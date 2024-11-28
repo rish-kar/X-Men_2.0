@@ -77,6 +77,7 @@
             theory = fileHandler.arrangeValues(theory);
             theory = fileHandler.identifyRoles(theory);
 
+            System.out.println("-----------------------\nLoading the model ended\n-----------------------");
             // Additional logic
         }
 
