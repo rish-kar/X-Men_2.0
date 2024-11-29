@@ -23,6 +23,7 @@ public class FileHandler {
 
     public Roles roles = new Roles();
 
+
     /**
      * Arrange the theory by connecting the rules.
      *
@@ -62,6 +63,7 @@ public class FileHandler {
         }
         return connectedRules;
     }
+
 
     /**
      * Arrange the lets by connecting the variables.
@@ -144,6 +146,7 @@ public class FileHandler {
         }
         return rules;
     }
+
 
     /**
      * Merge the tags values: For the models that used the specification of tags while they send
@@ -257,6 +260,13 @@ public class FileHandler {
         return rules;
     }
 
+
+    /**
+     * Spread the tags in the theory.
+     *
+     * @param theory The list of rules to spread.
+     * @return The spread list of rules.
+     */
     public ArrayList<Rule> spreadTagsie(ArrayList<Rule> theory) {
         ArrayList<Value> persistentTags = new ArrayList<>();
         boolean didSomething = false;
@@ -355,6 +365,12 @@ public class FileHandler {
     }
 
 
+    /**
+     * Connects the variables with each other.
+     *
+     * @param theory the list of rules to process
+     * @return the modified list of rules
+     */
     public ArrayList<Rule> letArrangement(ArrayList<Rule> theory) {
         boolean didSomething = false;
         /*
@@ -409,6 +425,7 @@ public class FileHandler {
 
         return theory;
     }
+
 
     /**
      * Arranges the persistent knowledge on all the rules based on the knowledge in each state.
@@ -471,6 +488,7 @@ public class FileHandler {
         return theory;
     }
 
+
     /**
      * Processes a rule with a similar name and updates the storage box with persistent knowledge.
      *
@@ -516,6 +534,7 @@ public class FileHandler {
         }
     }
 
+
     /**
      * Updates the storage box with state parameters.
      *
@@ -540,6 +559,7 @@ public class FileHandler {
         }
     }
 
+
     /**
      * Updates the storage box with receive parameters.
      *
@@ -551,6 +571,7 @@ public class FileHandler {
         updateStorageBoxWithParameters(storageBox, receiveParameters);
     }
 
+
     /**
      * Updates the storage box with send parameters.
      *
@@ -561,6 +582,7 @@ public class FileHandler {
         Object sendParameters = sendPostcondition.getParameter(2);
         updateStorageBoxWithParameters(storageBox, sendParameters);
     }
+
 
     /**
      * Updates the storage box with parameters.
@@ -595,6 +617,7 @@ public class FileHandler {
         }
     }
 
+
     /**
      * Updates the storage box with a value.
      *
@@ -608,6 +631,7 @@ public class FileHandler {
             }
         }
     }
+
 
     /**
      * Retrieves values from a nested special.
@@ -630,6 +654,12 @@ public class FileHandler {
     }
 
 
+    /**
+     * Identifies the roles in the theory.
+     *
+     * @param theory the list of rules to process
+     * @return the modified list of rules
+     */
     public ArrayList<Rule> identifyRoles(ArrayList<Rule> theory) {
         boolean didSomething = false;
 

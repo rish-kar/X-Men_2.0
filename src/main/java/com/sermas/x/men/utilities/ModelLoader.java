@@ -9,7 +9,6 @@
     import org.springframework.web.multipart.MultipartFile;
 
     import java.io.File;
-    import java.io.FileInputStream;
     import java.io.IOException;
     import java.io.InputStream;
     import java.util.ArrayList;
@@ -18,43 +17,47 @@
     @org.springframework.stereotype.Component
     public class ModelLoader {
 
-        public ArrayList<Component> full_model = new ArrayList<>();
-        public ArrayList<Function> functions = new ArrayList<>();
-        public ArrayList<Builtins> builtins = new ArrayList<>();
-        public ArrayList<Rule> theory = new ArrayList<>();
-        public boolean modelWithTags;
-        public File file2;
+        ArrayList<Rule> theory = new ArrayList<>();
+
 
         @Autowired
         private FileHandler fileHandler;
 
-        public void openFile(MultipartFile file) throws IOException, org.antlr.runtime.RecognitionException {
+
+        /**
+         * Opens the file and loads the model.
+         *
+         * @param file The file to open.
+         * @throws IOException                            If an I/O error occurs.
+         * @throws org.antlr.runtime.RecognitionException If an error occurs during recognition.
+         */
+        public ArrayList<Rule> openFile(MultipartFile file) throws IOException, org.antlr.runtime.RecognitionException {
             // File selection and loading logic
+            // List of components in the model
+            ArrayList<Function> functions = new ArrayList<>();
+            ArrayList<Builtins> builtins = new ArrayList<>();
+            ArrayList<Component> full_model = new ArrayList<>();
 
             // Validate the file extension
-            System.out.println("-----------------------\nStarting File Validation\n-----------------------");
+            log.info("-----------------------\nStarting File Validation\n-----------------------");
 
-            try {
-                if (!isValidExtension(file)) {
-                    throw new IllegalArgumentException("Invalid file extension");
-                }
-            } catch (IllegalArgumentException e) {
-                log.error("Exception occurred: {}", e.getMessage(), e);
+            if (!isValidExtension(file)) {
+                log.error("Invalid file extension");
+                throw new IllegalArgumentException("Invalid file extension");
             }
 
-            System.out.println("-----------------------\nFile Validation Ended\n-----------------------");
+            log.info("-----------------------\nFile Validation Ended\n-----------------------");
 
             // Load the file
-            System.out.println("-----------------------\nLoading the model started\n-----------------------");
+            log.info("-----------------------\nLoading the model started\n-----------------------");
 
-            full_model = loadSPTHY(file, full_model);
-            for (Component element : full_model) {
-                System.out.println("Component: " + element);
-                System.out.println();
-            }
+            ArrayList<Component> loadedModel = loadSPTHY(file, full_model);
+            loadedModel.forEach(element -> log.debug("Component: {}", element));
+
+            theory = new ArrayList<>();
 
             // Adding components to their respective lists
-            full_model.forEach((element) -> {
+            loadedModel.forEach((element) -> {
                 if (element instanceof Builtins) {
                     builtins.add((Builtins) element);
                     log.debug("Added Builtins component: {}", element);
@@ -69,6 +72,7 @@
                 }
             });
 
+            // Additional logic to arrange the theory in a specific order
             theory = fileHandler.arrangeTheory(theory);
             theory = fileHandler.arrangeLets(theory);
             theory = fileHandler.mergeTagsValues(theory);
@@ -77,46 +81,48 @@
             theory = fileHandler.arrangeValues(theory);
             theory = fileHandler.identifyRoles(theory);
 
-            System.out.println("-----------------------\nLoading the model ended\n-----------------------");
-            // Additional logic
+            log.info("-----------------------\nLoading the model ended\n-----------------------");
+
+            return theory;
         }
+
 
         /**
          * Loads the Tamarin-Prover specific SPTHY file.
          *
-         * @param file The file to load.
-         * @param save The list to save the components to.
+         * @param spthyFile The file to load.
+         * @param componentList The list to save the components to.
          * @return The list of components.
          * @throws IOException If an I/O error occurs.
          */
-        public ArrayList<Component> loadSPTHY(MultipartFile file, ArrayList<Component> save) throws IOException {
-            log.debug("Starting loadSPTHY with file: {}", file.getOriginalFilename());
+        public ArrayList<Component> loadSPTHY(MultipartFile spthyFile, ArrayList<Component> componentList) throws IOException {
+            log.debug("Starting loadSPTHY with file: {}", spthyFile.getOriginalFilename());
 
-            try (InputStream inputStream = file.getInputStream()) {
+            try (InputStream inputStream = spthyFile.getInputStream()) {
                 // Create a CharStream that reads from the input stream
-                ANTLRInputStream input = new ANTLRInputStream(inputStream);
+                ANTLRInputStream antlrInputStream = new ANTLRInputStream(inputStream);
                 log.debug("Created ANTLRInputStream");
 
                 // Create a lexer that feeds off of input CharStream
-                TamarinLexer lexer = new TamarinLexer(input);
+                TamarinLexer tamarinLexer = new TamarinLexer(antlrInputStream);
                 log.debug("Created TamarinLexer");
 
                 // Create a buffer of tokens pulled from the lexer
-                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                CommonTokenStream tokenStream = new CommonTokenStream(tamarinLexer);
                 log.debug("Created CommonTokenStream");
 
                 // Create a parser that feeds off the tokens buffer
-                TamarinParser parser = new TamarinParser(tokens);
+                TamarinParser tamarinParser = new TamarinParser(tokenStream);
                 log.debug("Created TamarinParser");
 
                 // Begin parsing at theory rule
-                ParseTree tree = parser.theory();
+                ParseTree parseTree = tamarinParser.theory();
                 log.debug("Parsed theory rule");
 
-                TamVisitor v = new TamVisitor();
-                ArrayList<Rule> tmp = (ArrayList<Rule>) v.visit(tree);
-                save.addAll(tmp);
-                log.debug("Visited parse tree and added rules to save");
+                TamVisitor tamVisitor = new TamVisitor();
+                ArrayList<Rule> ruleList = (ArrayList<Rule>) tamVisitor.visit(parseTree);
+                componentList.addAll(ruleList);
+                log.debug("Visited parse tree and added rules to componentList");
 
             } catch (IOException e) {
                 log.error("IOException occurred while loading SPTHY file: {}", e.getMessage(), e);
@@ -127,8 +133,9 @@
             }
 
             log.debug("loadSPTHY completed");
-            return save;
+            return componentList;
         }
+
 
         /**
          * Validates the file extension.
@@ -137,7 +144,7 @@
          * @return True if the file extension is valid, false otherwise.
          */
         public boolean isValidExtension(MultipartFile file) {
-            String fileName = file.getName();
+            String fileName = file.getOriginalFilename();
             return fileName.endsWith(".spthy");
         }
     }
