@@ -1,6 +1,7 @@
 package com.sermas.x.men.controller;
 
 import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.MutationGeneratorService;
@@ -40,9 +41,11 @@ public class ReplaceMutationController {
     @PostMapping("/subMessagesMutations")
     public ResponseEntity<Object> replaceSubMessagesMutations(@RequestParam("file") MultipartFile file) throws Exception {
 
+        ParametersBundle parametersBundle = new ParametersBundle();
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
         ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_SUB_MESSAGES));
+        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_SUB_MESSAGES), parametersBundle);
 
         return ResponseEntity.ok(null);
     }
@@ -57,9 +60,11 @@ public class ReplaceMutationController {
     @PostMapping("/typeMutations")
     public ResponseEntity<Object> replaceTypeMutations(@RequestParam("file") MultipartFile file) throws Exception {
 
+        ParametersBundle parametersBundle = new ParametersBundle();
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
         ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_TYPE));
+        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_TYPE), parametersBundle);
 
         return ResponseEntity.ok(null);
     }

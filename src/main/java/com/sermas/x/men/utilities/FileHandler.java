@@ -1,6 +1,7 @@
 package com.sermas.x.men.utilities;
 
 import com.sermas.x.men.model.*;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -23,6 +24,15 @@ public class FileHandler {
 
     public Roles roles = new Roles();
 
+
+    @PostConstruct
+    public void init() {
+        if (env == null) {
+            log.error("Environment bean is not injected!");
+        } else {
+            log.info("Environment bean is injected successfully.");
+        }
+    }
 
     /**
      * Arrange the theory by connecting the rules.
@@ -689,5 +699,95 @@ public class FileHandler {
         }
 
         return theory;
+    }
+
+    /**
+     * De-merges tags and values in the given theory.
+     *
+     * @param rules The list of rules to process.
+     * @return The modified list of rules.
+     */
+    public ArrayList<Rule> demergeTagsValues(ArrayList<Rule> rules) {
+        if (modelWithTags) {
+            boolean didSomething = false;
+
+            // Iterate through each rule in the list
+            for (Rule rule : rules) {
+                try {
+                    // Process the 'Rcv' fact in the rule's preconditions
+                    Fact receiveFact = rule.getPreconditionFactByMatchingName("Rcv");
+                    if (receiveFact != null) {
+                        didSomething = true;
+                        demergeFact(receiveFact, rule);
+                    }
+
+                    // Process the 'Snd' fact in the rule's postconditions
+                    Fact sendFact = rule.getPostconditionFactByMatchingName("Snd");
+                    if (sendFact != null) {
+                        demergeFact(sendFact, rule);
+                    }
+                } catch (Exception e) {
+                    // Log any exceptions that occur during processing
+                    log.error("An error occurred while demerging tags and values: {}", e.getMessage());
+                }
+            }
+
+            if (didSomething) {
+                log.info("De-merging of tags and values completed.");
+            }
+        }
+        return rules;
+    }
+
+    /**
+     * De-merges tags and values in the given fact.
+     *
+     * @param fact The fact to process.
+     * @param rule The rule containing the fact.
+     */
+    private void demergeFact(Fact fact, Rule rule) {
+        // Check if the parameter at index 2 is an instance of PSpecial
+        if (fact.getParameter(2) instanceof PSpecial) {
+            PSpecial valuesAndTags = (PSpecial) fact.getParameter(2);
+            PSpecial tags = new PSpecial();
+            PSpecial values = new PSpecial();
+
+            // Separate tags and values
+            for (Value value : valuesAndTags.getGroup()) {
+                Value tag = new Value(value.getTag());
+                tag.setRemoved(value.isRemoved());
+                tags.addValue(tag);
+                values.addValue(value);
+            }
+
+            // Set the tags and values back to the fact parameters
+            fact.getParameters().set(2, tags);
+            fact.getParameters().add(values);
+
+            // Check if the parameter at index 2 is an instance of Value and the rule has no variables
+        } else if (fact.getParameter(2) instanceof Value && !rule.hasVariables()) {
+            PSpecial tags = new PSpecial();
+            PSpecial values = new PSpecial();
+
+            Value value = (Value) fact.getParameter(2);
+            Value tag = new Value(value.getTag());
+            tag.setRemoved(value.isRemoved());
+
+            values.addValue(value);
+            tags.addValue(tag);
+
+            // Set the tags and values back to the fact parameters
+            fact.getParameters().set(2, tags);
+            fact.getParameters().add(values);
+
+            // Check if the parameter at index 3 is an instance of Value and the rule has variables
+        } else if (fact.getParameter(3) instanceof Value && rule.hasVariables()) {
+            Value value = (Value) fact.getParameter(2);
+            Value tag = new Value(value.getTag());
+
+            // Set the tag and value back to the fact parameters
+            fact.getParameters().set(2, tag);
+            fact.getParameters().add(value);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.sermas.x.men.service;
 
 import com.sermas.x.men.model.Mutations;
 import com.sermas.x.men.service.impl.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -10,31 +11,34 @@ import java.util.Map;
 @Component
 public class MutationStrategyFactory {
 
-    private static final Map<Mutations, MutationStrategy> strategies = new HashMap<>();
+    private final Map<Mutations, MutationStrategy> strategies = new HashMap<>();
 
-    // Initialize the strategies
-    static {
-
-        // Skip Mutation Strategies
-        strategies.put(Mutations.SKIP_SEND, new SkipSendMutationStrategy());
-        strategies.put(Mutations.SKIP_RECEIVE, new SkipReceiveMutationStrategy());
-        strategies.put(Mutations.SKIP_SEND_RECEIVE, new SkipSendReceiveMutationStrategy());
-        strategies.put(Mutations.SKIP_RECEIVE_SEND, new SkipReceiveSendMutationStrategy());
-        strategies.put(Mutations.SKIP_RECEIVE_SEND_RECEIVE, new SkipReceiveSendReceiveMutationStrategy());
-
-        // Add Mutation Strategies
-        strategies.put(Mutations.ADD, new AddMutationStrategy());
-
-        // Replace Mutation Strategies#
-        strategies.put(Mutations.REPLACE_SUB_MESSAGES, new ReplaceSubMessagesStrategy());
-        strategies.put(Mutations.REPLACE_TYPE, new ReplaceTypeStrategy());
-
-        // Neglect Mutation Strategies
-        strategies.put(Mutations.NEGLECT, new NeglectMutationStrategy());
+    @Autowired
+    public MutationStrategyFactory(
+            SkipSendMutationStrategy skipSendMutationStrategy,
+            SkipReceiveMutationStrategy skipReceiveMutationStrategy,
+            SkipSendReceiveMutationStrategy skipSendReceiveMutationStrategy,
+            SkipReceiveSendMutationStrategy skipReceiveSendMutationStrategy,
+            SkipReceiveSendReceiveMutationStrategy skipReceiveSendReceiveMutationStrategy,
+            AddMutationStrategy addMutationStrategy,
+            ReplaceSubMessagesStrategy replaceSubMessagesStrategy,
+            ReplaceTypeStrategy replaceTypeStrategy,
+            NeglectMutationStrategy neglectMutationStrategy
+    ) {
+        // Initialize strategies with Spring-managed beans
+        strategies.put(Mutations.SKIP_SEND, skipSendMutationStrategy);
+        strategies.put(Mutations.SKIP_RECEIVE, skipReceiveMutationStrategy);
+        strategies.put(Mutations.SKIP_SEND_RECEIVE, skipSendReceiveMutationStrategy);
+        strategies.put(Mutations.SKIP_RECEIVE_SEND, skipReceiveSendMutationStrategy);
+        strategies.put(Mutations.SKIP_RECEIVE_SEND_RECEIVE, skipReceiveSendReceiveMutationStrategy);
+        strategies.put(Mutations.ADD, addMutationStrategy);
+        strategies.put(Mutations.REPLACE_SUB_MESSAGES, replaceSubMessagesStrategy);
+        strategies.put(Mutations.REPLACE_TYPE, replaceTypeStrategy);
+        strategies.put(Mutations.NEGLECT, neglectMutationStrategy);
     }
 
     // Get the strategy for the given mutation
-    public static MutationStrategy getStrategy(Mutations mutation) {
+    public MutationStrategy getStrategy(Mutations mutation) {
         return strategies.get(mutation);
     }
 }

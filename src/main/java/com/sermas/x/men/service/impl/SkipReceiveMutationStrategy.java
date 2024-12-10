@@ -1,5 +1,6 @@
 package com.sermas.x.men.service.impl;
 
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.MutationStrategy;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +12,8 @@ import java.util.ArrayList;
 @Slf4j
 public class SkipReceiveMutationStrategy implements MutationStrategy {
     @Override
-    public void applyMutation(ArrayList<Rule> rules) {
+    public ParametersBundle applyMutation(Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
         // Implement skip send mutation logic
+        return new ParametersBundle();
     }
 }

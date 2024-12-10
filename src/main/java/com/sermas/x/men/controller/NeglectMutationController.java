@@ -1,6 +1,7 @@
 package com.sermas.x.men.controller;
 
 import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.MutationGeneratorService;
@@ -40,9 +41,11 @@ public class NeglectMutationController {
     @PostMapping("/neglectMutations")
     public ResponseEntity<Object> neglectMutations(@RequestParam("file") MultipartFile file) throws Exception {
 
+        ParametersBundle parametersBundle = new ParametersBundle();
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
         ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.NEGLECT));
+        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.NEGLECT), parametersBundle);
 
         return ResponseEntity.ok(null);
     }
