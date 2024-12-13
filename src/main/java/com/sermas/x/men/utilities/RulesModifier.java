@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -85,8 +86,7 @@ public class RulesModifier {
             }
 
             if (!enable) {
-                parametersBundle.setCollections(new ArrayList<>(List.of(modelRules)));
-            }
+                parametersBundle.getCollections().add(modelRules);            }
         } catch (Exception e) {
             log.error("Error occurred while processing rules: ", e);
         }

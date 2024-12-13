@@ -17,7 +17,9 @@ import java.util.ArrayList;
 public class ParametersBundle {
 
     String fileName;
+    ArrayList<Rule> theory;
     ArrayList<ArrayList> collections;
     ArrayList<Function> functions;
     ArrayList<Builtins> builtins;
+    Boolean modelWithTags = false;
 }

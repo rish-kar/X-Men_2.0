@@ -44,7 +44,8 @@ public class SkipMutationController {
         ParametersBundle parametersBundle = new ParametersBundle();
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.SKIP_SEND), parametersBundle);
 
         return ResponseEntity.ok(null);
@@ -63,7 +64,8 @@ public class SkipMutationController {
         ParametersBundle parametersBundle = new ParametersBundle();
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.SKIP_RECEIVE), parametersBundle);
 
         return ResponseEntity.ok(null);
@@ -82,7 +84,8 @@ public class SkipMutationController {
         ParametersBundle parametersBundle = new ParametersBundle();
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.SKIP_SEND_RECEIVE), parametersBundle);
 
         return ResponseEntity.ok(null);
@@ -101,7 +104,8 @@ public class SkipMutationController {
         ParametersBundle parametersBundle = new ParametersBundle();
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.SKIP_RECEIVE_SEND), parametersBundle);
 
         return ResponseEntity.ok(null);
@@ -120,7 +124,8 @@ public class SkipMutationController {
         ParametersBundle parametersBundle = new ParametersBundle();
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.SKIP_RECEIVE_SEND_RECEIVE), parametersBundle);
 
         return ResponseEntity.ok(null);

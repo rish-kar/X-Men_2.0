@@ -12,6 +12,7 @@
     import java.io.IOException;
     import java.io.InputStream;
     import java.util.ArrayList;
+    import java.util.List;
 
     @Slf4j
     @org.springframework.stereotype.Component
@@ -31,7 +32,7 @@
          * @throws IOException                            If an I/O error occurs.
          * @throws org.antlr.runtime.RecognitionException If an error occurs during recognition.
          */
-        public ArrayList<Rule> openFile(MultipartFile file) throws IOException, org.antlr.runtime.RecognitionException {
+        public ParametersBundle openFile(MultipartFile file, ParametersBundle parametersBundle) throws IOException, org.antlr.runtime.RecognitionException {
             // File selection and loading logic
             // List of components in the model
             ArrayList<Function> functions = new ArrayList<>();
@@ -72,18 +73,23 @@
                 }
             });
 
+            parametersBundle.setTheory(theory);
             // Additional logic to arrange the theory in a specific order
-            theory = fileHandler.arrangeTheory(theory);
-            theory = fileHandler.arrangeLets(theory);
-            theory = fileHandler.mergeTagsValues(theory);
-            theory = fileHandler.spreadTagsie(theory);
-            theory = fileHandler.letArrangement(theory);
-            theory = fileHandler.arrangeValues(theory);
-            theory = fileHandler.identifyRoles(theory);
+            parametersBundle = fileHandler.arrangeTheory(parametersBundle);
+            parametersBundle = fileHandler.arrangeLets(parametersBundle);
+            parametersBundle = fileHandler.mergeTagsValues(parametersBundle);
+            parametersBundle = fileHandler.spreadTagsie(parametersBundle);
+            parametersBundle = fileHandler.letArrangement(parametersBundle);
+            parametersBundle = fileHandler.arrangeValues(parametersBundle);
+            parametersBundle = fileHandler.identifyRoles(parametersBundle);
 
             log.info("-----------------------\nLoading the model ended\n-----------------------");
 
-            return theory;
+            parametersBundle.setCollections(new ArrayList<>(List.of(parametersBundle.getTheory())));
+            parametersBundle.setFunctions(functions);
+            parametersBundle.setBuiltins(builtins);
+
+            return parametersBundle;
         }
 
 

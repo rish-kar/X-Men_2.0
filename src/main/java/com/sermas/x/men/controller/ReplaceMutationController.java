@@ -44,7 +44,8 @@ public class ReplaceMutationController {
         ParametersBundle parametersBundle = new ParametersBundle();
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_SUB_MESSAGES), parametersBundle);
 
         return ResponseEntity.ok(null);
@@ -63,7 +64,8 @@ public class ReplaceMutationController {
         ParametersBundle parametersBundle = new ParametersBundle();
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_TYPE), parametersBundle);
 
         return ResponseEntity.ok(null);

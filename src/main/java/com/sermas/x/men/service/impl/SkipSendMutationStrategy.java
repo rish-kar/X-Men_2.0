@@ -34,7 +34,9 @@ public class SkipSendMutationStrategy implements MutationStrategy {
         // Check if the original rule has a postcondition fact named "Snd"
         if (originalRule.getPostconditionFactByMatchingName("Snd") != null) {
             // Clone the theory to create a new list of rules
-            ArrayList<Rule> clonedTheory = utilityFunctions.cloneModel(rules);
+//            parametersBundle.getTheory().clear();
+            parametersBundle.setTheory(new ArrayList<>(rules));
+            ArrayList<Rule> clonedTheory = utilityFunctions.cloneModel(parametersBundle);
             // Clone the original rule to create a mutated rule
             Rule mutatedRule = originalRule.clone();
 

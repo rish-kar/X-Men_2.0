@@ -60,7 +60,9 @@ public class MutationController {
         if (Boolean.TRUE.equals(neglectMutation)) mutationSet.add(Mutations.NEGLECT);
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+        parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, mutationSet, parametersBundle);
 

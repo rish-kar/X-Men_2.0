@@ -45,7 +45,7 @@ public class MutatedFileGenerator {
         // Iterate through each model in the collections
         for (ArrayList<Rule> model : collections) {
             // De-merge tags and values in the model
-            model = fileHandler.demergeTagsValues(model);
+            model = fileHandler.demergeTagsValues(model, parametersBundle);
 
             // Split the file name to create new file names
             String[] fileNameTokens = filename.split("\\.(?=[^\\.]+$)");

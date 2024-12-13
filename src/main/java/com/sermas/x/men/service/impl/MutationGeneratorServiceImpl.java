@@ -7,6 +7,7 @@ import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.service.MutationStrategy;
 import com.sermas.x.men.service.MutationStrategyFactory;
 import com.sermas.x.men.utilities.MutatedFileGenerator;
+import com.sermas.x.men.utilities.UtilityFunctions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,10 @@ public class MutationGeneratorServiceImpl implements MutationGeneratorService {
     @Autowired
     MutatedFileGenerator mutatedFileGenerator;
 
+    @Autowired
+    UtilityFunctions utilityFunctions;
+
+
     /**
      * Generate mutation based on the mutation set
      *
@@ -38,7 +43,9 @@ public class MutationGeneratorServiceImpl implements MutationGeneratorService {
         for (Mutations mutation : mutationSet) {
             MutationStrategy strategy = mutationStrategyFactory.getStrategy(mutation);
             if (strategy != null) {
-                for(Rule rule : rules) {
+                ArrayList<Rule> human_rules = extractHumanRules(rules);
+                ArrayList<Rule> cloned_rules = utilityFunctions.cloneRules(human_rules);
+                for(Rule rule : cloned_rules) {
                     parametersBundle = strategy.applyMutation(rule, rules, parametersBundle);
                 }
 
@@ -48,4 +55,21 @@ public class MutationGeneratorServiceImpl implements MutationGeneratorService {
         mutatedFileGenerator.saveFiles(parametersBundle);
         return rules;
     }
+
+    /**
+     * Extract human rules from the rules
+     *
+     * @param rules Rules
+     * @return Human Rules
+     */
+    private ArrayList<Rule> extractHumanRules(ArrayList<Rule> rules) {
+        ArrayList<Rule> human_rules = new ArrayList<>();
+        for (Rule rule : rules) {
+            if (rule.isHuman()) {
+                human_rules.add(rule);
+            }
+        }
+        return human_rules;
+    }
+
 }

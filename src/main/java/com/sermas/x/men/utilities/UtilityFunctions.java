@@ -24,23 +24,25 @@ public class UtilityFunctions {
     /**
      * Clones the given list of rules and arranges the theory.
      *
-     * @param originalTheory The original list of rules to clone.
+     * @param parametersBundle The parameters bundle containing the theory to clone.
      * @return The cloned and arranged list of rules.
      */
-    public ArrayList<Rule> cloneModel(ArrayList<Rule> originalTheory) {
+    public ArrayList<Rule> cloneModel(ParametersBundle parametersBundle) {
         ArrayList<Rule> clonedTheory = new ArrayList<>();
+        ArrayList<Rule> originalTheory = parametersBundle.getTheory();
         try {
             // Clone each rule in the original theory
             for (Rule rule : originalTheory) {
                 clonedTheory.add(rule.clone());
             }
+            parametersBundle.setTheory(new ArrayList<>(clonedTheory));
             // Arrange the cloned theory
-            fileHandler.arrangeTheory(clonedTheory);
+            parametersBundle = fileHandler.arrangeTheory(parametersBundle);
             log.info("Successfully cloned and arranged the theory.");
         } catch (Exception e) {
             log.error("Error occurred while cloning and arranging the theory: ", e);
         }
-        return clonedTheory;
+        return parametersBundle.getTheory();
     }
 
 
@@ -371,6 +373,30 @@ public class UtilityFunctions {
             // Log any exceptions that occur during the exploration
             log.error("Error while exploring variable '{}': ", variableName, e);
         }
+    }
+
+    /**
+     * Clones a list of rules.
+     *
+     * @param rules The list of rules to be cloned.
+     * @return A new list containing clones of the original rules.
+     */
+    public ArrayList<Rule> cloneRules(ArrayList<Rule> rules) {
+        ArrayList<Rule> clonedRules = new ArrayList<>();
+
+        try {
+            // Iterate through each rule in the original list
+            for (Rule rule : rules) {
+                // Clone the rule and add it to the new list
+                clonedRules.add(rule.clone());
+            }
+        } catch (Exception e) {
+            // Log any exceptions that occur during the cloning process
+            log.error("Error while cloning rules: ", e);
+        }
+
+        // Return the new list of cloned rules
+        return clonedRules;
     }
 }
 
