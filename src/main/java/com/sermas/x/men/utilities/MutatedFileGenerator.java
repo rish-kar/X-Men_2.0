@@ -30,6 +30,7 @@ public class MutatedFileGenerator {
      * @param parametersBundle The final parameters bundle containing the models to be saved.
      */
     public void saveFiles(ParametersBundle parametersBundle) {
+        deleteExistingMutatedFiles();
 
         // Get parameters from the ParametersBundle
         String filename = parametersBundle.getFileName();
@@ -93,6 +94,31 @@ public class MutatedFileGenerator {
                     } catch (IOException e) {
                         log.error("An error occurred while closing the writer: {}", e.getMessage());
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Deletes all mutated files in the current directory.
+     * This method is used to clean up the directory with existing files before new mutations are written into files.
+     */
+    public void deleteExistingMutatedFiles() {
+
+        // Get the directory path of the file
+        String directoryPath = Paths.get("").toAbsolutePath().normalize().toString();
+        File directory = new File(directoryPath);
+
+        // Get all files in the directory that contain "_M" in their name and end with ".m"
+        File[] files = directory.listFiles((dir, name) -> name.contains("_M") && name.endsWith(".m"));
+
+        // Delete each file in the directory
+        if (files != null) {
+            for (File file : files) {
+                if (file.delete()) {
+                    log.info("Deleted file: " + file.getName());
+                } else {
+                    log.error("Failed to delete file: " + file.getName());
                 }
             }
         }

@@ -90,6 +90,8 @@ public class RulesModifier {
         } catch (Exception e) {
             log.error("Error occurred while processing rules: ", e);
         }
+
+        log.info("Returning ParametersBundle with mutation.");
         return parametersBundle;
     }
 
