@@ -1,6 +1,7 @@
 package com.sermas.x.men.controller;
 
 import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.MutationGeneratorService;
@@ -40,9 +41,12 @@ public class AddMutationController {
     @PostMapping("/addMutations")
     public ResponseEntity<Object> addMutations(@RequestParam("file") MultipartFile file) throws Exception {
 
+        ParametersBundle parametersBundle = new ParametersBundle();
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.ADD));
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.ADD), parametersBundle);
 
         return ResponseEntity.ok(null);
     }

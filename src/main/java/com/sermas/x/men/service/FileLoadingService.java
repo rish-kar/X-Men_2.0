@@ -1,6 +1,7 @@
 package com.sermas.x.men.service;
 
 import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.utilities.ModelLoader;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ public class FileLoadingService {
      * @param file The file to process.
      * @return A message indicating the result of the file processing.
      */
-    public ArrayList<Rule> fileLoader(MultipartFile file) throws Exception {
+    public ParametersBundle fileLoader(MultipartFile file, ParametersBundle parametersBundle) throws Exception {
 
         // Basic Level File Validation: Check if the file is empty or null
         {
@@ -60,11 +61,11 @@ public class FileLoadingService {
             throw new IllegalArgumentException("File Validation Failed");
         }
 
-        ArrayList<Rule> rules = loadFile(file);
+        parametersBundle = loadFile(file, parametersBundle);
 
 
         // Implement your file processing logic here
-        return rules;
+        return parametersBundle;
     }
 
     /**
@@ -72,9 +73,9 @@ public class FileLoadingService {
      *
      * @param file The file to load.
      */
-    public ArrayList<Rule> loadFile(MultipartFile file) {
+    public ParametersBundle loadFile(MultipartFile file, ParametersBundle parametersBundle) {
         try {
-            return modelLoader.openFile(file);
+            return modelLoader.openFile(file, parametersBundle);
         } catch (IOException | org.antlr.runtime.RecognitionException e) {
             log.error("Error occurred while loading file: {}", e.getMessage(), e);
         }

@@ -2,8 +2,6 @@ package com.sermas.x.men.utilities;
 
 import com.sermas.x.men.model.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -15,23 +13,17 @@ import java.util.regex.Pattern;
 @Slf4j
 public class FileHandler {
 
-    @Autowired
-    private Environment env;
-
-    @org.springframework.beans.factory.annotation.Value("${global-variables.modelWithTags}")
-    private boolean modelWithTags;
-
     public Roles roles = new Roles();
-
 
     /**
      * Arrange the theory by connecting the rules.
      *
-     * @param rules The list of rules to arrange.
+     * @param parametersBundle The parameters bundle to arrange.
      * @return The arranged list of rules.
      */
-    public ArrayList<Rule> arrangeTheory(ArrayList<Rule> rules) {
+    public ParametersBundle arrangeTheory(ParametersBundle parametersBundle) {
         ArrayList<Rule> connectedRules = new ArrayList<>();
+        ArrayList<Rule> rules = parametersBundle.getTheory();
         try {
             // Iterate through each rule in the rules list
             for (int index = 0; index < rules.size(); index++) {
@@ -61,18 +53,19 @@ public class FileHandler {
         } catch (Exception e) {
             log.error("An unexpected error occurred: {}", e.getMessage());
         }
-        return connectedRules;
+        parametersBundle.setTheory(new ArrayList<>(connectedRules));
+        return parametersBundle;
     }
 
 
     /**
      * Arrange the lets by connecting the variables.
      *
-     * @param rules The list of rules to arrange.
+     * @param parametersBundle The parameters bundle to arrange.
      * @return The arranged list of rules.
      */
-    public ArrayList<Rule> arrangeLets(ArrayList<Rule> rules) {
-
+    public ParametersBundle arrangeLets(ParametersBundle parametersBundle) {
+        ArrayList<Rule> rules = parametersBundle.getTheory();
         boolean didSomething = false;
 
         try {
@@ -144,7 +137,8 @@ public class FileHandler {
         } catch (Exception e) {
             log.error("An unexpected error occurred while arranging lets: {}", e.getMessage());
         }
-        return rules;
+        parametersBundle.setTheory(new ArrayList<>(rules));
+        return parametersBundle;
     }
 
 
@@ -154,11 +148,11 @@ public class FileHandler {
      * have standard rules of <Sender,Receiver,Values> instead of <Sender,
      * Receiver,Tags,Values>. We take care to print out the tags at the end.
      *
-     * @param rules The list of rules to merge.
+     * @param parametersBundle The parameters bundle to merge.
      * @return The merged list of rules.
      */
-    public ArrayList<Rule> mergeTagsValues(ArrayList<Rule> rules) {
-
+    public ParametersBundle mergeTagsValues(ParametersBundle parametersBundle) {
+        ArrayList<Rule> rules = parametersBundle.getTheory();
         boolean didSomething = false;
 
         try {
@@ -171,8 +165,8 @@ public class FileHandler {
                 if (receiveFact != null && receiveFact.getParameters().size() == 4) {
                     didSomething = true;
 
-                    if (!modelWithTags) {
-                        System.setProperty("global-variables.modelWithTags", String.valueOf(true));
+                    if (!parametersBundle.getModelWithTags()) {
+                        parametersBundle.setModelWithTags(true);
                     }
 
                     // We have 'Rcv' with tags
@@ -257,18 +251,21 @@ public class FileHandler {
         } catch (Exception e) {
             log.error("An unexpected error occurred while merging tags and values: {}", e.getMessage());
         }
-        return rules;
+        parametersBundle.setTheory(new ArrayList<>(rules));
+        return parametersBundle;
     }
 
 
     /**
      * Spread the tags in the theory.
      *
-     * @param theory The list of rules to spread.
+     * @param parametersBundle The parameters bundle to spread.
      * @return The spread list of rules.
      */
-    public ArrayList<Rule> spreadTagsie(ArrayList<Rule> theory) {
+    public ParametersBundle spreadTagsie(ParametersBundle parametersBundle) {
         ArrayList<Value> persistentTags = new ArrayList<>();
+        ArrayList<Rule> theory = parametersBundle.getTheory();
+
         boolean didSomething = false;
 
         try {
@@ -361,18 +358,21 @@ public class FileHandler {
         } catch (Exception e) {
             log.error("An unexpected error occurred while spreading tags: {}", e.getMessage());
         }
-        return theory;
+        parametersBundle.setTheory(new ArrayList<>(theory));
+        return parametersBundle;
     }
 
 
     /**
      * Connects the variables with each other.
      *
-     * @param theory the list of rules to process
+     * @param parametersBundle the parameters bundle to process.
      * @return the modified list of rules
      */
-    public ArrayList<Rule> letArrangement(ArrayList<Rule> theory) {
+    public ParametersBundle letArrangement(ParametersBundle parametersBundle) {
+        ArrayList<Rule> theory = parametersBundle.getTheory();
         boolean didSomething = false;
+
         /*
          * 0 Receiver
          * 1 Sender
@@ -422,18 +422,19 @@ public class FileHandler {
         } catch (Exception e) {
             log.error("An unexpected error occurred while connecting variables: {}", e.getMessage());
         }
-
-        return theory;
+        parametersBundle.setTheory(new ArrayList<>(theory));
+        return parametersBundle;
     }
 
 
     /**
      * Arranges the persistent knowledge on all the rules based on the knowledge in each state.
      *
-     * @param theory the list of rules to process
+     * @param parametersBundle the parameters bundle to arrange.
      * @return the modified list of rules
      */
-    public ArrayList<Rule> arrangeValues(ArrayList<Rule> theory) {
+    public ParametersBundle arrangeValues(ParametersBundle parametersBundle) {
+        ArrayList<Rule> theory = parametersBundle.getTheory();
         boolean didSomething = false;
 
         try {
@@ -485,7 +486,8 @@ public class FileHandler {
             log.error("An unexpected error occurred while arranging values: {}", e.getMessage());
         }
 
-        return theory;
+        parametersBundle.setTheory(new ArrayList<>(theory));
+        return parametersBundle;
     }
 
 
@@ -657,10 +659,11 @@ public class FileHandler {
     /**
      * Identifies the roles in the theory.
      *
-     * @param theory the list of rules to process
+     * @param parametersBundle the parameters bundle to identify.
      * @return the modified list of rules
      */
-    public ArrayList<Rule> identifyRoles(ArrayList<Rule> theory) {
+    public ParametersBundle identifyRoles(ParametersBundle parametersBundle) {
+        ArrayList<Rule> theory = parametersBundle.getTheory();
         boolean didSomething = false;
 
         try {
@@ -688,6 +691,141 @@ public class FileHandler {
             log.error("An unexpected error occurred while identifying roles: {}", e.getMessage());
         }
 
+        parametersBundle.setTheory(new ArrayList<>(theory));
+        return parametersBundle;
+    }
+
+    /**
+     * De-merges tags and values in the given theory.
+     *
+     * @param theory The list of rules to process.
+     * @return The modified list of rules.
+     */
+    public ArrayList<com.sermas.x.men.model.Rule> demergeTagsValues(ArrayList<com.sermas.x.men.model.Rule> theory, ParametersBundle parametersBundle) {
+        if (parametersBundle.getModelWithTags()) {
+            boolean didSomething = false;
+            for (int i = 0; i < theory.size(); i++) {
+                com.sermas.x.men.model.Rule rule = theory.get(i);
+                Fact rcv = rule.getPreconditionFactByMatchingName("Rcv");
+                if (rcv != null) {
+                    didSomething = true;
+                    /*We have Rcv with tags
+                     *
+                     * 0 Receiver
+                     * 1 Sender
+                     * 2 tag/group of tags
+                     * 3 value/group of values
+                     */
+
+                    if (rcv.getParameter(2) instanceof PSpecial) {
+
+                        PSpecial valuesANDtags = (PSpecial) rcv.getParameter(2);
+
+                        PSpecial tags = new PSpecial();
+                        PSpecial values = new PSpecial();
+
+                        for (int j = 0; j < valuesANDtags.getGroup().size(); j++) {
+                            Value value = valuesANDtags.getValue(j);
+                            Value tag = new Value(value.getTag());
+                            tag.setRemoved(value.isRemoved());
+                            tags.addValue(tag);
+                            values.addValue(value);
+                        }
+
+                        rcv.getParameters().set(2, tags);
+                        rcv.getParameters().add(values);
+
+                    } else if (rcv.getParameter(2) instanceof Value && !rule.hasVariables()) {
+                        PSpecial tags = new PSpecial();
+                        PSpecial values = new PSpecial();
+
+                        Value value = (Value) rcv.getParameter(2);
+                        Value tag = new Value(value.getTag());
+                        tag.setRemoved(value.isRemoved());
+
+                        values.addValue(value);
+                        tags.addValue(tag);
+
+                        rcv.getParameters().set(2, tags);
+                        rcv.getParameters().add(values);
+
+                    } else if (rcv.getParameter(3) instanceof Value && rule.hasVariables()) {
+                        /*
+                         * 2 tag for the variable (never used so far)
+                         * 3 variable
+                         */
+                        Value value = (Value) rcv.getParameter(2);
+                        Value tag = new Value(value.getTag());
+
+                        rcv.getParameters().set(2, tag);
+                        rcv.getParameters().add(value);
+
+                        // Method to connect the variable with the messages!!!!
+                    }
+                }
+                Fact snd = rule.getPostconditionFactByMatchingName("Snd");
+                if (snd != null) {
+                    /*We have Snd with tags
+                     *
+                     * 0 Sender
+                     * 1 Receiver
+                     * 2 tag/group of tags
+                     * 3 value/group of values
+                     */
+
+                    if (snd.getParameter(2) instanceof PSpecial) {
+
+                        PSpecial valuesANDtags = (PSpecial) snd.getParameter(2);
+
+                        PSpecial tags = new PSpecial();
+                        PSpecial values = new PSpecial();
+
+                        for (int j = 0; j < valuesANDtags.getGroup().size(); j++) {
+                            Value value = valuesANDtags.getValue(j);
+                            Value tag = new Value(value.getTag());
+                            tag.setRemoved(value.isRemoved());
+                            tags.addValue(tag);
+                            values.addValue(value);
+                        }
+
+                        snd.getParameters().set(2, tags);
+                        snd.getParameters().add(values);
+
+                    } else if (snd.getParameter(2) instanceof Value && !rule.hasVariables()) {
+                        PSpecial tags = new PSpecial();
+                        PSpecial values = new PSpecial();
+
+                        Value value = (Value) snd.getParameter(2);
+                        Value tag = new Value(value.getTag());
+                        tag.setRemoved(value.isRemoved());
+
+                        values.addValue(value);
+                        tags.addValue(tag);
+
+                        snd.getParameters().set(2, tags);
+                        snd.getParameters().add(values);
+
+                    } else if (snd.getParameter(3) instanceof Value && rule.hasVariables()) {
+                        /*
+                         * 2 tag for the variable (never used so far)
+                         * 3 variable
+                         */
+                        Value value = (Value) snd.getParameter(2);
+                        Value tag = new Value(value.getTag());
+
+                        snd.getParameters().set(2, tag);
+                        snd.getParameters().add(value);
+
+                        // Method to connect the variable with the messages!!!!
+                    }
+                }
+            }
+            if (didSomething) {
+                System.out.println("--------------------------------\nDEMerging of tags and values ended\n--------------------------------");
+            }
+        }
         return theory;
     }
+
+
 }

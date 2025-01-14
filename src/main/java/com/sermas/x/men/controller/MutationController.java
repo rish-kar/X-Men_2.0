@@ -1,5 +1,6 @@
 package com.sermas.x.men.controller;
 
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Mutations;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
@@ -43,6 +44,7 @@ public class MutationController {
             @RequestHeader(value = "Neglect-Mutation", required = false) Boolean neglectMutation,
             @RequestParam("file") MultipartFile file) throws Exception {
 
+        ParametersBundle parametersBundle = new ParametersBundle();
 
         // Create a set of mutations based on the request headers
         Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
@@ -58,8 +60,11 @@ public class MutationController {
         if (Boolean.TRUE.equals(neglectMutation)) mutationSet.add(Mutations.NEGLECT);
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        ArrayList<Rule> rules = fileLoadingService.fileLoader(file);
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, mutationSet);
+        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+        parametersBundle.getCollections().clear();
+        parametersBundle.setFileName(file.getOriginalFilename());
+        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, mutationSet, parametersBundle);
 
 
         return ResponseEntity.ok(null);
