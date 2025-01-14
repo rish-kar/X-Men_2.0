@@ -1,0 +1,716 @@
+{
+	"info": {
+		"_postman_id": "c471b225-f9be-4f6c-be1c-0af6409d6917",
+		"name": "X-Men",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39727841"
+	},
+	"item": [
+		{
+			"name": "Individual Endpoints",
+			"item": [
+				{
+					"name": "1. Skip Send",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/skip/sendMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"skip",
+								"sendMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Skip Receive",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/skip/receiveMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"skip",
+								"receiveMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Skip Send Receive",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/skip/sendReceiveMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"skip",
+								"sendReceiveMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Skip Receive Send",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/skip/receiveSendMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"skip",
+								"receiveSendMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "5. Skip Receive Send Receive",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/skip/receiveSendReceive",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"skip",
+								"receiveSendReceive"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "6. Add Mutation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/addMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"addMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "7. Replace Sub-messages",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/replace/subMessagesMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"replace",
+								"subMessagesMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "8. Replace Type Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/replace/typeMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"replace",
+								"typeMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "9. Neglect Mutation Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/neglectMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"neglectMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Mutations (Generate Mutations)",
+			"item": [
+				{
+					"name": "1. Skip Send",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Skip-Send",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Skip Receive",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Skip-Receive",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Skip Send Receive",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Skip-Send-Receive",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Skip Receive Send",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Skip-Recieve-Send",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "5. Skip Receive Send Receive",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Skip-Recieve-Send-Receive",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "6. Add Mutation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Add-Mutation",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "7. Replace Sub-messages",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Replace-Sub-Messages",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "8. Replace Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Replace-Type",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "9. Neglect Mutation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Neglect-Mutation",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				},
+				{
+					"name": "10. Trigger All Mutations",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Skip-Send",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Skip-Receive",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Skip-Send-Receive",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Skip-Recieve-Send",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Skip-Recieve-Send-Receive",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Add-Mutation",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Replace-Sub-Messages",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Replace-Type",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "Neglect-Mutation",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/rkoff/OneDrive - King's College London/Workspace/Projects/SERMAS_KCL/Test Models/Models/Edited Model/Oyster.spthy"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8081/api/generateMutations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"generateMutations"
+							]
+						},
+						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
