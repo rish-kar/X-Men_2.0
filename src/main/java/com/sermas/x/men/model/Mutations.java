@@ -1,0 +1,13 @@
+package com.sermas.x.men.model;
+
+public enum Mutations {
+    SKIP_SEND,
+    SKIP_RECEIVE,
+    SKIP_SEND_RECEIVE,
+    SKIP_RECEIVE_SEND,
+    SKIP_RECEIVE_SEND_RECEIVE,
+    ADD,
+    REPLACE_SUB_MESSAGES,
+    REPLACE_TYPE,
+    NEGLECT
+}

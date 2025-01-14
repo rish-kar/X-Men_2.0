@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: X-Men
+
+server:
+  port: 8081
+
+
+global-variables:
+  modelWithTags: false
