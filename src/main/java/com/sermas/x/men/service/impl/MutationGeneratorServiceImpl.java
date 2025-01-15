@@ -1,7 +1,7 @@
 package com.sermas.x.men.service.impl;
 
-import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.service.MutationStrategy;
@@ -13,9 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
+/**
+ * MutationGeneratorServiceImpl class.
+ */
 @Service
 @Slf4j
 public class MutationGeneratorServiceImpl implements MutationGeneratorService {
@@ -51,7 +53,6 @@ public class MutationGeneratorServiceImpl implements MutationGeneratorService {
 
             }
         }
-//        parametersBundle.setCollections(new ArrayList<>(List.of(rules)));
         mutatedFileGenerator.saveFiles(parametersBundle);
         return rules;
     }

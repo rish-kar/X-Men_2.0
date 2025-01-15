@@ -7,14 +7,15 @@ import com.sermas.x.men.service.MutationStrategy;
 import com.sermas.x.men.utilities.RulesModifier;
 import com.sermas.x.men.utilities.UtilityFunctions;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
+/**
+ * SkipReceiveMutationStrategy class.
+ */
 @Service
 @Slf4j
 public class SkipReceiveSendMutationStrategy implements MutationStrategy {
@@ -22,12 +23,26 @@ public class SkipReceiveSendMutationStrategy implements MutationStrategy {
     private final UtilityFunctions utilityFunctions;
     private final RulesModifier rulesModifier;
 
+    /**
+     * SkipReceiveSendMutationStrategy constructor.
+     *
+     * @param utilityFunctions Utility functions
+     * @param rulesModifier    Rules modifier
+     */
     @Autowired
     public SkipReceiveSendMutationStrategy(@Lazy UtilityFunctions utilityFunctions, RulesModifier rulesModifier) {
         this.utilityFunctions = utilityFunctions;
         this.rulesModifier = rulesModifier;
     }
 
+    /**
+     * Apply the SkipReceiveSend mutation strategy to the original rule.
+     *
+     * @param originalRule     The original rule to be mutated
+     * @param rules            The list of rules in the theory
+     * @param parametersBundle The parameters bundle containing the theory and other parameters
+     * @return The parameters bundle containing the mutated theory and other parameters
+     */
     @Override
     public ParametersBundle applyMutation(Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
         // Initialize log for the class

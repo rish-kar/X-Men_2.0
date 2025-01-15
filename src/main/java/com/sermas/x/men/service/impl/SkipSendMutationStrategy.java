@@ -7,7 +7,6 @@ import com.sermas.x.men.model.Variable;
 import com.sermas.x.men.service.MutationStrategy;
 import com.sermas.x.men.utilities.RulesModifier;
 import com.sermas.x.men.utilities.UtilityFunctions;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -22,19 +21,33 @@ public class SkipSendMutationStrategy implements MutationStrategy {
     private final UtilityFunctions utilityFunctions;
     private final RulesModifier rulesModifier;
 
+    /**
+     * SkipSendMutationStrategy constructor.
+     *
+     * @param utilityFunctions Utility functions
+     * @param rulesModifier    Rules modifier
+     */
     @Autowired
     public SkipSendMutationStrategy(@Lazy UtilityFunctions utilityFunctions, RulesModifier rulesModifier) {
         this.utilityFunctions = utilityFunctions;
         this.rulesModifier = rulesModifier;
     }
 
+    /**
+     * Apply the SkipSend mutation strategy to the original rule.
+     *
+     * @param originalRule     The original rule to be mutated
+     * @param rules            The list of rules in the theory
+     * @param parametersBundle The parameters bundle containing the theory and other parameters
+     * @return The parameters bundle containing the mutated theory and other parameters
+     */
     @Override
     public ParametersBundle applyMutation(Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
         log.info("Applying SkipSendMutationStrategy");
         // Check if the original rule has a postcondition fact named "Snd"
         if (originalRule.getPostconditionFactByMatchingName("Snd") != null) {
             // Clone the theory to create a new list of rules
-//            parametersBundle.getTheory().clear();
+            // parametersBundle.getTheory().clear();
             parametersBundle.setTheory(new ArrayList<>(rules));
             ArrayList<Rule> clonedTheory = utilityFunctions.cloneModel(parametersBundle);
             // Clone the original rule to create a mutated rule
@@ -105,11 +118,11 @@ public class SkipSendMutationStrategy implements MutationStrategy {
             parametersBundle = rulesModifier.rulesModifier(clonedTheory, false, null, parametersBundle);
             // TODO: Check for variable removal which is commented
             // Return the modified theory
-//            return clonedTheory;
+            // return clonedTheory;
         } else {
             // Log a warning if the original rule does not have a "Snd" postcondition fact
             log.warn("The original rule does not have a 'Snd' postcondition fact.");
-//            return rules;
+            // return rules;
         }
         return parametersBundle;
     }

@@ -450,7 +450,8 @@ public class Rule extends Component implements Cloneable {
             }
 
             x = (Fact)var2.next();
-        } while(!x.getF_name().startsWith(s));
+        }
+        while(!x.getF_name().startsWith(s));
 
         return x;
     }

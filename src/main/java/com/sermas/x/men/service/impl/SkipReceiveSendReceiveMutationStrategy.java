@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
+/**
+ * SkipReceiveSendReceiveMutationStrategy class.
+ */
 @Service
 @Slf4j
 public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy {
@@ -18,6 +21,12 @@ public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy 
     private final UtilityFunctions utilityFunctions;
     private final RulesModifier rulesModifier;
 
+    /**
+     * SkipReceiveSendReceiveMutationStrategy constructor.
+     *
+     * @param utilityFunctions Utility functions
+     * @param rulesModifier    Rules modifier
+     */
     @Autowired
     public SkipReceiveSendReceiveMutationStrategy(@Lazy UtilityFunctions utilityFunctions, RulesModifier rulesModifier) {
         this.utilityFunctions = utilityFunctions;
@@ -25,6 +34,14 @@ public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy 
     }
 
 
+    /**
+     * Apply the SkipReceiveSendReceive mutation strategy to the original rule.
+     *
+     * @param originalRule    The original rule to be mutated
+     * @param rules          The list of rules in the theory
+     * @param parametersBundle The parameters bundle containing the theory and other parameters
+     * @return The parameters bundle containing the mutated theory and other parameters
+     */
     @Override
     public ParametersBundle applyMutation(Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
         log.info("Starting SKIP_RECEIVE_SEND_RECEIVE mutation...");

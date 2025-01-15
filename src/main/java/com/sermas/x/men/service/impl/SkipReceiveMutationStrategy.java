@@ -14,6 +14,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * SkipReceiveMutationStrategy class.
+ */
 @Service
 @Slf4j
 public class SkipReceiveMutationStrategy implements MutationStrategy {
@@ -21,6 +24,12 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
     private final UtilityFunctions utilityFunctions;
     private final RulesModifier rulesModifier;
 
+    /**
+     * SkipReceiveMutationStrategy constructor.
+     *
+     * @param utilityFunctions Utility functions
+     * @param rulesModifier    Rules modifier
+     */
     @Autowired
     public SkipReceiveMutationStrategy(@Lazy UtilityFunctions utilityFunctions, RulesModifier rulesModifier) {
         this.utilityFunctions = utilityFunctions;
@@ -28,6 +37,14 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
     }
 
 
+    /**
+     * Apply the SkipReceive mutation strategy to the original rule.
+     *
+     * @param originalRule     The original rule to be mutated
+     * @param rules            The list of rules in the theory
+     * @param parametersBundle The parameters bundle containing the theory and other parameters
+     * @return The parameters bundle containing the mutated theory and other parameters
+     */
     @Override
     public ParametersBundle applyMutation(Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
         ParametersBundle parametersBundle1 = new ParametersBundle();
@@ -84,8 +101,12 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
         return rulesModifier.rulesModifier(clonedTheory, false, null, parametersBundle);
     }
 
-// Example helper methods
-
+    /**
+     * Remove actions by names.
+     *
+     * @param rule          Rule to remove actions from
+     * @param namesToRemove Names of actions to remove
+     */
     private void removeActionsByNames(Rule rule, String... namesToRemove) {
         Set<String> removeSet = new HashSet<>(Arrays.asList(namesToRemove));
         for (Fact action : rule.getActions()) {
@@ -95,6 +116,12 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
         }
     }
 
+    /**
+     * Gather modifications from a fact.
+     *
+     * @param rcvFact Fact to gather modifications from
+     * @return List of modifications
+     */
     private ArrayList<Mutants> gatherModifications(Fact rcvFact) {
         ArrayList<Mutants> modifications = new ArrayList<>();
         // Parameter 0 should be a Value
@@ -116,6 +143,11 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
         return modifications;
     }
 
+    /**
+     * Rebuild state if present.
+     *
+     * @param mutatedRule Mutated rule to rebuild state for
+     */
     private void rebuildStateIfPresent(Rule mutatedRule) {
         Fact statePrecondition = mutatedRule.getPreconditionFactByMatchingName("State");
         Fact statePostcondition = mutatedRule.getPostconditionFactByMatchingName("State");
@@ -125,6 +157,12 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
         }
     }
 
+    /**
+     * Remove matching values from a fact.
+     *
+     * @param fact       Fact to remove values from
+     * @param valueNames Names of values to remove
+     */
     private void removeMatchingValuesFromFact(Fact fact, Set<String> valueNames) {
         for (Object param : fact.getParameters()) {
             if (param instanceof Value) {
@@ -145,6 +183,14 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
         }
     }
 
+    /**
+     * Remove actions if they contain certain values.
+     *
+     * @param modifications List of modifications
+     * @param rule          Rule to remove actions from
+     * @param valueNames    Names of values to check for
+     * @param actionNames   Action names to remove
+     */
     private void removeActionsIfContain(ArrayList<Mutants> modifications, Rule rule, Set<String> valueNames, String... actionNames) {
         Set<String> actionNamesSet = new HashSet<>(Arrays.asList(actionNames));
         for (Fact action : rule.getActions()) {
@@ -170,4 +216,4 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
             }
         }
     }
-    }
+}

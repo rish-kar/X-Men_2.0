@@ -1,20 +1,19 @@
 package com.sermas.x.men.utilities;
 
 import com.sermas.x.men.model.Builtins;
-import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Function;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-
-import java.io.File;
 import java.util.Iterator;
 
 @Component

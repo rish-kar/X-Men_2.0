@@ -1,7 +1,7 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.MutationGeneratorService;
@@ -65,8 +65,6 @@ public class MutationController {
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, mutationSet, parametersBundle);
-
-
         return ResponseEntity.ok(null);
     }
 

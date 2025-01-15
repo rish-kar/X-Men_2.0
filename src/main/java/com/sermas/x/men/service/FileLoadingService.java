@@ -1,6 +1,5 @@
 package com.sermas.x.men.service;
 
-import com.sermas.x.men.model.Mutations;
 import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.utilities.ModelLoader;
@@ -12,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Set;
 
 /**
  * Service class for skipping send mutation.
