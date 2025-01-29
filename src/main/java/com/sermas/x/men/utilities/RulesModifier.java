@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Component
 @Slf4j
@@ -90,6 +88,8 @@ public class RulesModifier {
         } catch (Exception e) {
             log.error("Error occurred while processing rules: ", e);
         }
+
+        log.info("Returning ParametersBundle with mutation.");
         return parametersBundle;
     }
 

@@ -1,7 +1,7 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.MutationGeneratorService;
@@ -36,8 +36,8 @@ public class MutationController {
             @RequestHeader(value = "Skip-Send", required = false) Boolean skipSend,
             @RequestHeader(value = "Skip-Receive", required = false) Boolean skipReceive,
             @RequestHeader(value = "Skip-Send-Receive", required = false) Boolean skipSendReceive,
-            @RequestHeader(value = "Skip-Recieve-Send", required = false) Boolean skipReceiveSend,
-            @RequestHeader(value = "Skip-Recieve-Send-Receive", required = false) Boolean skipReceiveSendReceive,
+            @RequestHeader(value = "Skip-Receive-Send", required = false) Boolean skipReceiveSend,
+            @RequestHeader(value = "Skip-Receive-Send-Receive", required = false) Boolean skipReceiveSendReceive,
             @RequestHeader(value = "Add-Mutation", required = false) Boolean addMutation,
             @RequestHeader(value = "Replace-Sub-Messages", required = false) Boolean replaceSubMessages,
             @RequestHeader(value = "Replace-Type", required = false) Boolean replaceType,
@@ -65,8 +65,6 @@ public class MutationController {
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, mutationSet, parametersBundle);
-
-
         return ResponseEntity.ok(null);
     }
 
