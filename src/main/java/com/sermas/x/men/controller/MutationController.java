@@ -5,6 +5,7 @@ import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.MutationGeneratorService;
+import com.sermas.x.men.utilities.TagSetter;
 import org.apache.tomcat.util.digester.Rules;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,6 +28,9 @@ public class MutationController {
     public FileLoadingService fileLoadingService;
 
     @Autowired
+    public TagSetter tagSetter;
+
+    @Autowired
     @Qualifier("mutationGeneratorServiceImpl")
     public MutationGeneratorService mutationGeneratorService;
 
@@ -41,7 +45,6 @@ public class MutationController {
             @RequestHeader(value = "Add-Mutation", required = false) Boolean addMutation,
             @RequestHeader(value = "Replace-Sub-Messages", required = false) Boolean replaceSubMessages,
             @RequestHeader(value = "Replace-Type", required = false) Boolean replaceType,
-            @RequestHeader(value = "Neglect-Mutation", required = false) Boolean neglectMutation,
             @RequestParam("file") MultipartFile file) throws Exception {
 
         ParametersBundle parametersBundle = new ParametersBundle();
@@ -57,7 +60,9 @@ public class MutationController {
         if (Boolean.TRUE.equals(addMutation)) mutationSet.add(Mutations.ADD);
         if (Boolean.TRUE.equals(replaceSubMessages)) mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
         if (Boolean.TRUE.equals(replaceType)) mutationSet.add(Mutations.REPLACE_TYPE);
-        if (Boolean.TRUE.equals(neglectMutation)) mutationSet.add(Mutations.NEGLECT);
+
+        // Set tags based on the mutation set
+        parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
         parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);

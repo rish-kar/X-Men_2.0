@@ -21,4 +21,5 @@ public class ParametersBundle {
     ArrayList<Function> functions;
     ArrayList<Builtins> builtins;
     Boolean modelWithTags = false;
+    Flags flags;
 }

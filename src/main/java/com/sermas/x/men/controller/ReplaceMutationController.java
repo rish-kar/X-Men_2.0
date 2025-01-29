@@ -5,6 +5,7 @@ import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.MutationGeneratorService;
+import com.sermas.x.men.utilities.TagSetter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * Controller for replace mutations.
@@ -26,6 +29,9 @@ public class ReplaceMutationController {
 
     @Autowired
     private FileLoadingService fileLoadingService;
+
+    @Autowired
+    public TagSetter tagSetter;
 
     @Autowired
     @Qualifier("mutationGeneratorServiceImpl")
@@ -41,11 +47,20 @@ public class ReplaceMutationController {
     @PostMapping("/subMessagesMutations")
     public ResponseEntity<Object> replaceSubMessagesMutations(@RequestParam("file") MultipartFile file) throws Exception {
 
+        Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
+        mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
+
         ParametersBundle parametersBundle = new ParametersBundle();
+
+        // Set tags based on the mutation set
+        parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
+
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
         parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+        parametersBundle.getCollections().clear();
+        parametersBundle.setFileName(file.getOriginalFilename());
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_SUB_MESSAGES), parametersBundle);
 
         return ResponseEntity.ok(null);
@@ -61,11 +76,19 @@ public class ReplaceMutationController {
     @PostMapping("/typeMutations")
     public ResponseEntity<Object> replaceTypeMutations(@RequestParam("file") MultipartFile file) throws Exception {
 
+        Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
+        mutationSet.add(Mutations.REPLACE_TYPE);
+
         ParametersBundle parametersBundle = new ParametersBundle();
+
+        // Set tags based on the mutation set
+        parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
 
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
         parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+        parametersBundle.getCollections().clear();
+        parametersBundle.setFileName(file.getOriginalFilename());
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_TYPE), parametersBundle);
 
         return ResponseEntity.ok(null);

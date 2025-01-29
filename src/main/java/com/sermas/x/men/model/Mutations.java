@@ -9,5 +9,6 @@ public enum Mutations {
     ADD,
     REPLACE_SUB_MESSAGES,
     REPLACE_TYPE,
-    NEGLECT
+    COMBINE_ADD_REPLACE_ONLY,
+    COMBINE_ADD_REPLACE
 }

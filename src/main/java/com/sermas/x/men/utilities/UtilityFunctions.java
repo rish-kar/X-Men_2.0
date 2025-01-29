@@ -5,8 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -398,5 +397,106 @@ public class UtilityFunctions {
         // Return the new list of cloned rules
         return clonedRules;
     }
+
+    /**
+     * Returns the power set of the given set. The power set is the set of all possible
+     * subsets (including the empty set and the set itself).
+     *
+     * @param originalSet the set from which to generate all subsets
+     * @param <T>         the type of elements in the set
+     * @return the power set of the given set
+     */
+    public <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+        // This will hold our final collection of subsets
+        Set<Set<T>> result = new HashSet<>();
+
+        // Base case: if the original set is empty, its power set contains only the empty set
+        if (originalSet.isEmpty()) {
+            result.add(new HashSet<>());  // add an empty subset
+            return result;
+        }
+
+        // Convert to a list to easily extract one element (the "firstElement")
+        List<T> elementList = new ArrayList<>(originalSet);
+
+        // "firstElement" is the head of our set, "remainder" are all other elements
+        T firstElement = elementList.get(0);
+        Set<T> remainder = new HashSet<>(elementList.subList(1, elementList.size()));
+
+        // Recursively build the power set of the remainder
+        Set<Set<T>> remainderPowerSet = powerSet(remainder);
+
+        // For each subset in the remainder's power set, create two subsets:
+        // 1. The subset itself (without the firstElement).
+        // 2. A copy of the subset that includes the firstElement.
+        for (Set<T> subset : remainderPowerSet) {
+            // Subset #1 (unchanged)
+            result.add(subset);
+
+            // Subset #2 (includes firstElement)
+            Set<T> subsetWithFirst = new HashSet<>(subset);
+            subsetWithFirst.add(firstElement);
+            result.add(subsetWithFirst);
+        }
+
+        return result;
+    }
+
+    /**
+     * Finds a rule in the given list by its name.
+     *
+     * @param rules The list of rules to search through.
+     * @param ruleName The name of the rule to find.
+     * @return The rule with the specified name, or null if not found.
+     */
+    public Rule find(List<Rule> rules, String ruleName) {
+        for (Rule rule : rules) {
+            if (rule.getRule_name().equals(ruleName)) {
+                return rule;
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Checks whether the provided {@code value} matches any {@code function} based on the old/new values
+     * found in the given {@code mutants} object. If a match is found (i.e., the value name starts with the
+     * function name and the parameter matches the old value in {@code mutants}), this method clones the
+     * new value, updates its name, and returns it. Otherwise, returns {@code null}.
+     *
+     * @param functions the list of {@link Function} objects to check against
+     * @param value     the {@link Value} whose name is evaluated
+     * @param mutants   contains old and new values for substitution
+     * @return a cloned {@link Value} with updated name if a match is found, otherwise {@code null}
+     */
+    public Value checkFunctionReplacement(List<Function> functions, Value value, Mutants mutants) {
+        if (functions == null || functions.isEmpty()) {
+            return null;
+        }
+        // Loop through all functions to find a match in the value's name
+        for (Function function : functions) {
+            String functionName   = function.getName().replaceAll("[^a-zA-Z]", "");
+            String originalName   = value.getName();
+            // If the value's name starts with the function name, extract what's after it
+            if (originalName.startsWith(functionName)) {
+                String extractedParam = originalName.replace(functionName, "")
+                        .replaceAll("[^a-zA-Z]", "");
+                String oldParamName   = mutants.getOldValue().getName().replaceAll("[^a-zA-Z]", "");
+                // Check if extracted param matches the old value in mutants
+                if (extractedParam.equals(oldParamName)) {
+                    // Build new name, e.g. fun(...) + newValue
+                    String newName = functionName + "(" + mutants.getNewValue().getName() + ")";
+                    // Clone the new value and update its name
+                    Value updatedValue = mutants.getNewValue().clone();
+                    updatedValue.setName(newName);
+                    return updatedValue;
+                }
+            }
+        }
+        // No matching function replacement found
+        return null;
+    }
+
 }
 

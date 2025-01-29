@@ -22,8 +22,7 @@ public class MutationStrategyFactory {
             SkipReceiveSendReceiveMutationStrategy skipReceiveSendReceiveMutationStrategy,
             AddMutationStrategy addMutationStrategy,
             ReplaceSubMessagesStrategy replaceSubMessagesStrategy,
-            ReplaceTypeStrategy replaceTypeStrategy,
-            NeglectMutationStrategy neglectMutationStrategy
+            ReplaceTypeStrategy replaceTypeStrategy
     ) {
         // Initialize strategies with Spring-managed beans
         strategies.put(Mutations.SKIP_SEND, skipSendMutationStrategy);
@@ -34,7 +33,6 @@ public class MutationStrategyFactory {
         strategies.put(Mutations.ADD, addMutationStrategy);
         strategies.put(Mutations.REPLACE_SUB_MESSAGES, replaceSubMessagesStrategy);
         strategies.put(Mutations.REPLACE_TYPE, replaceTypeStrategy);
-        strategies.put(Mutations.NEGLECT, neglectMutationStrategy);
     }
 
     // Get the strategy for the given mutation
