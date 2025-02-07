@@ -46,7 +46,7 @@ public class SkipSendReceiveMutationStrategy implements MutationStrategy {
         try {
             if (originalRule.getPostconditionFactByMatchingName("Snd") == null) {
 
-                log.info("No mutation needed if 'Snd' postcondition is absent for Skip Receive Mutation Strategy");
+                log.debug("No mutation needed if 'Snd' postcondition is absent for Skip Receive Mutation Strategy");
                 return parametersBundle; // No mutation needed if "Snd" postcondition is absent
             }
 
@@ -67,7 +67,7 @@ public class SkipSendReceiveMutationStrategy implements MutationStrategy {
                 // Add mutated arriving rule to the clone
                 theoryClone.add(arrivingRule);
 
-                log.info("Final Mutated Arriving Rule: {}", arrivingRule);
+                log.debug("Final Mutated Arriving Rule: {}", arrivingRule);
 
                 // Apply the modified rules
                 parametersBundle = rulesModifier.rulesModifier(theoryClone, false, null, parametersBundle);
@@ -131,7 +131,7 @@ public class SkipSendReceiveMutationStrategy implements MutationStrategy {
             }
         }
 
-        log.info("Mutated Original Rule: {}", mutatedRule);
+        log.debug("Mutated Original Rule: {}", mutatedRule);
         return mutatedRule;
     }
 

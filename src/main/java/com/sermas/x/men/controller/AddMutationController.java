@@ -46,6 +46,8 @@ public class AddMutationController {
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
         parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+        parametersBundle.getCollections().clear();
+        parametersBundle.setFileName(file.getOriginalFilename());
         ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.ADD), parametersBundle);
 
         return ResponseEntity.ok(null);

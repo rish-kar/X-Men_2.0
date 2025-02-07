@@ -72,7 +72,7 @@ public class RulesModifier {
                 // Modify postconditions
                 modifyPostconditions(ruleToBeModified, modifications);
 
-                log.info("\n" + ruleToBeModified.toString() + "\n");
+                log.debug("\n" + ruleToBeModified.toString() + "\n");
                 modelRules.add(ruleToBeModified);
 
                 currentRule = ruleToBeModified;
@@ -89,7 +89,7 @@ public class RulesModifier {
             log.error("Error occurred while processing rules: ", e);
         }
 
-        log.info("Returning ParametersBundle with mutation.");
+        log.debug("Returning ParametersBundle with mutation.");
         return parametersBundle;
     }
 

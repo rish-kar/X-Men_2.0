@@ -100,7 +100,8 @@ public class Fact implements Cloneable, Comparable {
         while(var2.hasNext()) {
             Object item = var2.next();
             if (item instanceof Variable) {
-                clone.add(item);
+//                clone.add(item);
+                clone.add(((Variable) item).clone());
             } else if (item instanceof Value) {
                 clone.add(((Value)item).clone());
             } else if (item instanceof PSpecial) {

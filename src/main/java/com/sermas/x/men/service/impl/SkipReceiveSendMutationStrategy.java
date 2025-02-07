@@ -83,7 +83,7 @@ public class SkipReceiveSendMutationStrategy implements MutationStrategy {
                 }
 
                 // Log the details of the mutated rule
-                log.info("Mutated Rule: " + mutatedRule.toString());
+                log.debug("Mutated Rule: " + mutatedRule.toString());
 
                 // Add the mutated rule to the cloned theory
                 clonedTheory.add(mutatedRule);
@@ -101,7 +101,7 @@ public class SkipReceiveSendMutationStrategy implements MutationStrategy {
             throw new RuntimeException("An error occurred during rule mutation.", e);
         }
 
-        log.info("Returning ParametersBundle without any mutation. \n Original Theory: " + parametersBundle.getTheory().toString());
+        log.debug("Returning ParametersBundle without any mutation. \n Original Theory: " + parametersBundle.getTheory().toString());
         // Return the original theory if no mutation is performed
         return parametersBundle;
     }

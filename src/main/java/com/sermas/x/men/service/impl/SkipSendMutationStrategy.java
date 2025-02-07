@@ -43,7 +43,7 @@ public class SkipSendMutationStrategy implements MutationStrategy {
      */
     @Override
     public ParametersBundle applyMutation(Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
-        log.info("Applying SkipSendMutationStrategy");
+        log.debug("Applying SkipSendMutationStrategy");
         // Check if the original rule has a postcondition fact named "Snd"
         if (originalRule.getPostconditionFactByMatchingName("Snd") != null) {
             // Clone the theory to create a new list of rules
@@ -112,7 +112,7 @@ public class SkipSendMutationStrategy implements MutationStrategy {
 
             // Add the mutated rule to the cloned theory
             clonedTheory.add(mutatedRule);
-            log.info("Mutated rule added: {}", mutatedRule);
+            log.debug("Mutated rule added: {}", mutatedRule);
 
             // Perform additional processing on the cloned theory
             parametersBundle = rulesModifier.rulesModifier(clonedTheory, false, null, parametersBundle);

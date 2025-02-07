@@ -20,6 +20,7 @@ public class ParametersBundle {
     ArrayList<ArrayList> collections;
     ArrayList<Function> functions;
     ArrayList<Builtins> builtins;
+    ArrayList<Value> roles;
     Boolean modelWithTags = false;
     Flags flags;
 }

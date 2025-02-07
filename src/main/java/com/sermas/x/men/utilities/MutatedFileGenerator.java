@@ -115,7 +115,7 @@ public class MutatedFileGenerator {
         if (files != null) {
             for (File file : files) {
                 if (file.delete()) {
-                    log.info("Deleted file: " + file.getName());
+                    log.debug("Deleted file: " + file.getName());
                 } else {
                     log.error("Failed to delete file: " + file.getName());
                 }

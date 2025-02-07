@@ -44,7 +44,7 @@ public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy 
      */
     @Override
     public ParametersBundle applyMutation(Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
-        log.info("Starting SKIP_RECEIVE_SEND_RECEIVE mutation...");
+        log.debug("Starting SKIP_RECEIVE_SEND_RECEIVE mutation...");
 
         ArrayList<Rule> mutatedTheory = new ArrayList<>();
         Rule nextHumanRule;
@@ -98,7 +98,7 @@ public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy 
                         }
                     }
 
-                    log.info("Mutated rule created: {}", mutatedRule);
+                    log.debug("Mutated rule created: {}", mutatedRule);
                     localTheoryClone.add(mutatedRule);
                     rulesModifier.rulesModifier(localTheoryClone, true, arrivingRule, parametersBundle);
 
@@ -175,7 +175,7 @@ public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy 
                         }
                     }
 
-                    log.info("Arriving rule mutated: {}", arrivingRule);
+                    log.debug("Arriving rule mutated: {}", arrivingRule);
                     localTheoryClone.add(arrivingRule);
                     return rulesModifier.rulesModifier(localTheoryClone, false, null, parametersBundle);
                 }
@@ -185,7 +185,7 @@ public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy 
             log.error("An error occurred during the mutation process: ", e);
         }
 
-        log.info("Mutation process completed.");
+        log.debug("Mutation process completed.");
         return parametersBundle;
     }
 }

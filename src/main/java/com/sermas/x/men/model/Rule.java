@@ -314,8 +314,8 @@ public class Rule extends Component implements Cloneable {
             ArrayList clone3;
             if (this.hasVariables()) {
                 clone3 = this.cloneListVariable(this.variables);
-                this.arrangeLets(clone3);
-                this.letArrangement(clone3, clone1, clone2);
+                p.arrangeLets(clone3);
+                p.letArrangement(clone3, clone1, clone2);
                 p.variables = clone3;
             }
 

@@ -72,12 +72,12 @@
 		</dependency>
 
 		<!-- JaCoCo plugin, declared as dependency for completeness -->
-		<dependency>
-			<groupId>org.jacoco</groupId>
-			<artifactId>jacoco-maven-plugin</artifactId>
-			<version>0.8.12</version>
-			<scope>test</scope>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.jacoco</groupId>-->
+<!--			<artifactId>jacoco-maven-plugin</artifactId>-->
+<!--			<version>0.8.12</version>-->
+<!--			<scope>test</scope>-->
+<!--		</dependency>-->
 
 		<!-- Surefire plugin, declared as dependency -->
 		<dependency>
@@ -121,7 +121,31 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.5</version>
+				<version>0.8.12</version>
+				<executions>
+					<!-- 1) Prepare JaCoCo Agent -->
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<!-- 2) Create Coverage Report -->
+					<execution>
+						<id>report</id>
+						<!-- 'verify' phase is typical for coverage reports -->
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<!-- 3) Exclude model classes from coverage -->
+							<excludes>
+								<exclude>**/model/**</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- Spring Boot Maven Plugin -->
 			<plugin>

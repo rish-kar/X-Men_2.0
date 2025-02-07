@@ -39,17 +39,17 @@
             ArrayList<Component> full_model = new ArrayList<>();
 
             // Validate the file extension
-            log.info("-----------------------\nStarting File Validation\n-----------------------");
+            log.debug("-----------------------\nStarting File Validation\n-----------------------");
 
             if (!isValidExtension(file)) {
                 log.error("Invalid file extension");
                 throw new IllegalArgumentException("Invalid file extension");
             }
 
-            log.info("-----------------------\nFile Validation Ended\n-----------------------");
+            log.debug("-----------------------\nFile Validation Ended\n-----------------------");
 
             // Load the file
-            log.info("-----------------------\nLoading the model started\n-----------------------");
+            log.debug("-----------------------\nLoading the model started\n-----------------------");
 
             ArrayList<Component> loadedModel = loadSPTHY(file, full_model);
             loadedModel.forEach(element -> log.debug("Component: {}", element));
@@ -82,7 +82,7 @@
             parametersBundle = fileHandler.arrangeValues(parametersBundle);
             parametersBundle = fileHandler.identifyRoles(parametersBundle);
 
-            log.info("-----------------------\nLoading the model ended\n-----------------------");
+            log.debug("-----------------------\nLoading the model ended\n-----------------------");
 
             parametersBundle.setCollections(new ArrayList<>(List.of(parametersBundle.getTheory())));
             parametersBundle.setFunctions(functions);

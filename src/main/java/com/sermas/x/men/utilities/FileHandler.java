@@ -13,8 +13,6 @@ import java.util.regex.Pattern;
 @Slf4j
 public class FileHandler {
 
-    public Roles roles = new Roles();
-
     /**
      * Arrange the theory by connecting the rules.
      *
@@ -47,7 +45,7 @@ public class FileHandler {
 
                 connectedRules.add(currentRule);
             }
-            log.info("Connecting the rules ended");
+            log.debug("Connecting the rules ended");
         } catch (IndexOutOfBoundsException e) {
             log.error("Error: Attempted to access an index that is out of bounds. {}", e.getMessage());
         } catch (Exception e) {
@@ -132,7 +130,7 @@ public class FileHandler {
                 }
             }
             if (didSomething) {
-                log.info("Connecting the variables ended");
+                log.debug("Connecting the variables ended");
             }
         } catch (Exception e) {
             log.error("An unexpected error occurred while arranging lets: {}", e.getMessage());
@@ -244,7 +242,7 @@ public class FileHandler {
             }
 
             if (didSomething) {
-                log.info("Merging of tags and values ended");
+                log.debug("Merging of tags and values ended");
             }
         } catch (CloneNotSupportedException e) {
             log.error("Error: Cloning not supported. {}", e.getMessage());
@@ -353,7 +351,7 @@ public class FileHandler {
                 }
             }
             if (didSomething) {
-                log.info("Spreading of tags ended");
+                log.debug("Spreading of tags ended");
             }
         } catch (Exception e) {
             log.error("An unexpected error occurred while spreading tags: {}", e.getMessage());
@@ -417,7 +415,7 @@ public class FileHandler {
             }
 
             if (didSomething) {
-                log.info("Connecting the variables with each other ended");
+                log.debug("Connecting the variables with each other ended");
             }
         } catch (Exception e) {
             log.error("An unexpected error occurred while connecting variables: {}", e.getMessage());
@@ -480,7 +478,7 @@ public class FileHandler {
             }
 
             if (didSomething) {
-                log.info("Setting up the persistent knowledge through the rules ended");
+                log.debug("Setting up the persistent knowledge through the rules ended");
             }
         } catch (Exception e) {
             log.error("An unexpected error occurred while arranging values: {}", e.getMessage());
@@ -667,6 +665,12 @@ public class FileHandler {
         boolean didSomething = false;
 
         try {
+
+            // Ensure the roles list is initialized
+            if (parametersBundle.getRoles() == null) {
+                parametersBundle.setRoles(new ArrayList<>());
+            }
+
             // Iterate through each rule in the list
             for (Rule rule : theory) {
                 // Check if the rule name starts with "setup"
@@ -677,7 +681,11 @@ public class FileHandler {
                         didSomething = true;
                         // Add each parameter of the Roles fact to the roles list
                         for (Object parameter : rolesFact.getParameters()) {
-                            roles.setValue((Value) parameter);
+                            if (parameter instanceof Value) {
+                                parametersBundle.getRoles().add((Value) parameter);
+                            } else {
+                                log.error("Parameter is not an instance of Value: {}", parameter);
+                            }
                         }
                         break;
                     }
@@ -685,7 +693,7 @@ public class FileHandler {
             }
 
             if (didSomething) {
-                log.info("Extracting the roles ended");
+                log.debug("Extracting the roles ended");
             }
         } catch (Exception e) {
             log.error("An unexpected error occurred while identifying roles: {}", e.getMessage());
@@ -821,7 +829,7 @@ public class FileHandler {
                 }
             }
             if (didSomething) {
-                System.out.println("--------------------------------\nDEMerging of tags and values ended\n--------------------------------");
+                log.debug("--------------------------------\nDEMerging of tags and values ended\n--------------------------------");
             }
         }
         return theory;

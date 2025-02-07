@@ -37,7 +37,7 @@ public class UtilityFunctions {
             parametersBundle.setTheory(new ArrayList<>(clonedTheory));
             // Arrange the cloned theory
             parametersBundle = fileHandler.arrangeTheory(parametersBundle);
-            log.info("Successfully cloned and arranged the theory.");
+            log.debug("Successfully cloned and arranged the theory.");
         } catch (Exception e) {
             log.error("Error occurred while cloning and arranging the theory: ", e);
         }

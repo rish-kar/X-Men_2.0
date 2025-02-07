@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component;
 public class SkipSendMutation {
 
     public void sampleFunction() {
-        log.info("Sample function called");
+        log.debug("Sample function called");
     }
 }

@@ -48,7 +48,7 @@ public class FileLoadingService {
             }
         }
 
-        log.info("Starting Tamarin validation for file: {}", file.getOriginalFilename());
+        log.debug("Starting Tamarin validation for file: {}", file.getOriginalFilename());
 
 
         // TODO: Implement TamarinValidator.validateTamarinFile(file)
