@@ -1,4 +1,4 @@
-package com.sermas.x.men.integration.tests;
+package com.sermas.x.men.integrationTests;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

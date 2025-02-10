@@ -72,5 +72,4 @@ public class MutationGeneratorServiceImpl implements MutationGeneratorService {
         }
         return human_rules;
     }
-
 }

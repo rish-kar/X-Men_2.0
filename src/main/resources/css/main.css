@@ -1,0 +1,22 @@
+/* main.css */
+
+.glass-panel {
+    /* A dark translucent background */
+    -fx-background-color: rgba(0, 0, 0, 0.1);
+
+    /* Rounded corners */
+    -fx-background-radius: 10;
+
+    /* Padding inside the panel */
+    -fx-padding: 20;
+
+    /* Optional drop shadow for depth */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.9), 22, 0.7, 0, 0);
+}
+
+.glass-panel Label,
+.glass-panel .check-box {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}

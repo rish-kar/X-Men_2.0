@@ -1,6 +1,8 @@
 spring:
   application:
     name: X-Men
+  main:
+    headless: false
 
 server:
   port: 8081

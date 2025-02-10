@@ -61,7 +61,7 @@ public class PSpecial extends Special implements Cloneable, Comparable {
                         str = str.concat(",");
                     }
                 } else {
-                    str = str.concat(((Value)this.group.get(po)).toString());
+                    str = str.concat(((Value) this.group.get(po)).toString());
                     if (this.group.size() != 1 && po < this.group.size() - 1) {
                         str = str.concat(",");
                     }

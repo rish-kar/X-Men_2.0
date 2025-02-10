@@ -1,4 +1,4 @@
-package com.sermas.x.men.integration.tests;
+package com.sermas.x.men.integrationTests;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-public class SkipSendTests {
+public class SkipReceiveSendReceiveTests {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -45,17 +45,16 @@ public class SkipSendTests {
     public void tearDown() throws Exception {
         // Delete generated files
         Files.deleteIfExists(Paths.get("Oyster_M0.m"));
-        Files.deleteIfExists(Paths.get("Oyster_M1.m"));
     }
 
     /**
-     * Test Skip Send Mutation - Multi Endpoint
+     * Test Skip Receive Send Receive Mutation - Multi Endpoint.
      *
      * @throws Exception Exception Object
      */
     @Test
-    @DisplayName("Test Skip Send Mutation - Multi Endpoint")
-    public void testSkipSendMultiEndpoint() throws Exception {
+    @DisplayName("Test Skip Receive Send Receive Mutation - Multi Endpoint")
+    public void testSkipReceiveSendReceiveMultiEndpoint() throws Exception {
         // Prepare the MultipartFile
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -67,37 +66,35 @@ public class SkipSendTests {
         // Perform the request
         mockMvc.perform(multipart("/api/generateMutations")
                         .file(file)
-                        .header("Skip-Send", "true"))
+                        .header("Skip-Receive-Send-Receive", "true"))
                 .andExpect(status().isOk());
 
         // Verify the generated files
-        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/SkipSend_0.m"));
-        assertThat(new File("Oyster_M1.m")).hasSameContentAs(new File("src/test/resources/SkipSend_1.m"));
+        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/SkipReceiveSendReceive_0.m"));
     }
 
     /**
-     * Test Skip Send Mutation - Single Endpoint
+     * Test Skip Receive Send Receive Mutation - Single Endpoint.
      *
      * @throws Exception Exception Object
      */
     @Test
-    @DisplayName("Test Skip Send Mutation - Single Endpoint")
-    public void testSkipSendSingleEndpoint() throws Exception {
+    @DisplayName("Test Skip Receive Send Receive Mutation - Single Endpoint")
+    public void testSkipReceiveSendReceiveSingleEndpoint() throws Exception {
         // Prepare the MultipartFile
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "Oyster.spthy",
-                MediaType.MULTIPART_FORM_DATA_VALUE,
+                MediaType.TEXT_PLAIN_VALUE,
                 Files.readAllBytes(Paths.get("src/test/resources/Oyster.spthy"))
         );
 
         // Perform the request
-        mockMvc.perform(multipart("/api/skip/sendMutations")
+        mockMvc.perform(multipart("/api/skip/receiveSendReceiveMutations")
                         .file(file))
                 .andExpect(status().isOk());
 
         // Verify the generated files
-        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/SkipSend_0.m"));
-        assertThat(new File("Oyster_M1.m")).hasSameContentAs(new File("src/test/resources/SkipSend_1.m"));
+        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/SkipReceiveSendReceive_0.m"));
     }
 }

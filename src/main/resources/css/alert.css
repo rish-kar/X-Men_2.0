@@ -1,0 +1,112 @@
+/* alert.css */
+
+/* Main dialog gradient */
+.my-alert {
+    -fx-background-color: linear-gradient(to bottom,
+        #0C1C26 0%,       /* Dark navy */
+        #154A5A 50%,      /* Intermediate teal-blue */
+        #479BA8 100%);    /* Main teal */
+    -fx-padding: 15;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.5, 0, 2);
+}
+
+/* Header panel with enforced gradient */
+.my-alert .dialog-pane .header-panel {
+    -fx-background-color: linear-gradient(to bottom,
+        #0C1C26 0%,
+        #154A5A 50%,
+        #479BA8 100%) !important;
+    -fx-background-insets: 0;
+    -fx-min-height: 40px;
+    -fx-pref-height: 40px;
+    -fx-border-color: #479BA88D !important;
+    -fx-border-width: 0 0 2px 0 !important;
+    -fx-background-radius: 8 8 0 0;
+    -fx-padding: 12 15 !important;
+}
+
+/* Header text styling */
+.my-alert .header-panel .label {
+    -fx-text-fill: #f0f8ff !important;
+    -fx-font-size: 18px !important;
+    -fx-font-weight: 700;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 3, 0.5, 1, 1) !important;
+    -fx-padding: 5px 0;
+}
+
+/* Content area styling with centered alignment */
+.my-alert .content {
+    -fx-text-fill: #f0f8ff;
+    -fx-font-size: 30px;
+    -fx-line-spacing: 3px;
+    -fx-padding: 15 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 1.5, 0.5, 1, 1);
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+
+/* Additional requirement for text centering */
+.my-alert .content.label {
+    -fx-min-width: 400px;  /* Ensures consistent width for centering */
+    -fx-wrap-text: true;   /* Optional: Enable if using long text */
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+}
+
+/* Button styling */
+.my-alert .button-bar .button {
+    -fx-background-color: linear-gradient(to bottom,
+        #0A3366 0%,
+        #0C1C26 50%,
+        #154A5A 100%);
+    -fx-background-radius: 4;
+    -fx-padding: 8 20;
+    -fx-border-color: #479BA8;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-effect: innershadow(gaussian, rgba(255,255,255,0.2), 2, 0.5, 0, 1);
+    -fx-text-fill: #ffffff !important;
+}
+
+/* Button states */
+.my-alert .button-bar .button:hover {
+    -fx-background-color: linear-gradient(to bottom,
+        #154A5A 0%,
+        #1D6B7F 50%,
+        #479BA8 100%);
+}
+
+.my-alert .button-bar .button:pressed {
+    -fx-background-color: linear-gradient(to bottom,
+        #0C1C26 0%,
+        #0A3366 50%,
+        #154A5A 100%);
+    -fx-effect: innershadow(gaussian, rgba(0,0,0,0.5), 2, 0.5, 0, 1);
+}
+
+/* Default button (OK) styling */
+.my-alert .button-bar .button:default {
+    -fx-background-color: linear-gradient(to bottom,
+        #1D6B7F 0%,
+        #154A5A 50%,
+        #0C1C26 100%);
+}
+
+/* Typography */
+.my-alert .header-panel .label,
+.my-alert .content,
+.my-alert .button-bar .button {
+    -fx-font-family: "Segoe UI", "Verdana", sans-serif;
+    -fx-font-weight: 600;
+}
+
+/* Spacing and layout */
+.my-alert .dialog-pane:header .header-panel {
+    -fx-spacing: 10;
+}
+
+.my-alert .button-bar {
+    -fx-padding: 15 20 10 20;
+    -fx-spacing: 12;
+}
