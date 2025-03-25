@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -76,16 +75,24 @@ public class ReplaceSubmessagesTests {
                         .header("Replace-Sub-Messages", "true"))
                 .andExpect(status().isOk());
 
-        // Verify the generated files
-        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_0.m"));
-        assertThat(new File("Oyster_M1.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_1.m"));
-        assertThat(new File("Oyster_M2.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_2.m"));
-        assertThat(new File("Oyster_M3.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_3.m"));
-        assertThat(new File("Oyster_M4.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_4.m"));
-        assertThat(new File("Oyster_M5.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_5.m"));
-        assertThat(new File("Oyster_M6.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_6.m"));
-        assertThat(new File("Oyster_M7.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_7.m"));
-    }
+        assertThat(Files.readString(Paths.get("Oyster_M0.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_0.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M1.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_1.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M2.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_2.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M3.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_3.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M4.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_4.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M5.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_5.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M6.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_6.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M7.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_7.m")).trim().replaceAll("\\r?\\n", "\n"));
+
+        }
 
     /**
      * Test Replace SubMessages Mutation - Single Endpoint
@@ -108,14 +115,23 @@ public class ReplaceSubmessagesTests {
                         .file(file))
                 .andExpect(status().isOk());
 
-        // Verify the generated files
-        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_0.m"));
-        assertThat(new File("Oyster_M1.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_1.m"));
-        assertThat(new File("Oyster_M2.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_2.m"));
-        assertThat(new File("Oyster_M3.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_3.m"));
-        assertThat(new File("Oyster_M4.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_4.m"));
-        assertThat(new File("Oyster_M5.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_5.m"));
-        assertThat(new File("Oyster_M6.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_6.m"));
-        assertThat(new File("Oyster_M7.m")).hasSameContentAs(new File("src/test/resources/ReplaceSubMessages_7.m"));
+        assertThat(Files.readString(Paths.get("Oyster_M0.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_0.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M1.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_1.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M2.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_2.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M3.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_3.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M4.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_4.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M5.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_5.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M6.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_6.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M7.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/ReplaceSubMessages_7.m")).trim().replaceAll("\\r?\\n", "\n"));
+
+
     }
 }

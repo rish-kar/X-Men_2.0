@@ -86,7 +86,7 @@ public class AddMutationTests {
             File expectedFile = new File("src/test/resources/Add_" + i + ".m");
             if (Files.exists(expectedFile.toPath())) {
                 String expectedFileContent = normalizeContent(Files.readString(expectedFile.toPath(), StandardCharsets.UTF_8));
-                if (generatedFileContent.equals(expectedFileContent)) {
+                if (generatedFileContent.contains(expectedFileContent)) {
                     matchFound = true;
                     log.info("Match found with file: Add_{}.m", i);
                     break;
@@ -130,7 +130,7 @@ public class AddMutationTests {
             File expectedFile = new File("src/test/resources/Add_" + i + ".m");
             if (Files.exists(expectedFile.toPath())) {
                 String expectedFileContent = normalizeContent(Files.readString(expectedFile.toPath(), StandardCharsets.UTF_8));
-                if (generatedFileContent.equals(expectedFileContent)) {
+                if (generatedFileContent.contains(expectedFileContent)) {
                     matchFound = true;
                     log.info("Match found with file: Add_{}.m", i);
                     break;

@@ -1,6 +1,5 @@
 package com.sermas.x.men.service.impl;
 
-import com.sermas.x.men.model.Flags;
 import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.MutationStrategy;

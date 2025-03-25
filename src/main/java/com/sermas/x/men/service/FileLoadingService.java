@@ -79,4 +79,17 @@ public class FileLoadingService {
         }
         return null;
     }
+
+    public ParametersBundle loadRulesFromString(String rulesContent, ParametersBundle bundle) {
+        // Implement your rule parsing logic
+        ArrayList<Rule> rules = parseRules(rulesContent);
+        bundle.getCollections().clear();
+        bundle.getCollections().add(rules);
+        return bundle;
+    }
+
+    private ArrayList<Rule> parseRules(String rulesContent) {
+        // Add actual parsing implementation
+        return new ArrayList<>();
+    }
 }

@@ -7,6 +7,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Getter
@@ -23,4 +25,16 @@ public class ParametersBundle {
     ArrayList<Value> roles;
     Boolean modelWithTags = false;
     Flags flags;
+
+    // New field to store additional content
+    private Map<String, String> extraContent = new HashMap<>();
+
+    // New methods to handle additional content
+    public void addExtraContent(String key, String value) {
+        this.extraContent.put(key, value);
+    }
+
+    public String getExtraContent(String key) {
+        return this.extraContent.getOrDefault(key, "");
+    }
 }

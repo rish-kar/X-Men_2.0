@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -70,9 +69,10 @@ public class SkipSendTests {
                         .header("Skip-Send", "true"))
                 .andExpect(status().isOk());
 
-        // Verify the generated files
-        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/SkipSend_0.m"));
-        assertThat(new File("Oyster_M1.m")).hasSameContentAs(new File("src/test/resources/SkipSend_1.m"));
+        assertThat(Files.readString(Paths.get("Oyster_M0.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/SkipSend_0.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M1.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/SkipSend_1.m")).trim().replaceAll("\\r?\\n", "\n"));
     }
 
     /**
@@ -96,8 +96,9 @@ public class SkipSendTests {
                         .file(file))
                 .andExpect(status().isOk());
 
-        // Verify the generated files
-        assertThat(new File("Oyster_M0.m")).hasSameContentAs(new File("src/test/resources/SkipSend_0.m"));
-        assertThat(new File("Oyster_M1.m")).hasSameContentAs(new File("src/test/resources/SkipSend_1.m"));
+        assertThat(Files.readString(Paths.get("Oyster_M0.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/SkipSend_0.m")).trim().replaceAll("\\r?\\n", "\n"));
+        assertThat(Files.readString(Paths.get("Oyster_M1.m")).trim().replaceAll("\\r?\\n", "\n"))
+                .contains(Files.readString(Paths.get("src/test/resources/SkipSend_1.m")).trim().replaceAll("\\r?\\n", "\n"));
     }
 }

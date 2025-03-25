@@ -1,14 +1,10 @@
 package com.sermas.x.men;
 
 import com.sermas.x.men.user_interface.XMenInterface;
-import com.sermas.x.men.utilities.UtilityFunctions;
-import javafx.application.Platform;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-
-import javax.swing.*;
 
 @SpringBootApplication(scanBasePackages = "com.sermas.x.men")
 public class Application implements CommandLineRunner {

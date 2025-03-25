@@ -1,9 +1,11 @@
 package com.sermas.x.men.controller;
 
+import com.sermas.x.men.model.InMemoryMultipartFile;
 import com.sermas.x.men.model.Mutations;
 import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
+import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.utilities.TagSetter;
 import org.apache.tomcat.util.digester.Rules;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Set;
@@ -34,6 +37,9 @@ public class MutationController {
     @Qualifier("mutationGeneratorServiceImpl")
     public MutationGeneratorService mutationGeneratorService;
 
+    @Autowired
+    private FileSplitterService fileSplitterService;
+
 
     @PostMapping("/generateMutations")
     public ResponseEntity<ArrayList<Rules>> generateMutations(
@@ -49,9 +55,8 @@ public class MutationController {
 
         ParametersBundle parametersBundle = new ParametersBundle();
 
-        // Create a set of mutations based on the request headers
+        // Create mutation set from headers
         Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
-
         if (Boolean.TRUE.equals(skipSend)) mutationSet.add(Mutations.SKIP_SEND);
         if (Boolean.TRUE.equals(skipReceive)) mutationSet.add(Mutations.SKIP_RECEIVE);
         if (Boolean.TRUE.equals(skipSendReceive)) mutationSet.add(Mutations.SKIP_SEND_RECEIVE);
@@ -61,15 +66,37 @@ public class MutationController {
         if (Boolean.TRUE.equals(replaceSubMessages)) mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
         if (Boolean.TRUE.equals(replaceType)) mutationSet.add(Mutations.REPLACE_TYPE);
 
-        // Set tags based on the mutation set
-        parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
+        // Process file content
+        String fileContent = new String(file.getBytes());
+        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
 
-        // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
-        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+        // Create virtual MultipartFile for rules section
+        MultipartFile rulesFile = new InMemoryMultipartFile(
+                "rulesFile",
+                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+                "text/plain",
+                sections.rules().getBytes(StandardCharsets.UTF_8)
+        );
+
+        // Set tags and load rules
+        parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
+        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
+
+        // Store file sections
+        parametersBundle.addExtraContent("preamble", sections.preamble());
+        parametersBundle.addExtraContent("postamble", sections.postamble());
+
+        // Generate mutations
+        ArrayList<Rule> originalRules = parametersBundle.getCollections().get(0);
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, mutationSet, parametersBundle);
+
+        ArrayList<Rule> mutatedRules = mutationGeneratorService.generateMutation(
+                originalRules,
+                mutationSet,
+                parametersBundle
+        );
+
         return ResponseEntity.ok(null);
     }
 

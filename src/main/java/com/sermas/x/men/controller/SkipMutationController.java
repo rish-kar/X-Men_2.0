@@ -1,9 +1,11 @@
 package com.sermas.x.men.controller;
 
+import com.sermas.x.men.model.InMemoryMultipartFile;
 import com.sermas.x.men.model.Mutations;
 import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
+import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -31,6 +34,9 @@ public class SkipMutationController {
     @Qualifier("mutationGeneratorServiceImpl")
     MutationGeneratorService mutationGeneratorService;
 
+    @Autowired
+    private FileSplitterService fileSplitterService;
+
 
     /**
      * Trigger skipping of send mutation.
@@ -43,8 +49,20 @@ public class SkipMutationController {
 
         ParametersBundle parametersBundle = new ParametersBundle();
 
+        // Process file content
+        String fileContent = new String(file.getBytes());
+        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+
+        // Create virtual MultipartFile for rules section
+        MultipartFile rulesFile = new InMemoryMultipartFile(
+                "rulesFile",
+                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+                "text/plain",
+                sections.rules().getBytes(StandardCharsets.UTF_8)
+        );
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
@@ -65,8 +83,20 @@ public class SkipMutationController {
 
         ParametersBundle parametersBundle = new ParametersBundle();
 
+        // Process file content
+        String fileContent = new String(file.getBytes());
+        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+
+        // Create virtual MultipartFile for rules section
+        MultipartFile rulesFile = new InMemoryMultipartFile(
+                "rulesFile",
+                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+                "text/plain",
+                sections.rules().getBytes(StandardCharsets.UTF_8)
+        );
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
@@ -87,8 +117,20 @@ public class SkipMutationController {
 
         ParametersBundle parametersBundle = new ParametersBundle();
 
+        // Process file content
+        String fileContent = new String(file.getBytes());
+        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+
+        // Create virtual MultipartFile for rules section
+        MultipartFile rulesFile = new InMemoryMultipartFile(
+                "rulesFile",
+                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+                "text/plain",
+                sections.rules().getBytes(StandardCharsets.UTF_8)
+        );
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
@@ -109,8 +151,20 @@ public class SkipMutationController {
 
         ParametersBundle parametersBundle = new ParametersBundle();
 
+        // Process file content
+        String fileContent = new String(file.getBytes());
+        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+
+        // Create virtual MultipartFile for rules section
+        MultipartFile rulesFile = new InMemoryMultipartFile(
+                "rulesFile",
+                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+                "text/plain",
+                sections.rules().getBytes(StandardCharsets.UTF_8)
+        );
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());
@@ -131,8 +185,20 @@ public class SkipMutationController {
 
         ParametersBundle parametersBundle = new ParametersBundle();
 
+        // Process file content
+        String fileContent = new String(file.getBytes());
+        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+
+        // Create virtual MultipartFile for rules section
+        MultipartFile rulesFile = new InMemoryMultipartFile(
+                "rulesFile",
+                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+                "text/plain",
+                sections.rules().getBytes(StandardCharsets.UTF_8)
+        );
+
         // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(file, parametersBundle);
+        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
         ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
         parametersBundle.getCollections().clear();
         parametersBundle.setFileName(file.getOriginalFilename());

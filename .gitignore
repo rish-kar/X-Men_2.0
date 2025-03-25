@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+javafx-libs/
+myruntime/
+
+# Ignore all .exe files
+*.exe

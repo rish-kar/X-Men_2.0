@@ -23,101 +23,76 @@ public class MutatedFileGenerator {
     @Autowired
     private FileHandler fileHandler;
 
-    /**
-     * Saves the mutated models to files.
-     *
-     * @param parametersBundle The final parameters bundle containing the models to be saved.
-     */
     public void saveFiles(ParametersBundle parametersBundle) {
         deleteExistingMutatedFiles();
 
-        // Get parameters from the ParametersBundle
         String filename = parametersBundle.getFileName();
         ArrayList<ArrayList> collections = parametersBundle.getCollections();
         ArrayList<Function> functions = parametersBundle.getFunctions();
         ArrayList<Builtins> builtins = parametersBundle.getBuiltins();
 
-        // Get the directory path of the file
-        String directoryPath = Paths.get("").toAbsolutePath().normalize().toString();
-        directoryPath = directoryPath.substring(0, directoryPath.lastIndexOf("/") + 1);
+        // Get stored sections
+        String preamble = parametersBundle.getExtraContent("preamble");
+        String postamble = parametersBundle.getExtraContent("postamble");
+
+        String baseName = filename.split("\\.(?=[^\\.]+$)")[0];
         int fileCounter = 0;
 
-        // Iterate through each model in the collections
         for (ArrayList<Rule> model : collections) {
-            // De-merge tags and values in the model
             model = fileHandler.demergeTagsValues(model, parametersBundle);
+            String newFileName = baseName + "_M" + fileCounter + ".m";
 
-            // Split the file name to create new file names
-            String[] fileNameTokens = filename.split("\\.(?=[^\\.]+$)");
-            String newFileName = directoryPath + fileNameTokens[0] + "_M" + fileCounter + ".m";
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFileName))) {
+                // Write preamble
+                writer.write(preamble);
+                writer.newLine();
+                writer.newLine();
 
-            BufferedWriter writer = null;
-            try {
-                // Initialize the BufferedWriter
-                writer = new BufferedWriter(new FileWriter(newFileName, false));
-
-                // Write functions if they exist
+                // Write functions
                 if (!functions.isEmpty()) {
-                    writer.append("functions: ");
+                    writer.write("functions: ");
                     Iterator<Function> iter = functions.iterator();
                     while (iter.hasNext()) {
-                        writer.append(iter.next().toString());
+                        writer.write(iter.next().toString());
                         if (iter.hasNext()) {
-                            writer.append(",");
+                            writer.write(",");
                         }
                     }
-                    writer.append("\n\n");
+                    writer.newLine();
+                    writer.newLine();
                 }
 
-                // Write builtins if they exist
+                // Write builtins
                 if (!builtins.isEmpty()) {
-                    writer.append(builtins.get(0).toString());
-                    writer.append("\n\n");
+                    writer.write(builtins.get(0).toString());
+                    writer.newLine();
+                    writer.newLine();
                 }
 
-                // Write each rule in the model
+                // Write rules
                 for (Rule rule : model) {
-                    writer.append(rule.toString());
+                    writer.write(rule.toString());
                 }
 
-                // Increment the file counter
+                // Write postamble
+                writer.newLine();
+                writer.write(postamble);
+
                 fileCounter++;
             } catch (IOException e) {
-                // Log the error if an exception occurs
-                log.error("An error occurred while saving the file: {}", e.getMessage());
-            } finally {
-                // Close the writer in the finally block to ensure it is closed even if an exception occurs
-                if (writer != null) {
-                    try {
-                        writer.close();
-                    } catch (IOException e) {
-                        log.error("An error occurred while closing the writer: {}", e.getMessage());
-                    }
-                }
+                log.error("Error saving file {}: {}", newFileName, e.getMessage());
             }
         }
     }
 
-    /**
-     * Deletes all mutated files in the current directory.
-     * This method is used to clean up the directory with existing files before new mutations are written into files.
-     */
     public void deleteExistingMutatedFiles() {
-
-        // Get the directory path of the file
-        String directoryPath = Paths.get("").toAbsolutePath().normalize().toString();
-        File directory = new File(directoryPath);
-
-        // Get all files in the directory that contain "_M" in their name and end with ".m"
+        File directory = new File(Paths.get("").toAbsolutePath().toString());
         File[] files = directory.listFiles((dir, name) -> name.contains("_M") && name.endsWith(".m"));
 
-        // Delete each file in the directory
         if (files != null) {
             for (File file : files) {
-                if (file.delete()) {
-                    log.debug("Deleted file: " + file.getName());
-                } else {
-                    log.error("Failed to delete file: " + file.getName());
+                if (!file.delete()) {
+                    log.error("Failed to delete file: {}", file.getName());
                 }
             }
         }

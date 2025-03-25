@@ -7,6 +7,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
@@ -15,23 +17,16 @@ import javafx.scene.media.MediaView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
-
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class XMenInterface extends Application {
@@ -76,11 +71,18 @@ public class XMenInterface extends Application {
     private MediaView createSplashScreen(StackPane splashRoot, Stage stage) {
         MediaView splashMediaView = new MediaView();
         try {
-            URL splashUrl = getClass().getResource("/X-Men-Logo.mp4");
-            if (splashUrl == null) {
+            InputStream videoStream = getClass().getResourceAsStream("/X-Men-Logo.mp4");
+            if (videoStream == null) {
                 throw new Exception("Resource /X-Men-Logo.mp4 not found.");
             }
-            Media splashMedia = new Media(splashUrl.toExternalForm());
+
+            // Copy the video to a temporary file
+            File tempVideoFile = File.createTempFile("splash", ".mp4");
+            tempVideoFile.deleteOnExit();
+            Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            // Load the video from the temporary file
+            Media splashMedia = new Media(tempVideoFile.toURI().toString());
             MediaPlayer splashPlayer = new MediaPlayer(splashMedia);
             splashPlayer.setCycleCount(1);
             splashPlayer.setAutoPlay(true);
@@ -131,11 +133,19 @@ public class XMenInterface extends Application {
     private MediaView setupMediaView(Stage stage) {
         MediaView mediaView = new MediaView();
         try {
-            URL mediaUrl = getClass().getResource("/DNA-Background.mp4");
-            if (mediaUrl == null) {
+
+            // Load the video as an InputStream from resources
+            InputStream videoStream = getClass().getResourceAsStream("/DNA-Background.mp4");
+            if (videoStream == null) {
                 throw new Exception("Resource /DNA-Background.mp4 not found.");
             }
-            Media media = new Media(mediaUrl.toExternalForm());
+
+            // Copy the video to a temporary file
+            File tempVideoFile = File.createTempFile("dna", ".mp4");
+            tempVideoFile.deleteOnExit();
+            Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            Media media = new Media(tempVideoFile.toURI().toString());
             mediaPlayer = new MediaPlayer(media);
             mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
             mediaView.setMediaPlayer(mediaPlayer);
@@ -167,7 +177,10 @@ public class XMenInterface extends Application {
 
         // Initialize buttons
         buttonUpload = new Button("Upload File");
+        buttonUpload.setId("buttonUpload");
+
         buttonStart = new Button("Start Mutation");
+        buttonStart.setId("buttonStart");
         setupButton(buttonUpload);
         setupButton(buttonStart);
 
@@ -218,15 +231,34 @@ public class XMenInterface extends Application {
         // Initialize check boxes.
         String checkboxStyle = "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;";
         cbSkipS = new CheckBox("Send");
+        cbSkipS.setId("cbSkipS");
+
         cbSkipSR = new CheckBox("Send Receive");
+        cbSkipSR.setId("cbSkipSR");
+
         cbSkipR = new CheckBox("Receive");
+        cbSkipR.setId("cbSkipR");
+
         cbSkipRS = new CheckBox("Receive Send");
+        cbSkipRS.setId("cbSkipRS");
+
         cbSkipRSR = new CheckBox("Receive Send Receive");
+        cbSkipRSR.setId("cbSkipRSR");
+
         cbAdd = new CheckBox("Add");
+        cbAdd.setId("cbAdd");
+
         cbSubmessages = new CheckBox("Sub Messages");
+        cbSubmessages.setId("cbSubmessages");
+
         cbType = new CheckBox("Type");
+        cbType.setId("cbType");
+
         cbCombineAddition = new CheckBox("Combination in Addition");
+        cbCombineAddition.setId("cbCombineAddition");
+
         cbCombineOnly = new CheckBox("Combination Only");
+        cbCombineOnly.setId("cbCombineOnly");
 
         // Apply style to check boxes.
         cbSkipS.setStyle(checkboxStyle);
@@ -288,8 +320,9 @@ public class XMenInterface extends Application {
                 .addFormDataPart("file", selectedFile.getName(), fileBody);
 
         // Updated URL: using port 8081 to match the server's port.
-        Request.Builder requestBuilder = new Request.Builder()
-                .url("http://localhost:8081/api/generateMutations");
+        String apiUrl = System.getProperty("app.api.url", "http://localhost:8081/api/generateMutations");
+        Request.Builder requestBuilder = new Request.Builder().url(apiUrl);
+
 
         // Add headers based on the state of the checkboxes.
         if (cbSkipS.isSelected())      requestBuilder.addHeader("Skip-Send", "true");
