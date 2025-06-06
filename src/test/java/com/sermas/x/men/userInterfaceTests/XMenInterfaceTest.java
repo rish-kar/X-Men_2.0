@@ -1,36 +1,41 @@
 package com.sermas.x.men.userInterfaceTests;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.testfx.util.WaitForAsyncUtils.waitFor;
+import static org.testfx.util.WaitForAsyncUtils.waitForFxEvents;
+
 import com.sermas.x.men.user_interface.XMenInterface;
+import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.application.Platform;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.MediaView;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 
-import java.io.File;
-import java.lang.reflect.Method;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * Test cases for XMenInterface.
  *
- * <p>
  * These tests use TestFX (for JavaFX UI testing) and OkHttp’s MockWebServer
  * (to simulate HTTP responses) to verify that the splash screen, main scene,
  * button actions, and HTTP callbacks are working as expected.
- * </p>
  */
 public class XMenInterfaceTest extends ApplicationTest {
 
@@ -58,8 +63,10 @@ public class XMenInterfaceTest extends ApplicationTest {
     @Test
     @DisplayName("Test Splash Screen Displayed")
     public void testSplashScreenDisplayed() throws InterruptedException {
+
         // Give a short delay to allow the splash scene to render.
         sleep(500);
+
         // Try to find a MediaView or a Label with the fallback text.
         MediaView mediaView = (MediaView) lookup(".media-view").queryAll().stream().findFirst().orElse(null);
         Label fallbackLabel = lookup("Splash Video not available").queryAll().stream()
@@ -67,6 +74,8 @@ public class XMenInterfaceTest extends ApplicationTest {
                 .map(node -> (Label) node)
                 .findFirst()
                 .orElse(null);
+
+        // Assert that either the MediaView or the fallback Label is present.
         assertTrue(mediaView != null || fallbackLabel != null,
                 "Either a MediaView or a fallback Label should be displayed on the splash screen");
     }
@@ -74,30 +83,49 @@ public class XMenInterfaceTest extends ApplicationTest {
     @Test
     @DisplayName("Test Switch to Main Scene")
     public void testSwitchToMainScene() throws InterruptedException {
+
         // Wait for more than 5 seconds so that the splash scene is replaced.
         sleep(6000);
         Scene currentScene = stage.getScene();
         assertNotNull(currentScene, "Scene should not be null after splash screen");
+
         // Lookup the GridPane by its style class that is actually applied.
         GridPane gridPane = (GridPane) currentScene.getRoot().lookup(".glass-panel");
         assertNotNull(gridPane, "Main scene should contain a GridPane with the checkboxes and buttons");
     }
 
-
     @Test
-    @DisplayName("Test Start Mutation Without File")
-    public void testStartMutationWithoutFile() throws InterruptedException {
-        sleep(6000); // Wait for main scene.
-        Button startButton = lookup("Start Mutation").queryButton();
-        assertNotNull(startButton, "Start Mutation button should exist");
-        clickOn(startButton);
-        sleep(1000); // Allow time for the alert to show.
-        DialogPane alertPane = lookup(".dialog-pane").query();
-        assertNotNull(alertPane, "A warning alert dialog should be displayed when no file is selected");
-        String contentText = alertPane.getContentText();
-        assertTrue(contentText.contains("Please Upload a File"), "Alert should advise to upload a file");
-        // Close the alert by clicking the OK button.
-        clickOn("OK");
+    @DisplayName("Start-Mutation shows warning when no file uploaded")
+    void testStartMutationWithoutFile() throws TimeoutException {
+        /* ── 1 ▸ wait for #buttonStart to exist AND its window to be showing ── */
+        waitFor(10, TimeUnit.SECONDS, () -> {
+            Button b = lookup("#buttonStart").tryQueryAs(Button.class).orElse(null);
+            if (b == null || b.getScene() == null) return false;
+            Window w = b.getScene().getWindow();
+            return w != null && w.isShowing();
+        });
+
+        Button startButton = lookup("#buttonStart").queryAs(Button.class);
+        // fire the action on the FX thread — no robot, no coordinates
+        interact(startButton::fire);
+        waitForFxEvents();
+
+        /* ── 2 ▸ wait until the Alert is visible ──────────────────────────── */
+        waitFor(5, TimeUnit.SECONDS, () -> {
+            DialogPane pane = lookup(".dialog-pane").tryQueryAs(DialogPane.class).orElse(null);
+            if (pane == null || pane.getScene() == null) return false;
+            Window w = pane.getScene().getWindow();
+            return w != null && w.isShowing();
+        });
+
+        DialogPane alertPane = lookup(".dialog-pane").queryAs(DialogPane.class);
+        assertTrue(alertPane.getContentText().contains("Please Upload a File"),
+                "Alert should advise to upload a file");
+
+        /* ── 3 ▸ close the Alert safely ──────────── */
+        Button okButton = (Button) alertPane.lookupButton(ButtonType.OK);
+        interact(okButton::fire);
+        waitForFxEvents();
     }
 
     @Test
@@ -109,6 +137,7 @@ public class XMenInterfaceTest extends ApplicationTest {
                 Method setupButtonMethod = XMenInterface.class.getDeclaredMethod("setupButton", Button.class);
                 setupButtonMethod.setAccessible(true);
                 setupButtonMethod.invoke(app, testButton);
+
                 // Check that the preferred size and style are set.
                 assertEquals(150, testButton.getPrefWidth(), "Button preferred width should be 150");
                 assertEquals(40, testButton.getPrefHeight(), "Button preferred height should be 40");
@@ -126,13 +155,18 @@ public class XMenInterfaceTest extends ApplicationTest {
     public void testCreateMainScene() {
         Platform.runLater(() -> {
             try {
+                // Create a dummy Stage to pass to the method
                 Method createMainSceneMethod = XMenInterface.class.getDeclaredMethod("createMainScene", Stage.class);
                 createMainSceneMethod.setAccessible(true);
                 Scene mainScene = (Scene) createMainSceneMethod.invoke(app, stage);
                 assertNotNull(mainScene, "createMainScene should return a non-null Scene");
+
+                // Check that the scene contains a StackPane with a MediaView and GridPane
                 StackPane root = (StackPane) mainScene.getRoot();
                 MediaView mediaView = null;
                 GridPane gridPane = null;
+
+                // Iterate through the children of the root to find MediaView and GridPane
                 for (javafx.scene.Node node : root.getChildren()) {
                     if (node instanceof MediaView) {
                         mediaView = (MediaView) node;
@@ -156,8 +190,12 @@ public class XMenInterfaceTest extends ApplicationTest {
             try {
                 StackPane splashRoot = new StackPane();
                 Stage dummyStage = new Stage();
+
+                // Use reflection to access the private method createSplashScreen
                 Method createSplashScreenMethod = XMenInterface.class.getDeclaredMethod("createSplashScreen", StackPane.class, Stage.class);
                 createSplashScreenMethod.setAccessible(true);
+
+                // Invoke the method to create the splash screen
                 MediaView splashMediaView = (MediaView) createSplashScreenMethod.invoke(app, splashRoot, dummyStage);
                 boolean fallbackFound = splashRoot.getChildren().stream()
                         .anyMatch(node -> node instanceof Label
@@ -171,80 +209,80 @@ public class XMenInterfaceTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
     }
 
-//    @Test
-//    @DisplayName("Test Send Mutation Request Success")
-//    public void testSendMutationRequestSuccess() throws Exception {
-//        MockWebServer server = new MockWebServer();
-//        try {
-//            // 1. Start MockWebServer on a random port
-//            server.start(0); // Let OS assign a free port
-//            int serverPort = server.getPort();
-//
-//            // 2. Configure the app to use the mock server's port
-//            System.setProperty("app.api.url", "http://localhost:" + serverPort + "/api/generateMutations");
-//
-//            // 3. Load the file internally from the resource folder
-//            File tempFile;
-//            try (InputStream is = getClass().getResourceAsStream("/Oyster.spthy")) {
-//                if (is == null) {
-//                    fail("Resource Oyster.spthy not found");
-//                }
-//                tempFile = File.createTempFile("Oyster", ".spthy");
-//                Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-//            }
-//
-//            // 4. Update the 'selectedFile' field on the JavaFX Application Thread
-//            Field selectedFileField = XMenInterface.class.getDeclaredField("selectedFile");
-//            selectedFileField.setAccessible(true);
-//            Platform.runLater(() -> {
-//                try {
-//                    selectedFileField.set(app, tempFile);
-//                } catch (Exception e) {
-//                    throw new RuntimeException("Failed to update selectedFile", e);
-//                }
-//            });
-//            WaitForAsyncUtils.waitForFxEvents();
-//
-//            // 5. Wait for the main scene to load
-//            WaitForAsyncUtils.waitForFxEvents();
-//            sleep(6000);
-//
-//            // 6. Ensure the CheckBox is present in the scene graph
-//            CheckBox cbSkipS = lookup("#cbSkipS").query();
-//            assertNotNull(cbSkipS, "CheckBox with fx:id='cbSkipS' should be present in the scene graph");
-//
-//            // 7. Select the checkbox via UI interaction
-//            clickOn(cbSkipS);
-//
-//            // 8. Enqueue a mock success response
-//            server.enqueue(new MockResponse()
-//                    .setResponseCode(200)
-//                    .setBody("Success"));
-//
-//            // 9. Click the "Start Mutation" button
-//            clickOn("#buttonStart");
-//
-//            // 10. Wait for the request to complete and alert to appear
-//            RecordedRequest request = server.takeRequest(5, TimeUnit.SECONDS);
-//            assertNotNull(request, "No HTTP request was made");
-//            assertEquals("POST", request.getMethod());
-//
-//            // 11. Optionally, verify the uploaded file's header contains the temp file's name
-//            String uploadedFileName = request.getHeader("Content-Disposition");
-//            assertTrue(uploadedFileName.contains(tempFile.getName()));
-//
-//            // 12. Check the success alert
-//            WaitForAsyncUtils.waitForFxEvents();
-//            DialogPane alertPane = lookup(".dialog-pane").query();
-//            assertNotNull(alertPane, "Success alert not shown");
-//            assertTrue(alertPane.getContentText().contains("Mutation Generation Succeeded"));
-//            clickOn("OK"); // Dismiss the alert
-//        } finally {
-//            server.shutdown(); // Cleanup
-//        }
-//    }
+    @Test
+    @DisplayName("Test Send Mutation Request Success")
+    public void testSendMutationRequestSuccess() throws Exception {
+        MockWebServer server = new MockWebServer();
+        try {
+            // Start MockWebServer on a random port
+            server.start(0); // Let OS assign a free port
+            int serverPort = server.getPort();
+
+            // Configure the app to use the mock server's port
+            System.setProperty("app.api.url", "http://localhost:" + serverPort + "/api/generateMutations");
+
+            // Load the file internally from the resource folder
+            File tempFile;
+            try (InputStream is = getClass().getResourceAsStream("/Oyster.spthy")) {
+                if (is == null) {
+                    fail("Resource Oyster.spthy not found");
+                }
+                tempFile = File.createTempFile("Oyster", ".spthy");
+                Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Update the 'selectedFile' field on the JavaFX Application Thread
+            Field selectedFileField = XMenInterface.class.getDeclaredField("selectedFile");
+            selectedFileField.setAccessible(true);
+            Platform.runLater(() -> {
+                try {
+                    selectedFileField.set(app, tempFile);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to update selectedFile", e);
+                }
+            });
+            WaitForAsyncUtils.waitForFxEvents();
+
+            // Wait for the main scene to load
+            WaitForAsyncUtils.waitForFxEvents();
+            sleep(6000);
+
+            // Ensure the CheckBox is present in the scene graph
+            CheckBox cbSkipS = lookup("#cbSkipS").query();
+            assertNotNull(cbSkipS, "CheckBox with fx:id='cbSkipS' should be present in the scene graph");
+
+            // Select the checkbox via UI interaction
+            clickOn(cbSkipS);
+
+            // Enqueue a mock success response
+            server.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setBody("Success"));
+
+            // Click the "Start Mutation" button
+            clickOn("#buttonStart");
+
+            // Wait for the request to complete and alert to appear
+            RecordedRequest request = server.takeRequest(5, TimeUnit.SECONDS);
+            assertNotNull(request, "No HTTP request was made");
+            assertEquals("POST", request.getMethod());
+
+            // Verify that the multipart body actually contains the file name
+            String body = request.getBody().readUtf8();
+            assertTrue(body.contains("filename=\"" + tempFile.getName() + "\""),
+                    "Multipart body should include uploaded file name");
 
 
+            // Check the success alert
+            WaitForAsyncUtils.waitForFxEvents();
+            DialogPane alertPane = lookup(".dialog-pane").query();
+            assertNotNull(alertPane, "Success alert not shown");
+            assertTrue(alertPane.getContentText().contains("Mutation Generation Succeeded"));
+            clickOn("OK"); // Dismiss the alert
+        } finally {
+            server.shutdown(); // Cleanup
+        }
+    }
 
 
     @Test
@@ -255,7 +293,6 @@ public class XMenInterfaceTest extends ApplicationTest {
             sleep(6000);
             File tempFile = File.createTempFile("test", ".xml");
             tempFile.deleteOnExit();
-            // ... (set selectedFile via reflection)
 
             server = new MockWebServer();
             server.start(0); // Use dynamic port
@@ -267,7 +304,6 @@ public class XMenInterfaceTest extends ApplicationTest {
             clickOn(startButton);
             sleep(2000);
 
-            // Verify dialog...
         } finally {
             if (server != null) {
                 server.shutdown(); // Ensure cleanup

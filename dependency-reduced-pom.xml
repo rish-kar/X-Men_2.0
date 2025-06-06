@@ -24,6 +24,8 @@
         <configuration>
           <source>21</source>
           <target>21</target>
+          <showWarnings>false</showWarnings>
+          <showDeprecation>false</showDeprecation>
         </configuration>
       </plugin>
       <plugin>

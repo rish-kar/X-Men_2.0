@@ -1,5 +1,11 @@
 package com.sermas.x.men.user_interface;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -21,400 +27,443 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.Objects;
-
+/** X-Men User Interface Application Class. */
 @Slf4j
 public class XMenInterface extends Application {
 
-    private MediaPlayer mediaPlayer;
-    private File selectedFile;  // Holds the selected file
+  private MediaPlayer mediaPlayer;
+  private File selectedFile; // Holds the selected file
 
-    // Declare checkboxes as class fields so they are accessible in event handlers.
-    private CheckBox cbSkipS;
-    private CheckBox cbSkipSR;
-    private CheckBox cbSkipR;
-    private CheckBox cbSkipRS;
-    private CheckBox cbSkipRSR;
-    private CheckBox cbAdd;
-    private CheckBox cbSubmessages;
-    private CheckBox cbType;
-    private CheckBox cbCombineAddition;
-    private CheckBox cbCombineOnly;
+  // Declare checkboxes as class fields so they are accessible in event handlers.
+  private CheckBox cbSkipS;
+  private CheckBox cbSkipSR;
+  private CheckBox cbSkipR;
+  private CheckBox cbSkipRS;
+  private CheckBox cbSkipRSR;
+  private CheckBox cbAdd;
+  private CheckBox cbSubmessages;
+  private CheckBox cbType;
+  private CheckBox cbCombineAddition;
+  private CheckBox cbCombineOnly;
 
-    private Button buttonUpload;
-    private Button buttonStart;
+  private Button buttonUpload;
+  private Button buttonStart;
 
-    private final static String message = "Error while performing mutation";
+  private static final String message = "Error while performing mutation";
 
-    @Override
-    public void start(Stage stage) {
-        StackPane splashRoot = new StackPane();
-        MediaView splashMediaView = createSplashScreen(splashRoot, stage);
-        stage.setScene(new Scene(splashRoot));
-        stage.setTitle("X-Men 3.0");
-        stage.show();
+  @Override
+  public void start(Stage stage) {
+    StackPane splashRoot = new StackPane();
+    MediaView splashMediaView = createSplashScreen(splashRoot, stage);
+    stage.setScene(new Scene(splashRoot));
+    stage.setTitle("X-Men 3.0");
+    stage.show();
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(5));
-        pause.setOnFinished(e -> stage.setScene(createMainScene(stage)));
-        pause.play();
+    PauseTransition pause = new PauseTransition(Duration.seconds(5));
+    pause.setOnFinished(e -> stage.setScene(createMainScene(stage)));
+    pause.play();
+  }
+
+  /**
+   * Attempts to load the splash video from resources. If the resource is not found, a fallback
+   * Label is displayed.
+   */
+  private MediaView createSplashScreen(StackPane splashRoot, Stage stage) {
+    MediaView splashMediaView = new MediaView();
+    try {
+      InputStream videoStream = getClass().getResourceAsStream("/X-Men-Logo.mp4");
+      if (videoStream == null) {
+        throw new Exception("Resource /X-Men-Logo.mp4 not found.");
+      }
+
+      // Copy the video to a temporary file
+      File tempVideoFile = File.createTempFile("splash", ".mp4");
+      tempVideoFile.deleteOnExit();
+      Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+      // Load the video from the temporary file
+      Media splashMedia = new Media(tempVideoFile.toURI().toString());
+      MediaPlayer splashPlayer = new MediaPlayer(splashMedia);
+      splashPlayer.setCycleCount(1);
+      splashPlayer.setAutoPlay(true);
+      splashMediaView.setMediaPlayer(splashPlayer);
+      splashMediaView.setPreserveRatio(true);
+      splashPlayer.setOnReady(
+          () -> {
+            stage.setWidth(splashMedia.getWidth());
+            stage.setHeight(splashMedia.getHeight());
+            stage.centerOnScreen();
+          });
+    } catch (Exception e) {
+      log.debug("Error loading splash video from resources: {}", e.getMessage());
+
+      // Fallback: show a Label if the video cannot be loaded.
+      Label fallbackLabel = new Label("Splash Video not available");
+      fallbackLabel.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
+      splashRoot.getChildren().add(fallbackLabel);
     }
+    splashRoot.getChildren().add(splashMediaView);
+    splashRoot.setAlignment(Pos.CENTER);
+    return splashMediaView;
+  }
 
-    /**
-     * Attempts to load the splash video from resources.
-     * If the resource is not found, a fallback Label is displayed.
-     */
-    private MediaView createSplashScreen(StackPane splashRoot, Stage stage) {
-        MediaView splashMediaView = new MediaView();
-        try {
-            InputStream videoStream = getClass().getResourceAsStream("/X-Men-Logo.mp4");
-            if (videoStream == null) {
-                throw new Exception("Resource /X-Men-Logo.mp4 not found.");
-            }
+  /**
+   * Builds the main scene by combining a background video (if available) and the mutation option
+   * panel.
+   */
+  private Scene createMainScene(Stage stage) {
+    StackPane root = new StackPane();
+    Scene scene = new Scene(root);
 
-            // Copy the video to a temporary file
-            File tempVideoFile = File.createTempFile("splash", ".mp4");
-            tempVideoFile.deleteOnExit();
-            Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    // Load the main CSS file from resources that styles the interface.
+    scene
+        .getStylesheets()
+        .add(Objects.requireNonNull(getClass().getResource("/css/main.css")).toExternalForm());
 
-            // Load the video from the temporary file
-            Media splashMedia = new Media(tempVideoFile.toURI().toString());
-            MediaPlayer splashPlayer = new MediaPlayer(splashMedia);
-            splashPlayer.setCycleCount(1);
-            splashPlayer.setAutoPlay(true);
-            splashMediaView.setMediaPlayer(splashPlayer);
-            splashMediaView.setPreserveRatio(true);
-            splashPlayer.setOnReady(() -> {
-                stage.setWidth(splashMedia.getWidth());
-                stage.setHeight(splashMedia.getHeight());
-                stage.centerOnScreen();
-            });
-        } catch (Exception e) {
-            log.debug("Error loading splash video from resources: {}", e.getMessage());
+    MediaView mediaView = setupMediaView(stage);
+    GridPane checkboxPanel = setupGridPane(stage);
 
-            // Fallback: show a Label if the video cannot be loaded.
-            Label fallbackLabel = new Label("Splash Video not available");
-            fallbackLabel.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
-            splashRoot.getChildren().add(fallbackLabel);
-        }
-        splashRoot.getChildren().add(splashMediaView);
-        splashRoot.setAlignment(Pos.CENTER);
-        return splashMediaView;
+    root.getChildren().addAll(mediaView, checkboxPanel);
+    return scene;
+  }
+
+  /**
+   * Attempts to load the background video from resources. If the resource is not found, logs the
+   * error.
+   */
+  private MediaView setupMediaView(Stage stage) {
+    MediaView mediaView = new MediaView();
+    try {
+
+      // Load the video as an InputStream from resources
+      InputStream videoStream = getClass().getResourceAsStream("/DNA-Background.mp4");
+      if (videoStream == null) {
+        throw new Exception("Resource /DNA-Background.mp4 not found.");
+      }
+
+      // Copy the video to a temporary file
+      File tempVideoFile = File.createTempFile("dna", ".mp4");
+      tempVideoFile.deleteOnExit();
+      Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+      Media media = new Media(tempVideoFile.toURI().toString());
+      mediaPlayer = new MediaPlayer(media);
+      mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+      mediaView.setMediaPlayer(mediaPlayer);
+      mediaView.setPreserveRatio(true);
+      mediaPlayer.setOnReady(
+          () -> {
+            stage.setWidth(1080);
+            stage.setHeight(720);
+            stage.centerOnScreen();
+            mediaPlayer.play();
+          });
+    } catch (Exception e) {
+      log.error("Error loading video from resources: {}", e.getMessage());
     }
+    return mediaView;
+  }
 
-    /**
-     * Builds the main scene by combining a background video (if available)
-     * and the mutation option panel.
-     */
-    private Scene createMainScene(Stage stage) {
-        StackPane root = new StackPane();
-        Scene scene = new Scene(root);
+  /**
+   * Sets up the grid pane that contains the checkboxes and buttons. Also attaches event handlers
+   * for uploading a file and starting the mutation.
+   */
+  private GridPane setupGridPane(Stage stage) {
+    GridPane checkboxPanel = new GridPane();
+    checkboxPanel.setHgap(20);
+    checkboxPanel.setVgap(36);
+    checkboxPanel.setAlignment(Pos.CENTER);
 
-        // Load the main CSS file from resources that styles the interface.
-        scene.getStylesheets().add(Objects.requireNonNull(
-                getClass().getResource("/css/main.css")).toExternalForm());
+    // Add the glass effect style class to the panel.
+    checkboxPanel.getStyleClass().add("glass-panel");
 
+    // Initialize buttons
+    buttonUpload = new Button("Upload File");
+    buttonUpload.setId("buttonUpload");
 
-        MediaView mediaView = setupMediaView(stage);
-        GridPane checkboxPanel = setupGridPane(stage);
+    buttonStart = new Button("Start Mutation");
+    buttonStart.setId("buttonStart");
+    setupButton(buttonUpload);
+    setupButton(buttonStart);
 
-        root.getChildren().addAll(mediaView, checkboxPanel);
-        return scene;
-    }
-
-    /**
-     * Attempts to load the background video from resources.
-     * If the resource is not found, logs the error.
-     */
-    private MediaView setupMediaView(Stage stage) {
-        MediaView mediaView = new MediaView();
-        try {
-
-            // Load the video as an InputStream from resources
-            InputStream videoStream = getClass().getResourceAsStream("/DNA-Background.mp4");
-            if (videoStream == null) {
-                throw new Exception("Resource /DNA-Background.mp4 not found.");
-            }
-
-            // Copy the video to a temporary file
-            File tempVideoFile = File.createTempFile("dna", ".mp4");
-            tempVideoFile.deleteOnExit();
-            Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-            Media media = new Media(tempVideoFile.toURI().toString());
-            mediaPlayer = new MediaPlayer(media);
-            mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-            mediaView.setMediaPlayer(mediaPlayer);
-            mediaView.setPreserveRatio(true);
-            mediaPlayer.setOnReady(() -> {
-                stage.setWidth(1080);
-                stage.setHeight(720);
-                stage.centerOnScreen();
-                mediaPlayer.play();
-            });
-        } catch (Exception e) {
-            log.error("Error loading video from resources: {}", e.getMessage());
-        }
-        return mediaView;
-    }
-
-    /**
-     * Sets up the grid pane that contains the checkboxes and buttons.
-     * Also attaches event handlers for uploading a file and starting the mutation.
-     */
-    private GridPane setupGridPane(Stage stage) {
-        GridPane checkboxPanel = new GridPane();
-        checkboxPanel.setHgap(20);
-        checkboxPanel.setVgap(36);
-        checkboxPanel.setAlignment(Pos.CENTER);
-
-        // Add the glass effect style class to the panel.
-        checkboxPanel.getStyleClass().add("glass-panel");
-
-        // Initialize buttons
-        buttonUpload = new Button("Upload File");
-        buttonUpload.setId("buttonUpload");
-
-        buttonStart = new Button("Start Mutation");
-        buttonStart.setId("buttonStart");
-        setupButton(buttonUpload);
-        setupButton(buttonStart);
-
-        // Set up file chooser for the "Upload File" button.
-        buttonUpload.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Select a File to Upload");
-            // Restrict to XML files (adjust if necessary).
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("XML Files", "*.*"));
-            File file = fileChooser.showOpenDialog(stage);
-            if (file != null) {
-                selectedFile = file;
-                log.debug("Selected file: {}", file.getAbsolutePath());
-            }
+    // Set up file chooser for the "Upload File" button.
+    buttonUpload.setOnAction(
+        e -> {
+          FileChooser fileChooser = new FileChooser();
+          fileChooser.setTitle("Select a File to Upload");
+          // Restrict to XML files (adjust if necessary).
+          fileChooser
+              .getExtensionFilters()
+              .add(new FileChooser.ExtensionFilter("XML Files", "*.*"));
+          File file = fileChooser.showOpenDialog(stage);
+          if (file != null) {
+            selectedFile = file;
+            log.debug("Selected file: {}", file.getAbsolutePath());
+          }
         });
 
-        // Set up HTTP request trigger for the "Start Mutation" button.
-        buttonStart.setOnAction(e -> {
-            if (selectedFile == null) {
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(Alert.AlertType.WARNING);
-                    alert.setTitle("File Not Selected");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Please Upload a File before Mutating");
+    // Set up HTTP request trigger for the "Start Mutation" button.
+    buttonStart.setOnAction(
+        e -> {
+          if (selectedFile == null) {
+            Platform.runLater(
+                () -> {
+                  Alert alert = new Alert(Alert.AlertType.WARNING);
+                  alert.setTitle("File Not Selected");
+                  alert.setHeaderText(null);
+                  alert.setContentText("Please Upload a File before Mutating");
 
-                    // Set your custom logo
-                    ImageView customLogo = new ImageView(new Image(Objects.requireNonNull(
-                            getClass().getResourceAsStream("/images/warning_mutation.png"))));
-                    customLogo.setFitWidth(120);
-                    customLogo.setFitHeight(120);
-                    alert.setGraphic(customLogo);
+                  // Set your custom logo
+                  ImageView customLogo =
+                      new ImageView(
+                          new Image(
+                              Objects.requireNonNull(
+                                  getClass().getResourceAsStream("/images/warning_mutation.png"))));
+                  customLogo.setFitWidth(120);
+                  customLogo.setFitHeight(120);
+                  alert.setGraphic(customLogo);
 
+                  // Load the custom CSS file from resources
+                  String cssPath =
+                      Objects.requireNonNull(getClass().getResource("/css/alert.css"))
+                          .toExternalForm();
+                  DialogPane dialogPane = alert.getDialogPane();
+                  dialogPane.getStylesheets().add(cssPath);
+                  dialogPane.getStyleClass().add("my-alert");
 
-                    // Load the custom CSS file from resources
-                    String cssPath = Objects.requireNonNull(
-                            getClass().getResource("/css/alert.css")).toExternalForm();
-                    DialogPane dialogPane = alert.getDialogPane();
-                    dialogPane.getStylesheets().add(cssPath);
-                    dialogPane.getStyleClass().add("my-alert");
-
-                    alert.showAndWait();
+                  alert.showAndWait();
                 });
-                return;
-            }
-            sendMutationRequest();
+            return;
+          }
+          sendMutationRequest();
         });
 
-        // Initialize check boxes.
-        String checkboxStyle = "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;";
-        cbSkipS = new CheckBox("Send");
-        cbSkipS.setId("cbSkipS");
+    // Initialize check boxes.
+    String checkboxStyle = "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;";
+    cbSkipS = new CheckBox("Send");
+    cbSkipS.setId("cbSkipS");
 
-        cbSkipSR = new CheckBox("Send Receive");
-        cbSkipSR.setId("cbSkipSR");
+    cbSkipSR = new CheckBox("Send Receive");
+    cbSkipSR.setId("cbSkipSR");
 
-        cbSkipR = new CheckBox("Receive");
-        cbSkipR.setId("cbSkipR");
+    cbSkipR = new CheckBox("Receive");
+    cbSkipR.setId("cbSkipR");
 
-        cbSkipRS = new CheckBox("Receive Send");
-        cbSkipRS.setId("cbSkipRS");
+    cbSkipRS = new CheckBox("Receive Send");
+    cbSkipRS.setId("cbSkipRS");
 
-        cbSkipRSR = new CheckBox("Receive Send Receive");
-        cbSkipRSR.setId("cbSkipRSR");
+    cbSkipRSR = new CheckBox("Receive Send Receive");
+    cbSkipRSR.setId("cbSkipRSR");
 
-        cbAdd = new CheckBox("Add");
-        cbAdd.setId("cbAdd");
+    cbAdd = new CheckBox("Add");
+    cbAdd.setId("cbAdd");
 
-        cbSubmessages = new CheckBox("Sub Messages");
-        cbSubmessages.setId("cbSubmessages");
+    cbSubmessages = new CheckBox("Sub Messages");
+    cbSubmessages.setId("cbSubmessages");
 
-        cbType = new CheckBox("Type");
-        cbType.setId("cbType");
+    cbType = new CheckBox("Type");
+    cbType.setId("cbType");
 
-        cbCombineAddition = new CheckBox("Combination in Addition");
-        cbCombineAddition.setId("cbCombineAddition");
+    cbCombineAddition = new CheckBox("Combination in Addition");
+    cbCombineAddition.setId("cbCombineAddition");
 
-        cbCombineOnly = new CheckBox("Combination Only");
-        cbCombineOnly.setId("cbCombineOnly");
+    cbCombineOnly = new CheckBox("Combination Only");
+    cbCombineOnly.setId("cbCombineOnly");
 
-        // Apply style to check boxes.
-        cbSkipS.setStyle(checkboxStyle);
-        cbSkipSR.setStyle(checkboxStyle);
-        cbSkipR.setStyle(checkboxStyle);
-        cbSkipRS.setStyle(checkboxStyle);
-        cbSkipRSR.setStyle(checkboxStyle);
-        cbAdd.setStyle(checkboxStyle);
-        cbSubmessages.setStyle(checkboxStyle);
-        cbType.setStyle(checkboxStyle);
-        cbCombineAddition.setStyle(checkboxStyle);
-        cbCombineOnly.setStyle(checkboxStyle);
+    // Apply style to check boxes.
+    cbSkipS.setStyle(checkboxStyle);
+    cbSkipSR.setStyle(checkboxStyle);
+    cbSkipR.setStyle(checkboxStyle);
+    cbSkipRS.setStyle(checkboxStyle);
+    cbSkipRSR.setStyle(checkboxStyle);
+    cbAdd.setStyle(checkboxStyle);
+    cbSubmessages.setStyle(checkboxStyle);
+    cbType.setStyle(checkboxStyle);
+    cbCombineAddition.setStyle(checkboxStyle);
+    cbCombineOnly.setStyle(checkboxStyle);
 
-        // Use an updated CSS drop-shadow with all required parameters.
-        String labelStyle = "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 2, 0.5, 1, 1);";
-        Label lblSkip = new Label("Skip mutation:");
-        lblSkip.setStyle(labelStyle);
-        Label lblReplace = new Label("Replace mutation:");
-        lblReplace.setStyle(labelStyle);
-        Label lblAdd = new Label("Add mutation:");
-        lblAdd.setStyle(labelStyle);
-        Label lblCombine = new Label("Combine mutation:");
-        lblCombine.setStyle(labelStyle);
+    // Use an updated CSS drop-shadow with all required parameters.
+    String labelStyle =
+        "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-effect: "
+            + "dropshadow(gaussian, rgba(0,0,0,0.8), 2, 0.5, 1, 1);";
+    Label lblSkip = new Label("Skip mutation:");
+    lblSkip.setStyle(labelStyle);
+    Label lblReplace = new Label("Replace mutation:");
+    lblReplace.setStyle(labelStyle);
+    Label lblAdd = new Label("Add mutation:");
+    lblAdd.setStyle(labelStyle);
+    Label lblCombine = new Label("Combine mutation:");
+    lblCombine.setStyle(labelStyle);
 
-        // Arrange components in rows.
-        checkboxPanel.addRow(0, lblSkip, cbSkipS, cbSkipSR, cbSkipR);
-        checkboxPanel.addRow(1, new Label(""), cbSkipRS, cbSkipRSR);
-        checkboxPanel.addRow(2, lblReplace, cbSubmessages, cbType);
-        checkboxPanel.addRow(3, lblAdd, cbAdd);
-        checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
-        // Add the button row at the bottom.
-        checkboxPanel.addRow(5, new Label(""), buttonUpload, buttonStart);
+    // Arrange components in rows.
+    checkboxPanel.addRow(0, lblSkip, cbSkipS, cbSkipSR, cbSkipR);
+    checkboxPanel.addRow(1, new Label(""), cbSkipRS, cbSkipRSR);
+    checkboxPanel.addRow(2, lblReplace, cbSubmessages, cbType);
+    checkboxPanel.addRow(3, lblAdd, cbAdd);
+    checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
+    // Add the button row at the bottom.
+    checkboxPanel.addRow(5, new Label(""), buttonUpload, buttonStart);
 
-        return checkboxPanel;
+    return checkboxPanel;
+  }
+
+  /** Sets up a button's preferred size and style. */
+  private void setupButton(Button button) {
+    button.setPrefSize(150, 40);
+    button.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;");
+    GridPane.setMargin(button, new Insets(20, 0, 0, 0));
+  }
+
+  /**
+   * Builds and sends an HTTP POST request (multipart/form-data) to your Spring Boot endpoint. The
+   * request includes the selected file and mutation options as headers.
+   */
+  private void sendMutationRequest() {
+    OkHttpClient client = new OkHttpClient();
+
+    // Create a MediaType for the file.
+    MediaType mediaType = MediaType.parse("application/octet-stream");
+    RequestBody fileBody = RequestBody.create(selectedFile, mediaType);
+
+    MultipartBody.Builder multipartBuilder =
+        new MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", selectedFile.getName(), fileBody);
+
+    // Updated URL: using port 8081 to match the server's port.
+    String apiUrl =
+        System.getProperty("app.api.url", "http://localhost:8081/api/generateMutations");
+    Request.Builder requestBuilder = new Request.Builder().url(apiUrl);
+
+    // Add headers based on the state of the checkboxes.
+    if (cbSkipS.isSelected()) {
+      requestBuilder.addHeader("Skip-Send", "true");
+    }
+    if (cbSkipR.isSelected()) {
+      requestBuilder.addHeader("Skip-Receive", "true");
+    }
+    if (cbSkipSR.isSelected()) {
+      requestBuilder.addHeader("Skip-Send-Receive", "true");
+    }
+    if (cbSkipRS.isSelected()) {
+      requestBuilder.addHeader("Skip-Receive-Send", "true");
+    }
+    if (cbSkipRSR.isSelected()) {
+      requestBuilder.addHeader("Skip-Receive-Send-Receive", "true");
+    }
+    if (cbAdd.isSelected()) {
+      requestBuilder.addHeader("Add-Mutation", "true");
+    }
+    if (cbSubmessages.isSelected()) {
+      requestBuilder.addHeader("Replace-Sub-Messages", "true");
+    }
+    if (cbType.isSelected()) {
+      requestBuilder.addHeader("Replace-Type", "true");
     }
 
-    /**
-     * Sets up a button's preferred size and style.
-     */
-    private void setupButton(Button button) {
-        button.setPrefSize(150, 40);
-        button.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;");
-        GridPane.setMargin(button, new Insets(20, 0, 0, 0));
-    }
+    RequestBody requestBody = multipartBuilder.build();
+    Request request = requestBuilder.post(requestBody).build();
 
-    /**
-     * Builds and sends an HTTP POST request (multipart/form-data) to your Spring Boot endpoint.
-     * The request includes the selected file and mutation options as headers.
-     */
-    private void sendMutationRequest() {
-        OkHttpClient client = new OkHttpClient();
-
-        // Create a MediaType for the file.
-        MediaType mediaType = MediaType.parse("application/octet-stream");
-        RequestBody fileBody = RequestBody.create(selectedFile, mediaType);
-
-        MultipartBody.Builder multipartBuilder = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", selectedFile.getName(), fileBody);
-
-        // Updated URL: using port 8081 to match the server's port.
-        String apiUrl = System.getProperty("app.api.url", "http://localhost:8081/api/generateMutations");
-        Request.Builder requestBuilder = new Request.Builder().url(apiUrl);
-
-
-        // Add headers based on the state of the checkboxes.
-        if (cbSkipS.isSelected())      requestBuilder.addHeader("Skip-Send", "true");
-        if (cbSkipR.isSelected())       requestBuilder.addHeader("Skip-Receive", "true");
-        if (cbSkipSR.isSelected())      requestBuilder.addHeader("Skip-Send-Receive", "true");
-        if (cbSkipRS.isSelected())      requestBuilder.addHeader("Skip-Receive-Send", "true");
-        if (cbSkipRSR.isSelected())     requestBuilder.addHeader("Skip-Receive-Send-Receive", "true");
-        if (cbAdd.isSelected())         requestBuilder.addHeader("Add-Mutation", "true");
-        if (cbSubmessages.isSelected()) requestBuilder.addHeader("Replace-Sub-Messages", "true");
-        if (cbType.isSelected())        requestBuilder.addHeader("Replace-Type", "true");
-
-        RequestBody requestBody = multipartBuilder.build();
-        Request request = requestBuilder.post(requestBody).build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException ex) {
+    client
+        .newCall(request)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(@NotNull Call call, @NotNull IOException ex) {
                 log.error("Error while performing mutation: {}", ex.getMessage());
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Mutation Request Failed");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Error: " + message);
+                Platform.runLater(
+                    () -> {
+                      Alert alert = new Alert(Alert.AlertType.ERROR);
+                      alert.setTitle("Mutation Request Failed");
+                      alert.setHeaderText(null);
+                      alert.setContentText("Error: " + message);
 
-                    // Common styling for all alerts
-                    String cssPath = Objects.requireNonNull(
-                            getClass().getResource("/css/alert.css")).toExternalForm();
-                    DialogPane dialogPane = alert.getDialogPane();
-                    dialogPane.getStylesheets().add(cssPath);
-                    dialogPane.getStyleClass().add("my-alert");
+                      // Common styling for all alerts
+                      String cssPath =
+                          Objects.requireNonNull(getClass().getResource("/css/alert.css"))
+                              .toExternalForm();
+                      DialogPane dialogPane = alert.getDialogPane();
+                      dialogPane.getStylesheets().add(cssPath);
+                      dialogPane.getStyleClass().add("my-alert");
 
-                    alert.showAndWait();
-                });
-            }
+                      alert.showAndWait();
+                    });
+              }
 
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+              @Override
+              public void onResponse(@NotNull Call call, @NotNull Response response)
+                  throws IOException {
                 if (response.isSuccessful()) {
-                    log.debug("Mutation generation succeeded!");
-                    Platform.runLater(() -> {
+                  log.debug("Mutation generation succeeded!");
+                  Platform.runLater(
+                      () -> {
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Success");
                         alert.setHeaderText(null);
                         alert.setContentText("Mutation Generation Succeeded");
 
                         // Set your custom logo
-                        ImageView customLogo = new ImageView(new Image(Objects.requireNonNull(
-                                getClass().getResourceAsStream("/images/dna_logo.png"))));
+                        ImageView customLogo =
+                            new ImageView(
+                                new Image(
+                                    Objects.requireNonNull(
+                                        getClass().getResourceAsStream("/images/dna_logo.png"))));
                         customLogo.setFitWidth(120);
                         customLogo.setFitHeight(120);
                         alert.setGraphic(customLogo);
 
                         // Load the custom CSS file from resources
-                        String cssPath = Objects.requireNonNull(getClass().getResource("/css/alert.css")).toExternalForm();
+                        String cssPath =
+                            Objects.requireNonNull(getClass().getResource("/css/alert.css"))
+                                .toExternalForm();
                         DialogPane dialogPane = alert.getDialogPane();
                         dialogPane.getStylesheets().add(cssPath);
                         dialogPane.getStyleClass().add("my-alert");
 
                         alert.showAndWait();
-                    });
+                      });
                 } else {
-                    log.error("Error: {} {}", response.code(), response.message());
-                    Platform.runLater(() -> {
+                  log.error("Error: {} {}", response.code(), response.message());
+                  Platform.runLater(
+                      () -> {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Error");
                         alert.setHeaderText(null);
                         alert.setContentText("Error: " + message);
 
                         // Set your custom logo
-                        ImageView customLogo = new ImageView(new Image(Objects.requireNonNull(
-                                getClass().getResourceAsStream("/images/error_mutation.png"))));
+                        ImageView customLogo =
+                            new ImageView(
+                                new Image(
+                                    Objects.requireNonNull(
+                                        getClass()
+                                            .getResourceAsStream("/images/error_mutation.png"))));
                         customLogo.setFitWidth(120);
                         customLogo.setFitHeight(120);
                         alert.setGraphic(customLogo);
 
                         // Load the custom CSS file from resources
-                        String cssPath = Objects.requireNonNull(
-                                getClass().getResource("/css/alert.css")).toExternalForm();
+                        String cssPath =
+                            Objects.requireNonNull(getClass().getResource("/css/alert.css"))
+                                .toExternalForm();
                         DialogPane dialogPane = alert.getDialogPane();
                         dialogPane.getStylesheets().add(cssPath);
                         dialogPane.getStyleClass().add("my-alert");
 
                         alert.showAndWait();
-                    });
+                      });
                 }
                 response.close();
-            }
-        });
-    }
+              }
+            });
+  }
 
-
-    public static void main(String[] args) {
-        launch(args);
-    }
+  /**
+   * Main method to launch the JavaFX application.
+   *
+   * @param args Command line arguments
+   */
+  public static void main(String[] args) {
+    launch(args);
+  }
 }

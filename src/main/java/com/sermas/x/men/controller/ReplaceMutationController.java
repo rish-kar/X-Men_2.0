@@ -8,6 +8,11 @@ import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.utilities.TagSetter;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -17,111 +22,102 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
-
-/**
- * Controller for replace mutations.
- */
+/** Controller for replace mutations. */
 @RestController
 @RequestMapping("/api/replace")
 public class ReplaceMutationController {
 
-    @Autowired
-    private FileLoadingService fileLoadingService;
+  @Autowired private FileLoadingService fileLoadingService;
 
-    @Autowired
-    public TagSetter tagSetter;
+  @Autowired public TagSetter tagSetter;
 
-    @Autowired
-    @Qualifier("mutationGeneratorServiceImpl")
-    MutationGeneratorService mutationGeneratorService;
+  @Autowired
+  @Qualifier("mutationGeneratorServiceImpl")
+  MutationGeneratorService mutationGeneratorService;
 
-    @Autowired
-    private FileSplitterService fileSplitterService;
+  @Autowired private FileSplitterService fileSplitterService;
 
+  /**
+   * Trigger replacing of sub messages mutation.
+   *
+   * @param file The file to process.
+   * @return A message indicating the result of the file processing.
+   */
+  @PostMapping("/subMessagesMutations")
+  public ResponseEntity<?> replaceSubMessagesMutations(@RequestParam("file") MultipartFile file)
+      throws Exception {
 
-    /**
-     * Trigger replacing of sub messages mutation.
-     *
-     * @param file The file to process.
-     * @return A message indicating the result of the file processing.
-     */
-    @PostMapping("/subMessagesMutations")
-    public ResponseEntity<Object> replaceSubMessagesMutations(@RequestParam("file") MultipartFile file) throws Exception {
+    Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
+    mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
 
-        Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
-        mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
+    ParametersBundle parametersBundle = new ParametersBundle();
 
-        ParametersBundle parametersBundle = new ParametersBundle();
+    // Process file content
+    String fileContent = new String(file.getBytes());
+    FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
 
-        // Process file content
-        String fileContent = new String(file.getBytes());
-        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+    // Create virtual MultipartFile for rules section
+    MultipartFile rulesFile =
+        new InMemoryMultipartFile(
+            "rulesFile",
+            file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+            "text/plain",
+            sections.rules().getBytes(StandardCharsets.UTF_8));
 
-        // Create virtual MultipartFile for rules section
-        MultipartFile rulesFile = new InMemoryMultipartFile(
-                "rulesFile",
-                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
-                "text/plain",
-                sections.rules().getBytes(StandardCharsets.UTF_8)
-        );
+    // Set tags based on the mutation set
+    parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
 
-        // Set tags based on the mutation set
-        parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
+    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
+    parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
+    ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+    parametersBundle.getCollections().clear();
+    parametersBundle.setFileName(file.getOriginalFilename());
 
-        // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
-        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
-        parametersBundle.getCollections().clear();
-        parametersBundle.setFileName(file.getOriginalFilename());
+    mutationGeneratorService.generateMutation(
+        rules, Collections.singleton(Mutations.REPLACE_SUB_MESSAGES), parametersBundle);
 
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_SUB_MESSAGES), parametersBundle);
+    return ResponseEntity.ok("Files generated successfully");
+  }
 
-        return ResponseEntity.ok(null);
-    }
+  /**
+   * Trigger replacing of type mutation.
+   *
+   * @param file The file to process.
+   * @return A message indicating the result of the file processing.
+   */
+  @PostMapping("/typeMutations")
+  public ResponseEntity<?> replaceTypeMutations(@RequestParam("file") MultipartFile file)
+      throws Exception {
 
+    Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
+    mutationSet.add(Mutations.REPLACE_TYPE);
 
-    /**
-     * Trigger replacing of type mutation.
-     *
-     * @param file The file to process.
-     * @return A message indicating the result of the file processing.
-     */
-    @PostMapping("/typeMutations")
-    public ResponseEntity<Object> replaceTypeMutations(@RequestParam("file") MultipartFile file) throws Exception {
+    ParametersBundle parametersBundle = new ParametersBundle();
 
-        Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
-        mutationSet.add(Mutations.REPLACE_TYPE);
+    // Process file content
+    String fileContent = new String(file.getBytes());
+    FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
 
-        ParametersBundle parametersBundle = new ParametersBundle();
+    // Create virtual MultipartFile for rules section
+    MultipartFile rulesFile =
+        new InMemoryMultipartFile(
+            "rulesFile",
+            file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+            "text/plain",
+            sections.rules().getBytes(StandardCharsets.UTF_8));
 
-        // Process file content
-        String fileContent = new String(file.getBytes());
-        FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+    // Set tags based on the mutation set
+    parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
 
-        // Create virtual MultipartFile for rules section
-        MultipartFile rulesFile = new InMemoryMultipartFile(
-                "rulesFile",
-                file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
-                "text/plain",
-                sections.rules().getBytes(StandardCharsets.UTF_8)
-        );
+    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
+    parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
+    ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
+    parametersBundle.getCollections().clear();
+    parametersBundle.setFileName(file.getOriginalFilename());
 
-        // Set tags based on the mutation set
-        parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
+    mutationGeneratorService.generateMutation(
+        rules, Collections.singleton(Mutations.REPLACE_TYPE), parametersBundle);
 
-        // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
-        parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
-        ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
-        parametersBundle.getCollections().clear();
-        parametersBundle.setFileName(file.getOriginalFilename());
-
-        ArrayList<Rule> newSetofRules = mutationGeneratorService.generateMutation(rules, Collections.singleton(Mutations.REPLACE_TYPE), parametersBundle);
-
-        return ResponseEntity.ok(null);
-    }
+    return ResponseEntity.ok("Files generated successfully");
+  }
 }
