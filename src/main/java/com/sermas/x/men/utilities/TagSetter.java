@@ -27,7 +27,7 @@ public class TagSetter {
     for (Mutations mutation : mutationSet) {
       switch (mutation) {
         case Mutations.REPLACE_TYPE:
-          flags.setReplaceTags(true);
+          flags.setReplaceType(true);
           parametersBundle.setFlags(flags);
           break;
         case Mutations.REPLACE_SUB_MESSAGES:

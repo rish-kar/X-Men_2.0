@@ -44,7 +44,6 @@ public class SkipReceiveSendMutationStrategy implements MutationStrategy {
   @Override
   public ParametersBundle applyMutation(
       Rule originalRule, ArrayList<Rule> rules, ParametersBundle parametersBundle) {
-    // Initialize log for the class
 
     // Validate input parameters
     if (originalRule == null || rules == null) {

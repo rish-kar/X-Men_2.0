@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * ReplaceMutationService class. This service handles the replacement of mutations in rules and
- * theories, including tag and submessage replacements. It provides methods to extract parameters,
- * handle tag replacements, handle submessage replacements, and propagate changes throughout the
+ * theories, including type and submessage replacements. It provides methods to extract parameters,
+ * handle type replacements, handle submessage replacements, and propagate changes throughout the
  * theory.
  */
 @Component
@@ -43,9 +43,9 @@ public class ReplaceMutationService {
     // Step 1: Extract parameters from the "Snd" postcondition of the rule
     ArrayList<Value> parameters = extractSndParameters(rule);
 
-    if (parametersBundle.getFlags().isReplaceTags()) {
-      // Step 2: Handle tag replacements if enabled
-      handleTagReplacements(rule, theoryClone, parameters, parametersBundle);
+    if (parametersBundle.getFlags().isReplaceType()) {
+      // Step 2: Handle type replacements if enabled
+      handleTypeReplacements(rule, theoryClone, parameters, parametersBundle);
     } else if (parametersBundle.getFlags().isReplaceSubmessages()) {
       // Step 3: Otherwise, handle sub message replacements if enabled
       handleSubmessageReplacements(rule, theoryClone, parameters, parametersBundle);
@@ -95,7 +95,7 @@ public class ReplaceMutationService {
    * @param theory The original theory that might be cloned or updated.
    * @param parameters The parameters extracted from the "Snd" postcondition.
    */
-  private void handleTagReplacements(
+  private void handleTypeReplacements(
       Rule rule,
       ArrayList<Rule> theory,
       ArrayList<Value> parameters,
@@ -150,7 +150,7 @@ public class ReplaceMutationService {
         parametersBundle.setTheory(theory);
       }
     } catch (Exception e) {
-      log.error("Error during tag replacement process: ", e);
+      log.error("Error during type replacement process: ", e);
     }
   }
 
@@ -354,11 +354,11 @@ public class ReplaceMutationService {
 
   /**
    * Checks if there is at least one pair of values (one from knowledgeList and one from sentList)
-   * that share the same non-null tag but have different names.
+   * that share the same non-null type (tag) but have different names.
    *
    * @param knowledgeList the list of Value objects representing knowledge in the postcondition
    * @param sentList the list of Value objects that were sent
-   * @return true if a matching tag with different names is found; false otherwise
+   * @return true if a matching type (tag) with different names is found; false otherwise
    */
   private boolean checkPotentialReplacement(List<Value> knowledgeList, List<Value> sentList) {
     for (Value knowledgeValue : knowledgeList) {
@@ -518,8 +518,6 @@ public class ReplaceMutationService {
                 }
               }
             }
-          } else if (valuesSent instanceof Variable) {
-            // TODO: Handle Variable case
           } else if (valuesSent instanceof Value) {
             if (mutants.getOldValue().equals(valuesSent)) {
               postSend.getParameters().set(2, mutants.getNewValue());
@@ -830,13 +828,6 @@ public class ReplaceMutationService {
             rcvValues.get(h).setRemoved(true);
           }
         }
-
-        /*
-         * =========================
-         * ACTION MODIFICATIONS (TODO)
-         * =========================
-         */
-        // This section is reserved for future action modifications.
 
         /*
          * ===========================

@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Flags {
 
   protected boolean add = false;
-  protected boolean replaceTags = false;
+  protected boolean replaceType = false;
   protected boolean replaceSubmessages = false;
   protected boolean combineAddReplace = false;
   protected boolean combineAddReplaceOnly = false;

@@ -70,7 +70,7 @@ public class SkipReceiveMutationStrategy implements MutationStrategy {
     // Gather modifications
     ArrayList<Mutants> modifications = gatherModifications(mutatedRcvFact);
 
-    // If no modifications, just return after adding the rule (if that's appropriate for your logic)
+    // If no modifications, just return after adding the rule
     if (modifications.isEmpty()) {
       clonedTheory.add(mutatedRule);
       return rulesModifier.rulesModifier(clonedTheory, false, null, parametersBundle);

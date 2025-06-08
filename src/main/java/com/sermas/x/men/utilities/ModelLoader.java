@@ -80,7 +80,7 @@ public class ModelLoader {
     parametersBundle = fileHandler.arrangeTheory(parametersBundle);
     parametersBundle = fileHandler.arrangeLets(parametersBundle);
     parametersBundle = fileHandler.mergeTagsValues(parametersBundle);
-    parametersBundle = fileHandler.spreadTagsie(parametersBundle);
+    parametersBundle = fileHandler.spreadTags(parametersBundle);
     parametersBundle = fileHandler.letArrangement(parametersBundle);
     parametersBundle = fileHandler.arrangeValues(parametersBundle);
     parametersBundle = fileHandler.identifyRoles(parametersBundle);

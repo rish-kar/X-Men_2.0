@@ -144,9 +144,7 @@ public class SkipReceiveSendReceiveMutationStrategy implements MutationStrategy 
           Object receiveParam =
               arrivingRule.getPreconditionFactByMatchingName("Rcv").getParameter(2);
 
-          if (receiveParam instanceof Variable) {
-            // TODO: Handle Variable case if needed
-          } else if (receiveParam instanceof Value) {
+          if (receiveParam instanceof Value) {
             if (((Value) receiveParam).isRemoved()) {
               modifications.add(new Mutants(null, (Value) receiveParam));
             }

@@ -3,15 +3,15 @@ package com.sermas.x.men.user_interface;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
+import javafx.geometry.*;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -20,8 +20,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
+import javafx.stage.*;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -59,8 +58,14 @@ public class XMenInterface extends Application {
     stage.setTitle("X-Men 3.0");
     stage.show();
 
+    stage.setIconified(false);
+    stage.setAlwaysOnTop(true); // prevents auto-minimize briefly
     PauseTransition pause = new PauseTransition(Duration.seconds(5));
-    pause.setOnFinished(e -> stage.setScene(createMainScene(stage)));
+    pause.setOnFinished(
+        e -> {
+          stage.setScene(createMainScene(stage));
+          stage.setAlwaysOnTop(false); // revert after scene change
+        });
     pause.play();
   }
 
@@ -70,18 +75,15 @@ public class XMenInterface extends Application {
    */
   private MediaView createSplashScreen(StackPane splashRoot, Stage stage) {
     MediaView splashMediaView = new MediaView();
+    boolean videoLoaded = false;
+
     try {
       InputStream videoStream = getClass().getResourceAsStream("/X-Men-Logo.mp4");
-      if (videoStream == null) {
-        throw new Exception("Resource /X-Men-Logo.mp4 not found.");
-      }
-
-      // Copy the video to a temporary file
+      if (videoStream == null) throw new Exception("Splash video not found");
       File tempVideoFile = File.createTempFile("splash", ".mp4");
       tempVideoFile.deleteOnExit();
       Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-      // Load the video from the temporary file
       Media splashMedia = new Media(tempVideoFile.toURI().toString());
       MediaPlayer splashPlayer = new MediaPlayer(splashMedia);
       splashPlayer.setCycleCount(1);
@@ -94,15 +96,26 @@ public class XMenInterface extends Application {
             stage.setHeight(splashMedia.getHeight());
             stage.centerOnScreen();
           });
+      splashRoot.getChildren().add(splashMediaView);
+      videoLoaded = true;
     } catch (Exception e) {
-      log.debug("Error loading splash video from resources: {}", e.getMessage());
-
-      // Fallback: show a Label if the video cannot be loaded.
-      Label fallbackLabel = new Label("Splash Video not available");
-      fallbackLabel.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
-      splashRoot.getChildren().add(fallbackLabel);
+      log.warn("Splash video not found, using fallback image.");
     }
-    splashRoot.getChildren().add(splashMediaView);
+
+    if (!videoLoaded) {
+      InputStream imgStream = getClass().getResourceAsStream("/images/splash_fallback_logo.png");
+      if (imgStream != null) {
+        ImageView fallbackImage = new ImageView(new Image(imgStream));
+        fallbackImage.setFitWidth(400);
+        fallbackImage.setPreserveRatio(true);
+        splashRoot.getChildren().add(fallbackImage);
+        log.info("Loaded fallback splash image.");
+      } else {
+        Label label = new Label("Splash Video not available");
+        label.setStyle("-fx-text-fill: white; -fx-font-size: 24px;");
+        splashRoot.getChildren().add(label);
+      }
+    }
     splashRoot.setAlignment(Pos.CENTER);
     return splashMediaView;
   }
@@ -113,17 +126,21 @@ public class XMenInterface extends Application {
    */
   private Scene createMainScene(Stage stage) {
     StackPane root = new StackPane();
-    Scene scene = new Scene(root);
+    Scene scene = new Scene(root, 1080, 720);
 
-    // Load the main CSS file from resources that styles the interface.
-    scene
-        .getStylesheets()
-        .add(Objects.requireNonNull(getClass().getResource("/css/main.css")).toExternalForm());
+    // CSS
+    URL cssUrl = getClass().getResource("/css/main.css");
+    if (cssUrl != null) {
+      scene.getStylesheets().add(cssUrl.toExternalForm());
+    } else {
+      log.error("main.css not found!");
+    }
 
-    MediaView mediaView = setupMediaView(stage);
+    Node backgroundNode = setupMediaOrFallback(stage);
     GridPane checkboxPanel = setupGridPane(stage);
 
-    root.getChildren().addAll(mediaView, checkboxPanel);
+    root.getChildren().addAll(backgroundNode, checkboxPanel);
+
     return scene;
   }
 
@@ -131,37 +148,76 @@ public class XMenInterface extends Application {
    * Attempts to load the background video from resources. If the resource is not found, logs the
    * error.
    */
-  private MediaView setupMediaView(Stage stage) {
-    MediaView mediaView = new MediaView();
-    try {
+  private Node setupMediaOrFallback(Stage stage) {
+    StackPane container = new StackPane();
 
-      // Load the video as an InputStream from resources
-      InputStream videoStream = getClass().getResourceAsStream("/DNA-Background.mp4");
-      if (videoStream == null) {
-        throw new Exception("Resource /DNA-Background.mp4 not found.");
+    Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+    double desiredWidth = screenBounds.getWidth();
+    double desiredHeight = screenBounds.getHeight();
+    container.setPrefSize(desiredWidth, desiredHeight);
+
+    MediaView mediaView = null;
+
+    try (InputStream videoStream = getClass().getResourceAsStream("/DNA-Background.mp4")) {
+      if (videoStream != null) {
+        File tempVideoFile = File.createTempFile("dna", ".mp4");
+        tempVideoFile.deleteOnExit();
+        Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        Media media = new Media(tempVideoFile.toURI().toString());
+        mediaPlayer = new MediaPlayer(media);
+        mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+
+        mediaView = new MediaView(mediaPlayer);
+        mediaView.setPreserveRatio(false);
+
+        mediaPlayer.setOnReady(
+            () -> {
+              stage.setWidth(desiredWidth);
+              stage.setHeight(desiredHeight);
+              stage.centerOnScreen();
+              mediaPlayer.play();
+            });
+
+        mediaView.fitWidthProperty().bind(container.widthProperty());
+        mediaView.fitHeightProperty().bind(container.heightProperty());
+
+        container.getChildren().add(mediaView);
+        log.info("Media successfully loaded.");
+        return container;
+      }
+      throw new IOException("Video stream null");
+    } catch (Exception e) {
+      log.warn("Video media failed to load: {}", e.getMessage());
+    }
+
+    // Fallback to Image explicitly guaranteed:
+    try (InputStream imgStream =
+        getClass().getResourceAsStream("/images/main_scene_dna_fallback.png")) {
+      if (imgStream == null) {
+        throw new IOException("Fallback image not found in resources");
       }
 
-      // Copy the video to a temporary file
-      File tempVideoFile = File.createTempFile("dna", ".mp4");
-      tempVideoFile.deleteOnExit();
-      Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      ImageView fallbackImage = new ImageView(new Image(imgStream));
+      fallbackImage.setPreserveRatio(false);
+      fallbackImage.fitWidthProperty().bind(container.widthProperty());
+      fallbackImage.fitHeightProperty().bind(container.heightProperty());
 
-      Media media = new Media(tempVideoFile.toURI().toString());
-      mediaPlayer = new MediaPlayer(media);
-      mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-      mediaView.setMediaPlayer(mediaPlayer);
-      mediaView.setPreserveRatio(true);
-      mediaPlayer.setOnReady(
-          () -> {
-            stage.setWidth(1080);
-            stage.setHeight(720);
-            stage.centerOnScreen();
-            mediaPlayer.play();
-          });
-    } catch (Exception e) {
-      log.error("Error loading video from resources: {}", e.getMessage());
+      stage.setWidth(desiredWidth);
+      stage.setHeight(desiredHeight);
+      stage.centerOnScreen();
+
+      container.getChildren().add(fallbackImage);
+      log.info("Fallback image loaded successfully.");
+
+    } catch (Exception imgException) {
+      log.error("Error loading fallback image explicitly: {}", imgException.getMessage());
+      Label errorLabel = new Label("Critical Error: No media or fallback image found.");
+      errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 18px;");
+      container.getChildren().add(errorLabel);
     }
-    return mediaView;
+
+    return container;
   }
 
   /**

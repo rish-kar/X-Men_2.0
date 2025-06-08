@@ -363,7 +363,7 @@ public class AddMutationStrategy implements MutationStrategy {
               theoryClone2, scenarioMutatedRule, messageToSend, role, parametersBundle);
           parametersBundle.setTheory(preservedTheory);
           // Store the entire mutated theory in 'collections' if needed
-          // (Will be done inside mutateArrivalRules when final sets are done)
+          // Will be done inside mutateArrivalRules when final sets are done
         }
       }
     }

@@ -264,7 +264,7 @@ public class FileHandler {
    * @param parametersBundle The parameters bundle to spread.
    * @return The spread list of rules.
    */
-  public ParametersBundle spreadTagsie(ParametersBundle parametersBundle) {
+  public ParametersBundle spreadTags(ParametersBundle parametersBundle) {
     ArrayList<Value> persistentTags = new ArrayList<>();
     ArrayList<Rule> theory = parametersBundle.getTheory();
 

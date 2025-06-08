@@ -46,17 +46,8 @@ public class FileLoadingService {
 
     log.debug("Starting Tamarin validation for file: {}", file.getOriginalFilename());
 
-    // TODO: Implement TamarinValidator.validateTamarinFile(file)
-    boolean isValid = true;
-
-    if (!isValid) {
-      log.error("File validation failed: ", file.getOriginalFilename());
-      throw new IllegalArgumentException("File Validation Failed");
-    }
-
     parametersBundle = loadFile(file, parametersBundle);
 
-    // Implement your file processing logic here
     return parametersBundle;
   }
 
@@ -72,31 +63,5 @@ public class FileLoadingService {
       log.error("Error occurred while loading file: {}", e.getMessage(), e);
     }
     return null;
-  }
-
-    /**
-     * Load rules from a string content.
-     *
-     * @param rulesContent The string content containing rules.
-     * @param bundle The parameters bundle to load the rules into.
-     * @return The updated parameters bundle containing the loaded rules.
-     */
-  public ParametersBundle loadRulesFromString(String rulesContent, ParametersBundle bundle) {
-    // Implement your rule parsing logic
-    ArrayList<Rule> rules = parseRules(rulesContent);
-    bundle.getCollections().clear();
-    bundle.getCollections().add(rules);
-    return bundle;
-  }
-
-    /**
-     * Parse rules from a string content.
-     *
-     * @param rulesContent The string content containing rules.
-     * @return A list of parsed rules.
-     */
-  private ArrayList<Rule> parseRules(String rulesContent) {
-    // Add actual parsing implementation
-    return new ArrayList<>();
   }
 }
