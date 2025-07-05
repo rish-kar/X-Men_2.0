@@ -19,4 +19,12 @@ public interface MutationGeneratorService {
    */
   void generateMutation(
       ArrayList<Rule> rules, Set<Mutations> mutations, ParametersBundle parametersBundle);
+
+  /**
+   * Extracts human-readable rules from a set of rules.
+   *
+   * @param rules The set of rules to extract human-readable rules from.
+   * @return An ArrayList of human-readable rules extracted from the input rules.
+   */
+  ArrayList<Rule> extractHumanRules(ArrayList<Rule> rules);
 }

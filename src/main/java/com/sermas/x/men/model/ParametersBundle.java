@@ -1,17 +1,14 @@
 package com.sermas.x.men.model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * ParametersBundle class represents a collection of parameters used in the application.
-*/
+/** ParametersBundle class represents a collection of parameters used in the application. */
 @Slf4j
 @Getter
 @Setter
@@ -27,6 +24,8 @@ public class ParametersBundle {
   ArrayList<Value> roles;
   Boolean modelWithTags = false;
   Flags flags;
+  Map<String, String> existingSetupKnowledge = new HashMap<>();
+  Map<String, LinkedHashSet<String>> forgetMutationSet = new HashMap<>();
 
   // New field to store additional content
   private Map<String, String> extraContent = new HashMap<>();

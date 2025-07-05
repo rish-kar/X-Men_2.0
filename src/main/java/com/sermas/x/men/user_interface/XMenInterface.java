@@ -7,6 +7,8 @@ import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
+import java.util.concurrent.*;
+
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -44,6 +46,7 @@ public class XMenInterface extends Application {
   private CheckBox cbType;
   private CheckBox cbCombineAddition;
   private CheckBox cbCombineOnly;
+  private CheckBox cbForget; // Added forget mutation checkbox
 
   private Button buttonUpload;
   private Button buttonStart;
@@ -326,6 +329,9 @@ public class XMenInterface extends Application {
     cbCombineOnly = new CheckBox("Combination Only");
     cbCombineOnly.setId("cbCombineOnly");
 
+    cbForget = new CheckBox("Forget Mutation");
+    cbForget.setId("cbForget");
+
     // Apply style to check boxes.
     cbSkipS.setStyle(checkboxStyle);
     cbSkipSR.setStyle(checkboxStyle);
@@ -337,6 +343,7 @@ public class XMenInterface extends Application {
     cbType.setStyle(checkboxStyle);
     cbCombineAddition.setStyle(checkboxStyle);
     cbCombineOnly.setStyle(checkboxStyle);
+    cbForget.setStyle(checkboxStyle);
 
     // Use an updated CSS drop-shadow with all required parameters.
     String labelStyle =
@@ -350,6 +357,8 @@ public class XMenInterface extends Application {
     lblAdd.setStyle(labelStyle);
     Label lblCombine = new Label("Combine mutation:");
     lblCombine.setStyle(labelStyle);
+    Label lblForget = new Label("Forget mutation:");
+    lblForget.setStyle(labelStyle);
 
     // Arrange components in rows.
     checkboxPanel.addRow(0, lblSkip, cbSkipS, cbSkipSR, cbSkipR);
@@ -358,7 +367,8 @@ public class XMenInterface extends Application {
     checkboxPanel.addRow(3, lblAdd, cbAdd);
     checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
     // Add the button row at the bottom.
-    checkboxPanel.addRow(5, new Label(""), buttonUpload, buttonStart);
+    checkboxPanel.addRow(5, lblForget, cbForget);
+    checkboxPanel.addRow(6, new Label(""), buttonUpload, buttonStart);
 
     return checkboxPanel;
   }
@@ -375,7 +385,11 @@ public class XMenInterface extends Application {
    * request includes the selected file and mutation options as headers.
    */
   private void sendMutationRequest() {
-    OkHttpClient client = new OkHttpClient();
+      OkHttpClient client = new OkHttpClient.Builder()
+              .connectTimeout(30, TimeUnit.MINUTES)
+              .writeTimeout(30, TimeUnit.MINUTES)
+              .readTimeout(30, TimeUnit.MINUTES)
+              .build();
 
     // Create a MediaType for the file.
     MediaType mediaType = MediaType.parse("application/octet-stream");
@@ -415,6 +429,9 @@ public class XMenInterface extends Application {
     }
     if (cbType.isSelected()) {
       requestBuilder.addHeader("Replace-Type", "true");
+    }
+    if (cbForget.isSelected()) {
+      requestBuilder.addHeader("Forget-Mutation", "true");
     }
 
     RequestBody requestBody = multipartBuilder.build();
@@ -479,35 +496,74 @@ public class XMenInterface extends Application {
                         alert.showAndWait();
                       });
                 } else {
+                  // Log the response code and message
                   log.error("Error: {} {}", response.code(), response.message());
-                  Platform.runLater(
-                      () -> {
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("Error");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Error: " + message);
 
-                        // Set your custom logo
-                        ImageView customLogo =
-                            new ImageView(
-                                new Image(
-                                    Objects.requireNonNull(
-                                        getClass()
-                                            .getResourceAsStream("/images/error_mutation.png"))));
-                        customLogo.setFitWidth(120);
-                        customLogo.setFitHeight(120);
-                        alert.setGraphic(customLogo);
+                  // Attempt to read the response body for details
+                  String responseBodyStr = response.body() != null ? response.body().string() : "";
 
-                        // Load the custom CSS file from resources
-                        String cssPath =
-                            Objects.requireNonNull(getClass().getResource("/css/alert.css"))
-                                .toExternalForm();
-                        DialogPane dialogPane = alert.getDialogPane();
-                        dialogPane.getStylesheets().add(cssPath);
-                        dialogPane.getStyleClass().add("my-alert");
+                  // Check for the specific "Forget function not found" text
+                  if (responseBodyStr.contains("Forget function not found")) {
+                    Platform.runLater(
+                        () -> {
+                          Alert alert = new Alert(Alert.AlertType.ERROR);
+                          alert.setTitle("Forget Function Error");
+                          alert.setHeaderText(null);
+                          alert.setContentText("Forget function not found in the input code");
 
-                        alert.showAndWait();
-                      });
+                          // Use the forget_not_found.png image
+                          ImageView customLogo =
+                              new ImageView(
+                                  new Image(
+                                      Objects.requireNonNull(
+                                          getClass()
+                                              .getResourceAsStream(
+                                                  "/images/forget_not_found.png"))));
+                          customLogo.setFitWidth(120);
+                          customLogo.setFitHeight(120);
+                          alert.setGraphic(customLogo);
+
+                          // Load the custom CSS file
+                          String cssPath =
+                              Objects.requireNonNull(getClass().getResource("/css/alert.css"))
+                                  .toExternalForm();
+                          DialogPane dialogPane = alert.getDialogPane();
+                          dialogPane.getStylesheets().add(cssPath);
+                          dialogPane.getStyleClass().add("my-alert");
+
+                          alert.showAndWait();
+                        });
+                  } else {
+                    log.error("Error: {} {}", response.code(), response.message());
+                    Platform.runLater(
+                        () -> {
+                          Alert alert = new Alert(Alert.AlertType.ERROR);
+                          alert.setTitle("Error");
+                          alert.setHeaderText(null);
+                          alert.setContentText("Error: " + message);
+
+                          // Set your custom logo
+                          ImageView customLogo =
+                              new ImageView(
+                                  new Image(
+                                      Objects.requireNonNull(
+                                          getClass()
+                                              .getResourceAsStream("/images/error_mutation.png"))));
+                          customLogo.setFitWidth(120);
+                          customLogo.setFitHeight(120);
+                          alert.setGraphic(customLogo);
+
+                          // Load the custom CSS file from resources
+                          String cssPath =
+                              Objects.requireNonNull(getClass().getResource("/css/alert.css"))
+                                  .toExternalForm();
+                          DialogPane dialogPane = alert.getDialogPane();
+                          dialogPane.getStylesheets().add(cssPath);
+                          dialogPane.getStyleClass().add("my-alert");
+
+                          alert.showAndWait();
+                        });
+                  }
                 }
                 response.close();
               }

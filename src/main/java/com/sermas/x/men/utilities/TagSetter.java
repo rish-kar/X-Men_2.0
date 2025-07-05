@@ -20,7 +20,7 @@ public class TagSetter {
    * @return The parameters bundle with the tags set.
    */
   public ParametersBundle setTags(ParametersBundle parametersBundle, Set<Mutations> mutationSet) {
-    Flags flags = new Flags();
+    Flags flags = parametersBundle.getFlags();
 
     // Sets tags for parameters bundle depending on the mutation set (Add, Replace, Combine Add
     // Replace, Combine Add Replace Only).

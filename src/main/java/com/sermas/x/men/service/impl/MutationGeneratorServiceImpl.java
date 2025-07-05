@@ -54,7 +54,7 @@ public class MutationGeneratorServiceImpl implements MutationGeneratorService {
    * @param rules Rules
    * @return Human Rules
    */
-  private ArrayList<Rule> extractHumanRules(ArrayList<Rule> rules) {
+  public ArrayList<Rule> extractHumanRules(ArrayList<Rule> rules) {
     ArrayList<Rule> humanRules = new ArrayList<>();
     for (Rule rule : rules) {
       if (rule.isHuman()) {

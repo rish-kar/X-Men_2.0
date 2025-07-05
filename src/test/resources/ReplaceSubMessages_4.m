@@ -68,29 +68,28 @@ rule H_2_M:
 , Send($Human,'gid',~gid)
 , To($GateOut)
 ]->
-[ State($Human,'3',<$oyster,$ccard,bal($oyster),bal($ccard),~gid>)
-, SndS($Human,$GateOut,<'gid'>,<~gid>)
+[ State($Human,'3',<$ccard,bal($ccard),~gid>)
+, SndS($Human,$GateOut,<'card','balance'>,<$oyster,bal($oyster)>)
 ]
 
 rule GateOut_1_M:
 [ State($GateOut,'1',<~goid>)
-, RcvS($Human,$GateOut,<'gid'>,<~gid>)
+, RcvS($Human,$GateOut,<'card','balance'>,<$oyster,bal($oyster)>)
 ]
 --[ Receive($GateOut,$Human,$oyster)
 , Receive($GateOut,$Human,bal($oyster))
 , Commit($GateOut,$Human,'finish')
 ]->
-[ State($GateOut,'2',<~goid,~gid>)
-, SndS($GateOut,$Human,<'finish'>,<'finish'>)
+[ State($GateOut,'2',<~goid,$oyster,bal($oyster)>)
+, SndS($GateOut,$Human,<'card','balance','finish'>,<$oyster,bal($oyster),'finish'>)
 ]
 
 rule H_3_M:
-[ State($Human,'3',<$oyster,$ccard,bal($oyster),bal($ccard),~gid>)
-, RcvS($GateOut,$Human,,)
+[ State($Human,'3',<$ccard,bal($ccard),~gid>)
+, RcvS($GateOut,$Human,<'card','balance','finish'>,<$oyster,bal($oyster),'finish'>)
 ]
 --[ H()
 , Hfin($Human,'card',$oyster)
 ]->
 [ 
 ]
-

@@ -52,36 +52,36 @@ public class PSpecial extends Special implements Cloneable, Comparable {
    * @return a string in a certain format
    */
   public String toString() {
-    String str = "<";
+    if (this.group == null || this.group.isEmpty()) {
+      return "<>";
+    }
 
-    for (int po = 0; po < this.group.size(); ++po) {
-      if (!this.group.get(po).isRemoved()) {
-        Object c = this.group.get(po);
-        if (c instanceof Variable) {
-          String x = c.toString();
-          if (!x.equals("")) {
-            str = str + ((Variable) c).getName();
-          }
+    StringBuilder str = new StringBuilder("<");
+    boolean first = true;
 
-          if (this.group.size() != 1 && po < this.group.size() - 1 && !x.equals("")) {
-            str = str.concat(",");
+    for (Value value : this.group) {
+      if (value != null && !value.isRemoved()) {
+        if (!first) {
+          str.append(",");
+        }
+        first = false;
+
+        if (value instanceof Variable) {
+          String name = value.getName();
+          if (name != null && !name.isEmpty()) {
+            str.append(name);
           }
         } else {
-          str = str.concat(this.group.get(po).toString());
-          if (this.group.size() != 1 && po < this.group.size() - 1) {
-            str = str.concat(",");
+          String valueStr = value.toString();
+          if (valueStr != null && !valueStr.isEmpty()) {
+            str.append(valueStr);
           }
         }
-      } else if (po == this.group.size() - 1) {
-        str = str.substring(0, str.length() - 1);
       }
     }
 
-    if (!str.isEmpty()) {
-      str = str.concat(">");
-    }
-
-    return str;
+    str.append(">");
+    return str.toString();
   }
 
   /**

@@ -7,6 +7,8 @@ import com.sermas.x.men.utilities.UtilityFunctions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.*;
+
 /**
  * Configuration class for the application. This class defines beans for various services and
  * utilities used in the application.
@@ -45,5 +47,16 @@ public class AppConfig {
   public SkipSendMutationStrategy skipSendMutationStrategy(
       UtilityFunctions utilityFunctions, RulesModifier rulesModifier) {
     return new SkipSendMutationStrategy(utilityFunctions, rulesModifier);
+  }
+
+  /**
+   * Bean for Random. Provides a random number generator instance that can be used throughout the
+   * application.
+   *
+   * @return a new instance of Random
+   */
+  @Bean
+  public Random random() {
+    return new Random();
   }
 }

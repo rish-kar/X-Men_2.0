@@ -4,6 +4,8 @@ import com.sermas.x.men.model.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -149,7 +151,7 @@ public class UtilityFunctions {
       // Iterate through each parameter in the fact
       for (Object parameter : parameters) {
         if (parameter instanceof Value value) {
-            // Check if the variable name matches
+          // Check if the variable name matches
           if (value.getName().equals(variableName)) {
             return true;
           }
@@ -269,14 +271,14 @@ public class UtilityFunctions {
         if (precondition.getF_name().startsWith("Rcv") && !precondition.isRemoved()) {
           Object receivedValue = precondition.getParameter(2);
           if (receivedValue instanceof PSpecial receivedValues) {
-              for (Value value : receivedValues.getGroup()) {
+            for (Value value : receivedValues.getGroup()) {
               if (!value.isRemoved() && !value.isConstant()) {
                 value.persistentKnowledge();
                 newKnowledge.addValue(value);
               }
             }
           } else if (receivedValue instanceof Variable receivedVariable) {
-              ArrayList<Value> values = new ArrayList<>();
+            ArrayList<Value> values = new ArrayList<>();
             exploreVariable(values, receivedVariable);
             for (Value value : values) {
               if (!value.isRemoved() && !value.isConstant()) {
@@ -494,5 +496,79 @@ public class UtilityFunctions {
     }
     // No matching function replacement found
     return null;
+  }
+
+  // Forget Mutation Logic
+  /**
+   * Removes from stateKnowledge any Message whose "unparsed" string exactly matches one of the
+   * forget strings in parametersBundle.getForgetMutationSet().
+   *
+   * <p>For example: if "bal($oyster)" is in the forget set for "H_2", and stateKnowledge["H_2"]
+   * contains a PredictiveFunction(bal [ Atom($oyster) ]), we unparse that to "bal($oyster)" and
+   * remove it.
+   *
+   * @param stateKnowledge The map ruleName -> set of messages from
+   *     extractStateKnowledgeFromRules(...)
+   * @param forgetMutationSet The map ruleName -> set of raw strings from parseForgetMutations(...)
+   */
+  public void applyForgetSetsToStateKnowledge(
+      Map<String, Set<Message>> stateKnowledge,
+      Map<String, LinkedHashSet<String>> forgetMutationSet) {
+    for (Map.Entry<String, Set<Message>> entry : stateKnowledge.entrySet()) {
+      String ruleName = entry.getKey();
+      Set<Message> messages = entry.getValue();
+
+      // Only do something if there's a forget set for this ruleName
+      if (!forgetMutationSet.containsKey(ruleName)) {
+        continue;
+      }
+
+      // For clarity:
+      Set<String> forgetStrings = forgetMutationSet.get(ruleName);
+
+      // Build a new set that excludes any message matching a forgetString
+      Set<Message> filtered = new LinkedHashSet<>();
+      for (Message msg : messages) {
+        String unparsed = unparseMessage(msg);
+        // If the unparsed string is NOT in the forget set, we keep it
+        if (!forgetStrings.contains(unparsed)) {
+          filtered.add(msg);
+        }
+      }
+      // Overwrite with the filtered set
+      entry.setValue(filtered);
+    }
+  }
+
+  /**
+   * Recursively "unparses" the Message back to a string in the same format your parser recognizes.
+   * Examples: Atom("bal($oyster)") -> "bal($oyster)" PredictiveFunction("bal", [Atom("$oyster")])
+   * -> "bal($oyster)" Pair(Atom("foo"), Atom("bar")) -> "(foo,bar)" Encrypt(...) -> e.g.
+   * "{...}_{...}" Adjust the syntax to match your existing parse logic.
+   *
+   * @param msg The Message to unparse.
+   * @return A string representation of the Message.
+   */
+  private String unparseMessage(Message msg) {
+    if (msg instanceof Atom atom) {
+      return atom.getValue();
+    } else if (msg instanceof Pair pair) {
+      // (left,right)
+      return "(" + unparseMessage(pair.getLeft()) + ", " + unparseMessage(pair.getRight()) + ")";
+    } else if (msg instanceof PredictiveFunction pf) {
+      // e.g. bal($oyster)
+      String args =
+          pf.getArgs().stream().map(this::unparseMessage).collect(Collectors.joining(", "));
+      return pf.getName() + "(" + args + ")";
+    } else if (msg instanceof Encrypt encrypt) {
+      // {msg}_{key}
+      return "{"
+          + unparseMessage(encrypt.getMsg())
+          + "}_{"
+          + unparseMessage(encrypt.getKey())
+          + "}";
+    }
+    // Default fallback
+    return msg.represent();
   }
 }

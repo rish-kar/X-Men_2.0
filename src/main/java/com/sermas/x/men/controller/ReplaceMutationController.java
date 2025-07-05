@@ -51,6 +51,7 @@ public class ReplaceMutationController {
     mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
 
     ParametersBundle parametersBundle = new ParametersBundle();
+    parametersBundle.setFlags(new com.sermas.x.men.model.Flags());
 
     // Process file content
     String fileContent = new String(file.getBytes());
@@ -93,6 +94,7 @@ public class ReplaceMutationController {
     mutationSet.add(Mutations.REPLACE_TYPE);
 
     ParametersBundle parametersBundle = new ParametersBundle();
+    parametersBundle.setFlags(new com.sermas.x.men.model.Flags());
 
     // Process file content
     String fileContent = new String(file.getBytes());

@@ -1,17 +1,13 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.InMemoryMultipartFile;
-import com.sermas.x.men.model.Mutations;
-import com.sermas.x.men.model.ParametersBundle;
-import com.sermas.x.men.model.Rule;
-import com.sermas.x.men.service.FileLoadingService;
-import com.sermas.x.men.service.FileSplitterService;
-import com.sermas.x.men.service.MutationGeneratorService;
-import com.sermas.x.men.utilities.TagSetter;
+import com.sermas.x.men.model.*;
+import com.sermas.x.men.service.*;
+import com.sermas.x.men.utilities.*;
+
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
+
+import lombok.extern.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 /** Controller for mutation generation. */
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class MutationController {
 
   @Autowired public FileLoadingService fileLoadingService;
@@ -32,6 +29,10 @@ public class MutationController {
   public MutationGeneratorService mutationGeneratorService;
 
   @Autowired private FileSplitterService fileSplitterService;
+
+  @Autowired private UtilityFunctions utilityFunctions;
+
+  @Autowired private SetupKnowledgeExtractor setupKnowledgeExtractor;
 
   /**
    * Generates mutations based on the provided file and mutation options.
@@ -59,64 +60,97 @@ public class MutationController {
       @RequestHeader(value = "Add-Mutation", required = false) Boolean addMutation,
       @RequestHeader(value = "Replace-Sub-Messages", required = false) Boolean replaceSubMessages,
       @RequestHeader(value = "Replace-Type", required = false) Boolean replaceType,
+      @RequestHeader(value = "True-Replace", required = false) Boolean trueReplace,
+      @RequestHeader(value = "Forget-Mutation", required = false) Boolean forgetMutation,
       @RequestParam("file") MultipartFile file)
       throws Exception {
 
-    // Create mutation set from headers
-    Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
-    if (Boolean.TRUE.equals(skipSend)) {
-      mutationSet.add(Mutations.SKIP_SEND);
-    }
-    if (Boolean.TRUE.equals(skipReceive)) {
-      mutationSet.add(Mutations.SKIP_RECEIVE);
-    }
-    if (Boolean.TRUE.equals(skipSendReceive)) {
-      mutationSet.add(Mutations.SKIP_SEND_RECEIVE);
-    }
-    if (Boolean.TRUE.equals(skipReceiveSend)) {
-      mutationSet.add(Mutations.SKIP_RECEIVE_SEND);
-    }
-    if (Boolean.TRUE.equals(skipReceiveSendReceive)) {
-      mutationSet.add(Mutations.SKIP_RECEIVE_SEND_RECEIVE);
-    }
-    if (Boolean.TRUE.equals(addMutation)) {
-      mutationSet.add(Mutations.ADD);
-    }
-    if (Boolean.TRUE.equals(replaceSubMessages)) {
-      mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
-    }
-    if (Boolean.TRUE.equals(replaceType)) {
-      mutationSet.add(Mutations.REPLACE_TYPE);
-    }
+    Map<String, String> setupKnowledgeValues;
 
-    // Process file content
-    String fileContent = new String(file.getBytes());
-    FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
+    try {
+      // Create mutation set from headers
+      Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
+      if (Boolean.TRUE.equals(skipSend)) {
+        mutationSet.add(Mutations.SKIP_SEND);
+      }
+      if (Boolean.TRUE.equals(skipReceive)) {
+        mutationSet.add(Mutations.SKIP_RECEIVE);
+      }
+      if (Boolean.TRUE.equals(skipSendReceive)) {
+        mutationSet.add(Mutations.SKIP_SEND_RECEIVE);
+      }
+      if (Boolean.TRUE.equals(skipReceiveSend)) {
+        mutationSet.add(Mutations.SKIP_RECEIVE_SEND);
+      }
+      if (Boolean.TRUE.equals(skipReceiveSendReceive)) {
+        mutationSet.add(Mutations.SKIP_RECEIVE_SEND_RECEIVE);
+      }
+      if (Boolean.TRUE.equals(addMutation)) {
+        mutationSet.add(Mutations.ADD);
+      }
+      if (Boolean.TRUE.equals(replaceSubMessages)) {
+        mutationSet.add(Mutations.REPLACE_SUB_MESSAGES);
+      }
+      if (Boolean.TRUE.equals(replaceType)) {
+        mutationSet.add(Mutations.REPLACE_TYPE);
+      }
+        if (Boolean.TRUE.equals(forgetMutation)) {
+            mutationSet.add(Mutations.FORGET);
+        }
 
-    // Create virtual MultipartFile for rules section
-    MultipartFile rulesFile =
-        new InMemoryMultipartFile(
-            "rulesFile",
-            file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
-            "text/plain",
-            sections.rules().getBytes(StandardCharsets.UTF_8));
+      // Process file content
+      String fileContent = new String(file.getBytes());
+      FileSplitterService.FileSections sections = fileSplitterService.splitFile(fileContent);
 
-    // Set tags and load rules
-    ParametersBundle parametersBundle = new ParametersBundle();
-    parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
-    parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
+      // Create virtual MultipartFile for rules section
+      MultipartFile rulesFile =
+          new InMemoryMultipartFile(
+              "rulesFile",
+              file.getOriginalFilename().replace(".spthy", "_rules.spthy"), // Preserve extension
+              "text/plain",
+              sections.rules().getBytes(StandardCharsets.UTF_8));
 
-    // Store file sections
-    parametersBundle.addExtraContent("preamble", sections.preamble());
-    parametersBundle.addExtraContent("postamble", sections.postamble());
+      // Set tags and load rules
+      ParametersBundle parametersBundle = new ParametersBundle();
+      parametersBundle.setFlags(new Flags());
+      parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
+      parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
 
-    // Generate mutations
-    ArrayList<Rule> originalRules = parametersBundle.getCollections().get(0);
-    parametersBundle.getCollections().clear();
-    parametersBundle.setFileName(file.getOriginalFilename());
+      // Store file sections
+      parametersBundle.addExtraContent("preamble", sections.preamble());
+      parametersBundle.addExtraContent("postamble", sections.postamble());
 
-    mutationGeneratorService.generateMutation(originalRules, mutationSet, parametersBundle);
+      // Generate mutations
+      ArrayList<Rule> originalRules = parametersBundle.getCollections().get(0);
+      // Only set flag if trueReplace header is available for random replacement for a similar value
+      // from the knowledge
+      // If true replacement is needed, then extract values from the setup knowledge
+      if (trueReplace != null
+          && trueReplace
+          && mutationSet.contains(Mutations.REPLACE_SUB_MESSAGES)) {
+        parametersBundle.getFlags().setTrueReplace(true);
+        setupKnowledgeValues = setupKnowledgeExtractor.processProtocolModel(originalRules);
+        parametersBundle.setExistingSetupKnowledge(setupKnowledgeValues);
+      }
 
-    return ResponseEntity.ok("Files generated successfully");
+      if (forgetMutation != null && forgetMutation) {
+        parametersBundle =
+            ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle);
+        parametersBundle.getFlags().setForgetMutation(true);
+      }
+
+      parametersBundle.getCollections().clear();
+      parametersBundle.setFileName(file.getOriginalFilename());
+
+      mutationGeneratorService.generateMutation(originalRules, mutationSet, parametersBundle);
+
+      return ResponseEntity.ok("File generated successfully in MutationController.");
+    } catch (IllegalArgumentException e) {
+      log.error("Error generating mutations: " + e.getMessage(), e);
+      return ResponseEntity.status(400).body(e.getMessage());
+    } catch (Exception e) {
+      log.error("Error generating mutations: " + e.getMessage(), e);
+      return ResponseEntity.status(500).body(e.getMessage());
+    }
   }
 }

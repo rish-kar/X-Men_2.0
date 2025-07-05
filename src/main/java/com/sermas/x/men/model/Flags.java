@@ -23,4 +23,6 @@ public class Flags {
   protected boolean combineAddReplace = false;
   protected boolean combineAddReplaceOnly = false;
   protected boolean switchFlag = false;
+  protected boolean trueReplace = false;
+  protected boolean forgetMutation = false;
 }

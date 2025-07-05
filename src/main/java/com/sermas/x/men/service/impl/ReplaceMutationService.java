@@ -3,6 +3,8 @@ package com.sermas.x.men.service.impl;
 import com.sermas.x.men.model.*;
 import com.sermas.x.men.utilities.UtilityFunctions;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -217,9 +219,6 @@ public class ReplaceMutationService {
    * @return true if the rule should be cloned, false otherwise.
    */
   private boolean shouldCloneRule(ParametersBundle parametersBundle) {
-    // Clarify the original combined condition: (parametersBundle.getFlags().isCombineAddReplace()
-    // && parametersBundle.getFlags().isSwitchFlag()) ||
-    // parametersBundle.getFlags().isCombineAddReplaceOnly()
     return (parametersBundle.getFlags().isCombineAddReplace()
             && parametersBundle.getFlags().isSwitchFlag())
         || parametersBundle.getFlags().isCombineAddReplaceOnly();
@@ -327,27 +326,18 @@ public class ReplaceMutationService {
   private ArrayList<String> generatePermutations(ArrayList<Value> parameters) {
     ArrayList<String> permutations = new ArrayList<>();
     try {
-      // Build a set of indices for powerSet
-      Set<Integer> indexSet = new HashSet<>();
-      for (int i = 0; i < parameters.size(); i++) {
-        indexSet.add(i);
-      }
-
-      // Generate the power set of all indices
-      Set<Set<Integer>> allSubsets = utilityFunctions.powerSet(indexSet);
-
-      // Convert each subset of indices into a string
-      for (Set<Integer> subset : allSubsets) {
-        StringBuilder subsetString = new StringBuilder();
-        for (Integer index : subset) {
-          subsetString.append(index);
+        List<List<Integer>> allSubsets = lexPowerSet(parameters.size());
+        for (List<Integer> subset : allSubsets) {
+            StringBuilder subsetString = new StringBuilder();
+            for (Integer index : subset) {
+                subsetString.append(index);
+            }
+            if (!subsetString.toString().isEmpty()) {
+                permutations.add(subsetString.toString());
+            }
         }
-        if (!subsetString.toString().isEmpty()) {
-          permutations.add(subsetString.toString());
-        }
-      }
     } catch (Exception e) {
-      log.error("Error generating permutations: ", e);
+        log.error("Error generating permutations: ", e);
     }
     return permutations;
   }
@@ -807,12 +797,10 @@ public class ReplaceMutationService {
             rcvValues.add((Value) rcvParameter);
           }
 
-          // Compare each item in localContentClone with rcvValues,
-          // marking unmatched items as removed.
           int i = 0;
           int j = 0;
-          while (i < localContentClone.size() && j < rcvValues.size()) {
-            String cloneName = localContentClone.get(i).getName().replaceAll("[^a-zA-Z]", "");
+          while (i < contentClone.size() && j < rcvValues.size()) {
+            String cloneName = contentClone.get(i).getName().replaceAll("[^a-zA-Z]", "");
             String rcvName = rcvValues.get(j).getName().replaceAll("[^a-zA-Z]", "");
             if (cloneName.equals(rcvName)) {
               i++;
@@ -823,7 +811,6 @@ public class ReplaceMutationService {
               j++;
             }
           }
-          // Anything leftover in rcvValues gets removed.
           for (int h = j; h < rcvValues.size(); h++) {
             rcvValues.get(h).setRemoved(true);
           }
@@ -856,35 +843,30 @@ public class ReplaceMutationService {
             sentValues.add((Value) valuesSent);
           }
 
-          // For each value in sentValues, remove it if it's not found in the postcondition
-          // "State"'s knowledge
           Fact statePostFact = ruleToModify.getPostconditionFactByMatchingName("State");
           if (statePostFact != null && statePostFact.getParameter(2) instanceof PSpecial) {
             ArrayList<Value> knowledge = ((PSpecial) statePostFact.getParameter(2)).getGroup();
-            for (Value value : sentValues) {
-              if (!value.isConstant()) {
+            for (int i = 0; i < sentValues.size(); i++) {
+              if (!sentValues.get(i).isConstant()) {
                 boolean found = false;
                 for (Value kn : knowledge) {
-                  if (value
-                      .getName()
-                      .replaceAll("[^a-zA-Z]", "")
+                  if (sentValues.get(i).getName().replaceAll("[^a-zA-Z]", "")
                       .equals(kn.getName().replaceAll("[^a-zA-Z]", ""))) {
                     found = true;
                     break;
                   }
                 }
                 if (!found) {
-                  value.setRemoved(true);
+                  sentValues.get(i).setRemoved(true);
                 }
               }
             }
           }
 
-          // Clear localContentClone, add back the non-removed sent values
-          localContentClone.clear();
+          contentClone.clear();
           for (Value v : sentValues) {
             if (!v.isRemoved()) {
-              localContentClone.add(v);
+              contentClone.add(v);
             }
           }
         }
@@ -939,5 +921,22 @@ public class ReplaceMutationService {
     } catch (Exception e) {
       log.error("Error ensuring consistency between state and receive facts: ", e);
     }
+  }
+
+  private List<List<Integer>> lexPowerSet(int n) {
+    List<List<Integer>> result = new ArrayList<>();
+    int powerSetSize = 1 << n;
+    for (int i = 1; i < powerSetSize; i++) { // skip empty set
+        List<Integer> subset = new ArrayList<>();
+        for (int j = 0; j < n; j++) {
+            if ((i & (1 << j)) != 0) {
+                subset.add(j);
+            }
+        }
+        result.add(subset);
+    }
+    // Sort by size, then lexicographically
+    result.sort(Comparator.<List<Integer>>comparingInt(List::size).thenComparing(a -> a.toString()));
+    return result;
   }
 }
