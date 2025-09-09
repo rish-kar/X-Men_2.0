@@ -28,12 +28,14 @@ public class ForgetMutationController {
   MutationGeneratorService mutationGeneratorService;
   @Autowired private FileSplitterService fileSplitterService;
   @Autowired private SetupKnowledgeExtractor setupKnowledgeExtractor;
+  @Autowired private ZipService zipService;
+
 
   /**
    * Trigger of forget mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/forget/mutations")
   public ResponseEntity<?> forgetMutations(@RequestParam("file") MultipartFile file)
@@ -74,7 +76,9 @@ public class ForgetMutationController {
 
       mutationGeneratorService.generateMutation(originalRules, mutationSet, parametersBundle);
 
-      return ResponseEntity.ok("Files generated successfully in ForgetMutationController.");
+      // Extract base filename for ZIP creation
+      String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+      return zipService.createZipResponse(baseFileName);
     } catch (IllegalArgumentException e) {
       log.error("Error generating forget mutations: " + e.getMessage(), e);
       return ResponseEntity.status(400).body(e.getMessage());
@@ -83,4 +87,5 @@ public class ForgetMutationController {
       return ResponseEntity.status(500).body(e.getMessage());
     }
   }
-} 
+}
+

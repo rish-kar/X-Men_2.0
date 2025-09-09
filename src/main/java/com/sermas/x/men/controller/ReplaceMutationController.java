@@ -7,6 +7,7 @@ import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
+import com.sermas.x.men.service.ZipService;
 import com.sermas.x.men.utilities.TagSetter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -37,11 +38,13 @@ public class ReplaceMutationController {
 
   @Autowired private FileSplitterService fileSplitterService;
 
+  @Autowired private ZipService zipService;
+
   /**
    * Trigger replacing of sub messages mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/subMessagesMutations")
   public ResponseEntity<?> replaceSubMessagesMutations(@RequestParam("file") MultipartFile file)
@@ -77,14 +80,16 @@ public class ReplaceMutationController {
     mutationGeneratorService.generateMutation(
         rules, Collections.singleton(Mutations.REPLACE_SUB_MESSAGES), parametersBundle);
 
-    return ResponseEntity.ok("Files generated successfully");
+    // Extract base filename for ZIP creation
+    String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+    return zipService.createZipResponse(baseFileName);
   }
 
   /**
    * Trigger replacing of type mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/typeMutations")
   public ResponseEntity<?> replaceTypeMutations(@RequestParam("file") MultipartFile file)
@@ -120,6 +125,8 @@ public class ReplaceMutationController {
     mutationGeneratorService.generateMutation(
         rules, Collections.singleton(Mutations.REPLACE_TYPE), parametersBundle);
 
-    return ResponseEntity.ok("Files generated successfully");
+    // Extract base filename for ZIP creation
+    String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+    return zipService.createZipResponse(baseFileName);
   }
 }

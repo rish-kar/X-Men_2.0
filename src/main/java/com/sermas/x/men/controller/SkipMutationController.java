@@ -7,6 +7,7 @@ import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
+import com.sermas.x.men.service.ZipService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,11 +33,13 @@ public class SkipMutationController {
 
   @Autowired private FileSplitterService fileSplitterService;
 
+  @Autowired private ZipService zipService;
+
   /**
    * Trigger skipping of send mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/sendMutations")
   public ResponseEntity<?> skipSendMutation(@RequestParam("file") MultipartFile file)
@@ -65,14 +68,16 @@ public class SkipMutationController {
     mutationGeneratorService.generateMutation(
         rules, Collections.singleton(Mutations.SKIP_SEND), parametersBundle);
 
-    return ResponseEntity.ok("Files generated successfully");
+    // Extract base filename for ZIP creation
+    String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+    return zipService.createZipResponse(baseFileName);
   }
 
   /**
    * Trigger skipping of receive mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/receiveMutations")
   public ResponseEntity<?> skipReceiveMutation(@RequestParam("file") MultipartFile file)
@@ -101,14 +106,16 @@ public class SkipMutationController {
     mutationGeneratorService.generateMutation(
         rules, Collections.singleton(Mutations.SKIP_RECEIVE), parametersBundle);
 
-    return ResponseEntity.ok("Files generated successfully");
+    // Extract base filename for ZIP creation
+    String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+    return zipService.createZipResponse(baseFileName);
   }
 
   /**
    * Trigger skipping of send receive mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/sendReceiveMutations")
   public ResponseEntity<?> skipSendReceiveMutation(@RequestParam("file") MultipartFile file)
@@ -137,14 +144,16 @@ public class SkipMutationController {
     mutationGeneratorService.generateMutation(
         rules, Collections.singleton(Mutations.SKIP_SEND_RECEIVE), parametersBundle);
 
-    return ResponseEntity.ok("Files generated successfully");
+    // Extract base filename for ZIP creation
+    String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+    return zipService.createZipResponse(baseFileName);
   }
 
   /**
    * Trigger skipping of receive send mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/receiveSendMutations")
   public ResponseEntity<?> skipReceiveSendMutation(@RequestParam("file") MultipartFile file)
@@ -173,14 +182,16 @@ public class SkipMutationController {
     mutationGeneratorService.generateMutation(
         rules, Collections.singleton(Mutations.SKIP_RECEIVE_SEND), parametersBundle);
 
-    return ResponseEntity.ok("Files generated successfully");
+    // Extract base filename for ZIP creation
+    String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+    return zipService.createZipResponse(baseFileName);
   }
 
   /**
    * Trigger skipping of receive send receive mutation.
    *
    * @param file The file to process.
-   * @return A message indicating the result of the file processing.
+   * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/receiveSendReceiveMutations")
   public ResponseEntity<?> skipReceiveSendReceiveMutation(@RequestParam("file") MultipartFile file)
@@ -209,6 +220,8 @@ public class SkipMutationController {
     mutationGeneratorService.generateMutation(
         rules, Collections.singleton(Mutations.SKIP_RECEIVE_SEND_RECEIVE), parametersBundle);
 
-    return ResponseEntity.ok("Files generated successfully");
+    // Extract base filename for ZIP creation
+    String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+    return zipService.createZipResponse(baseFileName);
   }
 }

@@ -400,9 +400,10 @@ public class XMenInterface extends Application {
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", selectedFile.getName(), fileBody);
 
-    // Updated URL: using port 8081 to match the server's port.
-    String apiUrl =
-        System.getProperty("app.api.url", "http://localhost:8081/api/generateMutations");
+    // Updated URL: using environment variables for API configuration
+    String apiBaseUrl = System.getProperty("API_BASE_URL", System.getenv().getOrDefault("API_BASE_URL", "http://localhost:8081"));
+    String apiEndpoint = System.getProperty("API_GENERATE_MUTATIONS_ENDPOINT", System.getenv().getOrDefault("API_GENERATE_MUTATIONS_ENDPOINT", "/api/generateMutations"));
+    String apiUrl = System.getProperty("API_FULL_URL", System.getenv().getOrDefault("API_FULL_URL", apiBaseUrl + apiEndpoint));
     Request.Builder requestBuilder = new Request.Builder().url(apiUrl);
 
     // Add headers based on the state of the checkboxes.

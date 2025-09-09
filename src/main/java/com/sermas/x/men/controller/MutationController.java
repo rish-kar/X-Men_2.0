@@ -10,6 +10,7 @@ import java.util.*;
 import lombok.extern.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +34,8 @@ public class MutationController {
   @Autowired private UtilityFunctions utilityFunctions;
 
   @Autowired private SetupKnowledgeExtractor setupKnowledgeExtractor;
+
+  @Autowired private ZipService zipService;
 
   /**
    * Generates mutations based on the provided file and mutation options.
@@ -144,7 +147,9 @@ public class MutationController {
 
       mutationGeneratorService.generateMutation(originalRules, mutationSet, parametersBundle);
 
-      return ResponseEntity.ok("File generated successfully in MutationController.");
+      // Extract base filename for ZIP creation
+      String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+      return zipService.createZipResponse(baseFileName);
     } catch (IllegalArgumentException e) {
       log.error("Error generating mutations: " + e.getMessage(), e);
       return ResponseEntity.status(400).body(e.getMessage());

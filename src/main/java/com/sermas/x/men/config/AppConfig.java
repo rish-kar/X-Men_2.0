@@ -4,8 +4,13 @@ import com.sermas.x.men.service.impl.SkipSendMutationStrategy;
 import com.sermas.x.men.utilities.FileHandler;
 import com.sermas.x.men.utilities.RulesModifier;
 import com.sermas.x.men.utilities.UtilityFunctions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.*;
 
 import java.util.*;
 
@@ -58,5 +63,35 @@ public class AppConfig {
   @Bean
   public Random random() {
     return new Random();
+  }
+
+  /**
+   * CORS configuration to allow all types of requests from localhost ports 8082 and higher.
+   * This enables cross-origin requests for development and testing purposes.
+   */
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins(
+                        "http://localhost:8081", // if you ever hit from same port
+                        "http://localhost:8082", // node server (if browser served from here)
+                        "http://localhost:8083", // Vite dev server
+                        "http://localhost:5173"  // default Vite fallback
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                .allowedHeaders(
+                        "Content-Type", "Accept", "Origin", "Authorization",
+                        "Skip-Send", "Skip-Receive", "Skip-Send-Receive", "Skip-Receive-Send",
+                        "Skip-Receive-Send-Receive", "Add-Mutation", "Replace-Sub-Messages",
+                        "Replace-Type", "True-Replace", "Forget-Mutation"
+                )
+                .exposedHeaders("Content-Disposition")
+                .allowCredentials(true)
+                .maxAge(3600);
+      }
+    };
   }
 }

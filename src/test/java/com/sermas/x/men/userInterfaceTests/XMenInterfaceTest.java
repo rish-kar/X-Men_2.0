@@ -236,7 +236,7 @@ public class XMenInterfaceTest extends ApplicationTest {
 
       // Configure the app to use the mock server's port
       System.setProperty(
-          "app.api.url", "http://localhost:" + serverPort + "/api/generateMutations");
+          "API_FULL_URL", "http://localhost:" + serverPort + "/api/generateMutations");
 
       // Load the file internally from the resource folder
       File tempFile;
@@ -313,7 +313,7 @@ public class XMenInterfaceTest extends ApplicationTest {
       server.start(0); // Use dynamic port
       int serverPort = server.getPort();
       System.setProperty(
-          "app.api.url", "http://localhost:" + serverPort + "/api/generateMutations");
+          "API_FULL_URL", "http://localhost:" + serverPort + "/api/generateMutations");
       server.enqueue(new MockResponse().setResponseCode(500));
 
       Button startButton = lookup("Start Mutation").queryButton();
