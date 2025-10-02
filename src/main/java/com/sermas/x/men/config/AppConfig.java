@@ -12,14 +12,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.*;
 
-import java.util.*;
-
 /**
  * Configuration class for the application. This class defines beans for various services and
  * utilities used in the application.
  */
 @Configuration
 public class AppConfig {
+
+  @Value("${app.cors.allowed-origins:}")
+  private String corsAllowedOrigins; // Comma-separated origins from configuration
 
   /**
    * Bean for FileHandler. Ensures proper initialization and avoids any dependency injection issues.
@@ -74,13 +75,13 @@ public class AppConfig {
     return new WebMvcConfigurer() {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
+        // Parse configured origins; if none provided, use legacy defaults
+        String[] configured = Arrays.stream(corsAllowedOrigins.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toArray(String[]::new);
         registry.addMapping("/api/**")
-                .allowedOrigins(
-                        "http://localhost:8081", // if you ever hit from same port
-                        "http://localhost:8082", // node server (if browser served from here)
-                        "http://localhost:8083", // Vite dev server
-                        "http://localhost:5173"  // default Vite fallback
-                )
+                .allowedOrigins(configured)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders(
                         "Content-Type", "Accept", "Origin", "Authorization",

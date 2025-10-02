@@ -30,7 +30,6 @@ public class ForgetMutationController {
   @Autowired private SetupKnowledgeExtractor setupKnowledgeExtractor;
   @Autowired private ZipService zipService;
 
-
   /**
    * Trigger of forget mutation.
    *
@@ -88,4 +87,3 @@ public class ForgetMutationController {
     }
   }
 }
-
