@@ -137,6 +137,9 @@ public class MutationController {
       }
 
       if (forgetMutation != null && forgetMutation) {
+        parametersBundle.getFlags().setTrueReplace(true);
+        setupKnowledgeValues = setupKnowledgeExtractor.processProtocolModel(originalRules);
+        parametersBundle.setExistingSetupKnowledge(setupKnowledgeValues);
         parametersBundle =
             ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle);
         parametersBundle.getFlags().setForgetMutation(true);

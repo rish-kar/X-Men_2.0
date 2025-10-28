@@ -57,19 +57,22 @@ public class SetupKnowledgeExtractor {
     // Using LinkedHashMap to preserve insertion order
     Map<String, String> valueTypeMap = new LinkedHashMap<>();
 
-    // Look for rules with !Type declarations
+    // Look for only the humansetup rule and extract !Type declarations
     for (Rule rule : rules) {
+      if (!"humansetup".equalsIgnoreCase(rule.getRule_name())) {
+        continue;
+      }
+
       String ruleContent = rule.toString();
 
-      // Find all !Type declarations for the principal
+      // Accept $var, ~var, fun(args), or plain identifiers
       Pattern typePattern = Pattern.compile(
-        "!Type\\("                       //  !Type(
-      + Pattern.quote(principal)         //  principal
-      + "\\s*,\\s*'([^']+)'\\s*,\\s*"    //  ,'type',
-      + "(\\$[A-Za-z0-9_]+|"             //  $oyster  OR
-      + "[A-Za-z0-9_]+\\([^)]*\\))"      //  bal($oyster)
-      + "\\)"                            //  )
-    );
+              "!Type\\(" +
+                      Pattern.quote(principal) +
+                      "\\s*,\\s*'([^']+)'\\s*,\\s*" +
+                      "(\\$[A-Za-z0-9_]+|~[A-Za-z0-9_]+|[A-Za-z0-9_]+\\([^)]*\\)|[A-Za-z0-9_]+)" +
+                      "\\)"
+      );
     
       Matcher typeMatcher = typePattern.matcher(ruleContent);
 
@@ -80,6 +83,9 @@ public class SetupKnowledgeExtractor {
         valueTypeMap.put(value, type);
         log.debug("Found type declaration: {} -> {}", value, type);
       }
+
+      // Process only the first matching humansetup rule
+      break;
     }
 
     if (valueTypeMap.isEmpty()) {
@@ -105,5 +111,3 @@ public class SetupKnowledgeExtractor {
     return extractPrincipalTypeValues(rules, principal);
   }
 }
-
-

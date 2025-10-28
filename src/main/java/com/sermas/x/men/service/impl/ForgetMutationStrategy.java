@@ -50,7 +50,8 @@ public class ForgetMutationStrategy implements MutationStrategy {
     if (forgetSet == null || forgetSet.isEmpty()) return parametersBundle;
 
     // Handle the case where no forget values are provided
-    for (String forgotten : forgetSet) {
+    for (String forgottenOriginal : forgetSet) {
+      String forgotten = canonicalize(forgottenOriginal);
 
       Message target = derivationCheckService.extractTargetFromRule(rule);
       Set<Message> knowledge = derivationCheckService.extractKnowledge(parametersBundle);
@@ -76,26 +77,32 @@ public class ForgetMutationStrategy implements MutationStrategy {
       startRule.setRule_name(startRule.getRule_name() + "_M");
       startRule.setTypo(Type.MUTATED);
 
-      // Remove Forget mutation from post-conditions
+      // Remove Forget mutation from actions
       removeForgetMutation(startRule, forgotten);
 
-      // Choose a replacement value for the forgotten value
+      // Choose a replacement value of same type
       String replacement = chooseReplacement(forgotten, setup);
 
-      // Replace forgotten value with a new one pulled out from the knowledge
+      // Apply replacement in the mutated rule (not touching State)
       replaceValue(
           startRule,
           forgotten,
-          replacement,
-          /* mutatePreState */ false,
-          /* mutateRcvS     */ false);
+          replacement, /* mutatePreState */
+          false, /* mutateRcvS */
+          false, /* includeStatePost */
+          false);
 
-      // Propagate the mutation through the theory
-      propagateMutation(theoryClone, startRule, forgotten, replacement, parametersBundle);
+      // Propagate to subsequent non-human rules and adjust access decision if needed
+      propagateMutation(theoryClone, startRule, forgotten, replacement, setup);
     }
 
     parametersBundle.getCollections().add(theoryClone);
     return parametersBundle;
+  }
+
+  // Normalize names like "~p1" -> "p1"
+  private String canonicalize(String name) {
+    return name != null && name.startsWith("~") ? name.substring(1) : name;
   }
 
   /**
@@ -105,46 +112,168 @@ public class ForgetMutationStrategy implements MutationStrategy {
    * @param startRule the rule where the mutation starts
    * @param forgotten the value to forget
    * @param replacement the value to replace the forgotten value with
-   * @param bundle the parameters bundle containing additional information for mutation
+   * @param setup the setup knowledge map containing values and their types
    */
   private void propagateMutation(
       ArrayList<Rule> theory,
       Rule startRule,
       String forgotten,
       String replacement,
-      ParametersBundle bundle) {
+      Map<String, String> setup) {
 
-    boolean seenStart = false;
-
-    for (Rule r : theory) {
-
-      // Skip rules that are not mutated or are not the start rule
-      if (!seenStart) {
-        seenStart = r.getRule_name().equals(startRule.getRule_name());
-        continue;
+    int startIndex = -1;
+    for (int i = 0; i < theory.size(); i++) {
+      if (theory.get(i).getRule_name().equals(startRule.getRule_name())) {
+        startIndex = i;
+        break;
       }
+    }
+    if (startIndex < 0) return;
 
-      // Set the rule name and type for mutation
+    for (int i = startIndex + 1; i < theory.size(); i++) {
+      Rule r = theory.get(i);
+
       r.setRule_name(r.getRule_name() + "_M");
       r.setTypo(Type.MUTATED);
 
-      replaceValue(r, forgotten, replacement, /* mutatePreState */ true, /* mutateRcvS     */ true);
-
-      if (checkValueReceived(r, forgotten)) {
-        restoreWhenReceived(r, forgotten, replacement);
-        bundle.getForgetMutationSet().values().forEach(set -> set.remove(forgotten));
-        break; // hard stop
+      if (r.isHuman()) {
+        continue;
       }
 
-      replaceValue(r, forgotten, replacement, /* mutatePreState */ true, /* mutateRcvS     */ true);
+      // In subsequent non-human rules, also update State facts
+      replaceValue(
+          r,
+          forgotten,
+          replacement, /* mutatePreState */
+          true, /* mutateRcvS */
+          true, /* includeStatePost */
+          true);
 
-      // Check if the forgotten value is received in this rule
-      if (checkValueReceived(r, forgotten)) {
-        restoreWhenReceived(r, forgotten, replacement);
-        bundle.getForgetMutationSet().values().forEach(s -> s.remove(forgotten));
-        break; // halt propagation
-      }
+      adjustAccessDecision(theory, i, r, replacement, setup);
     }
+  }
+
+  // Flip access=Denied->Granted in current rule (Send/SndS) and in the next rule's matching RcvS
+  private void adjustAccessDecision(
+      ArrayList<Rule> theory,
+      int currentIndex,
+      Rule rule,
+      String replacement,
+      Map<String, String> setup) {
+    try {
+      String type = setup.get(replacement);
+      if (!"password".equalsIgnoreCase(type)) return;
+
+      boolean receivedReplacement =
+          rule.getPreconditions().stream()
+              .filter(f -> "RcvS".equals(f.getF_name()))
+              .flatMap(f -> f.getParameters().stream())
+              .filter(p -> p instanceof PSpecial)
+              .map(p -> (PSpecial) p)
+              .flatMap(ps -> ps.getGroup().stream())
+              .anyMatch(v -> replacement.equals(v.getName()));
+
+      if (!receivedReplacement) return;
+
+      // Flip any Send(_, 'access', 'Denied') -> 'Granted'
+      for (Fact act : rule.getActions()) {
+        if (!"Send".equals(act.getF_name()) || act.getParameters().size() < 3) continue;
+        Object a1 = act.getParameters().get(1), a2 = act.getParameters().get(2);
+        if (a1 instanceof Value va1
+            && "'access'".equals(va1.getName())
+            && a2 instanceof Value va2
+            && "'Denied'".equals(va2.getName())) {
+          va2.setName("'Granted'");
+        }
+      }
+
+      // Flip any SndS(_,_, <'access'>, <'Denied'>) -> 'Granted' (robust to quotes/HTML)
+      for (Fact post : rule.getPostconditions()) {
+        if (!"SndS".equals(post.getF_name())) continue;
+        Object values = post.getParameters().get(2);
+        if (values instanceof PSpecial vp) {
+          for (Value v : vp.getGroup()) {
+            String n = normalizeAlpha(v.getName());
+            if ("denied".equalsIgnoreCase(n)) {
+              v.setName("'Granted'");
+            }
+          }
+        } else if (values instanceof Value v) {
+          String n = normalizeAlpha(v.getName());
+          if ("denied".equalsIgnoreCase(n)) {
+            v.setName("'Granted'");
+          }
+        }
+      }
+
+      // Propagation logic: Also update the next rule's RcvS to receive 'Granted' instead of
+      // 'Denied'
+      if (currentIndex + 1 < theory.size()) {
+        Rule nextRule = theory.get(currentIndex + 1);
+        for (Fact pre : nextRule.getPreconditions()) {
+          if (!"RcvS".equals(pre.getF_name())) continue;
+          // Handle both parameter structures
+          for (int paramIndex = 0; paramIndex < pre.getParameters().size(); paramIndex++) {
+            Object param = pre.getParameters().get(paramIndex);
+            if (param instanceof PSpecial ps) {
+              // Check if this PSpecial contains access-related values
+              boolean hasAccess =
+                  ps.getGroup().stream().anyMatch(v -> "'access'".equals(v.getName()));
+              if (hasAccess) {
+                // Find the corresponding values parameter
+                if (paramIndex + 1 < pre.getParameters().size()) {
+                  Object valuesParam = pre.getParameters().get(paramIndex + 1);
+                  if (valuesParam instanceof PSpecial vp) {
+                    vp.getGroup().stream()
+                        .filter(v -> "'Denied'".equals(v.getName()))
+                        .forEach(v -> v.setName("'Granted'"));
+                  }
+                }
+              } else {
+                // Direct replacement in the same PSpecial group
+                ps.getGroup().stream()
+                    .filter(v -> "'Denied'".equals(v.getName()))
+                    .forEach(v -> v.setName("'Granted'"));
+              }
+            }
+          }
+        }
+
+        // Update actions in next rule to handle 'Granted'
+        for (Fact act : nextRule.getActions()) {
+          if ("Receive".equals(act.getF_name()) || "Commit".equals(act.getF_name())) {
+            for (Object param : act.getParameters()) {
+              if (param instanceof Value v && "'Denied'".equals(v.getName())) {
+                v.setName("'Granted'");
+              }
+            }
+          }
+        }
+
+        // Update State postconditions to store 'Granted' instead of 'Denied'
+        for (Fact post : nextRule.getPostconditions()) {
+          if ("State".equals(post.getF_name()) && post.getParameters().size() >= 3) {
+            Object stateData = post.getParameters().get(2);
+            if (stateData instanceof PSpecial ps) {
+              ps.getGroup().stream()
+                  .filter(v -> "'Denied'".equals(v.getName()))
+                  .forEach(v -> v.setName("'Granted'"));
+            }
+          }
+        }
+      }
+
+    } catch (Exception e) {
+      log.warn("adjustAccessDecision failed: {}", e.getMessage());
+    }
+  }
+
+  private String normalizeAlpha(String s) {
+    if (s == null) return null;
+    // Drop common HTML tokens first, then non-letters
+    String t =
+        s.replace("&apos;", "").replace("&quot;", "").replace("apos", "").replace("quot", "");
+    return t.replaceAll("[^A-Za-z]", "");
   }
 
   /**
@@ -155,12 +284,21 @@ public class ForgetMutationStrategy implements MutationStrategy {
    */
   private void removeForgetMutation(Rule rule, String forgotten) {
 
-    rule.getPostconditions()
-        .removeIf(f -> "Forget".equals(f.getF_name()) && f.getParameters().contains(forgotten));
+    // Remove Forget(...) from actions to keep generated syntax valid
+    rule.getActions().removeIf(f -> "Forget".equals(f.getF_name()) && containsParam(f, forgotten));
 
-    rule.getPostconditions().stream()
-        .filter(f -> "State".equals(f.getF_name()))
-        .forEach(f -> removeInFact(f, forgotten));
+    // Do not alter State knowledge
+  }
+
+  // Compare canonical names inside Value and PSpecial
+  private boolean containsParam(Fact fact, String name) {
+    for (Object p : fact.getParameters()) {
+      if (p instanceof Value v && canonicalize(v.getName()).equals(name)) return true;
+      if (p instanceof PSpecial ps) {
+        for (Value v : ps.getGroup()) if (canonicalize(v.getName()).equals(name)) return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -173,59 +311,33 @@ public class ForgetMutationStrategy implements MutationStrategy {
    * @param mutateRcvS whether to mutate the RcvS fact
    */
   private void replaceValue(
-      Rule rule, String forgotten, String replacement, boolean mutatePreState, boolean mutateRcvS) {
+      Rule rule,
+      String forgotten,
+      String replacement,
+      boolean mutatePreState,
+      boolean mutateRcvS,
+      boolean includeStatePost) {
 
-    rule.getPostconditions().forEach(f -> replaceInFact(f, forgotten, replacement));
-
-    rule.getActions()
+    // Replace in postconditions; include State only when requested
+    rule.getPostconditions()
         .forEach(
             f -> {
-              if (!"Receive".equals(f.getF_name())) {
+              if (includeStatePost || !"State".equals(f.getF_name())) {
                 replaceInFact(f, forgotten, replacement);
               }
             });
+
+    // Replace in all actions, including Receive
+    rule.getActions().forEach(f -> replaceInFact(f, forgotten, replacement));
 
     if (mutatePreState) {
       rule.getPreconditions()
           .forEach(
               f -> {
-                if (!"RcvS".equals(f.getF_name()) || mutateRcvS) {
+                if (!"RcvS".equals(f.getF_name()) || mutateRcvS)
                   replaceInFact(f, forgotten, replacement);
-                }
               });
     }
-  }
-
-  /**
-   * Restores the forgotten value in the State and SndS facts when it is received.
-   *
-   * @param rule the rule in which to restore the forgotten value
-   * @param forgotten the value that was forgotten
-   * @param replacement the value that replaced the forgotten value
-   */
-  private void restoreWhenReceived(Rule rule, String forgotten, String replacement) {
-
-    rule.getPostconditions().stream()
-        .filter(f -> "State".equals(f.getF_name()))
-        .map(
-            f ->
-                f.getParameters().stream()
-                    .filter(p -> p instanceof PSpecial)
-                    .map(p -> (PSpecial) p)
-                    .findFirst()
-                    .orElse(null))
-        .filter(Objects::nonNull)
-        .forEach(
-            ps -> {
-              ps.getGroup().removeIf(v -> replacement.equals(v.getName()));
-              if (ps.getGroup().stream().noneMatch(v -> forgotten.equals(v.getName()))) {
-                ps.getGroup().add(new Value(forgotten));
-              }
-            });
-
-    rule.getPostconditions().stream()
-        .filter(f -> "SndS".equals(f.getF_name()))
-        .forEach(f -> replaceInFact(f, replacement, forgotten));
   }
 
   /**
@@ -280,12 +392,11 @@ public class ForgetMutationStrategy implements MutationStrategy {
    * @param replacement the value to replace the forgotten value with
    */
   private void replaceInFact(Fact fact, String forgotten, String replacement) {
-
-    List<Object> params = fact.getParameters();
-
-    for (Object param : params) {
+    for (Object param : fact.getParameters()) {
       if (param instanceof PSpecial) {
         deepReplaceInPSpecial((PSpecial) param, forgotten, replacement);
+      } else if (param instanceof Value v) {
+        if (canonicalize(v.getName()).equals(forgotten)) v.setName(replacement);
       }
     }
   }
@@ -298,22 +409,78 @@ public class ForgetMutationStrategy implements MutationStrategy {
    * @param replacement the value to replace the forgotten value with
    */
   private void deepReplaceInPSpecial(PSpecial ps, String forgotten, String replacement) {
+    for (Value v : ps.getGroup()) {
+      if (canonicalize(v.getName()).equals(forgotten)) v.setName(replacement);
+    }
+  }
 
-    List<Value> group = ps.getGroup();
+  /**
+   * Adjusts the access decision in the rule based on the replacement value.
+   *
+   * @param rule the rule in which to adjust the access decision
+   * @param replacement the value that replaced the forgotten value
+   * @param setup the setup knowledge map containing values and their types
+   */
+  private void adjustAccessDecision(Rule rule, String replacement, Map<String, String> setup) {
+    try {
+      String type = setup.get(replacement);
 
-    for (int i = 0; i < group.size(); i++) {
-      Object e = group.get(i);
+      boolean receivedReplacement =
+          rule.getPreconditions().stream()
+              .filter(f -> "RcvS".equals(f.getF_name()))
+              .flatMap(f -> f.getParameters().stream())
+              .filter(p -> p instanceof PSpecial)
+              .map(p -> (PSpecial) p)
+              .flatMap(ps -> ps.getGroup().stream())
+              .anyMatch(v -> replacement.equals(v.getName()));
 
-      if (e instanceof PSpecial) {
-        deepReplaceInPSpecial((PSpecial) e, forgotten, replacement);
-
-      } else if (e instanceof Value) {
-        Value v = (Value) e;
-        if (forgotten.equals(v.getName())) v.setName(replacement);
-
-      } else if (e instanceof String) {
-        if (forgotten.equals(e)) group.set(i, new Value(replacement));
+      // Flip any Send(_, 'access', 'Denied') -> 'Granted'
+      for (Fact act : rule.getActions()) {
+        if (!"Send".equals(act.getF_name()) || act.getParameters().size() < 3) continue;
+        Object a1 = act.getParameters().get(1), a2 = act.getParameters().get(2);
+        if (a1 instanceof Value va1
+            && "access".equals(va1.getName())
+            && a2 instanceof Value va2
+            && "Denied".equals(va2.getName())) {
+          va2.setName("'Granted'");
+        }
       }
+
+      // Flip any SndS(_,_, <'access'>, <'Denied'>) -> 'Granted'
+      for (Fact post : rule.getPostconditions()) {
+        if (!"SndS".equals(post.getF_name()) || post.getParameters().size() < 4) continue;
+        Object labels = post.getParameters().get(2);
+        Object values = post.getParameters().get(3);
+        if (labels instanceof PSpecial lp && values instanceof PSpecial vp) {
+          boolean hasAccess = lp.getGroup().stream().anyMatch(v -> v.getName().contains("access"));
+          if (hasAccess) {
+            vp.getGroup()
+                .forEach(
+                    v -> {
+                      if (v.getName().contains("Denied")) v.setName("'Granted'");
+                    });
+          }
+        }
+      }
+
+      for (Fact pre : rule.getPreconditions()) {
+        if (!"RcvS".equals(pre.getF_name()) || pre.getParameters().size() < 4) continue;
+        Object lbl = pre.getParameters().get(2);
+        Object val = pre.getParameters().get(3);
+        if (lbl instanceof PSpecial lp && val instanceof PSpecial vp) {
+          boolean hasAccessPre =
+              lp.getGroup().stream().anyMatch(v -> v.getName().contains("access"));
+          if (hasAccessPre) {
+            vp.getGroup()
+                .forEach(
+                    v -> {
+                      if (v.getName().contains("Denied")) v.setName("'Granted'");
+                    });
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.warn("adjustAccessDecision failed: {}", e.getMessage());
     }
   }
 
@@ -350,7 +517,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
   private String chooseReplacement(String forgotten, Map<String, String> setup) {
     String type = setup.get(forgotten);
     return setup.entrySet().stream()
-        .filter(e -> e.getValue().equals(type) && !e.getKey().equals(forgotten))
+        .filter(e -> Objects.equals(e.getValue(), type) && !Objects.equals(e.getKey(), forgotten))
         .map(Map.Entry::getKey)
         .findFirst()
         .orElse(forgotten + "_rep");

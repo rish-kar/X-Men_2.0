@@ -47,24 +47,35 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
   }
 
   /**
-   * Extracts the target message from a rule.
+   * Extracts the target message from a rule by taking the last postcondition's last parameter.
+   *
+   * Example: if postconditions contain ... , TSnd(H,I,'response',<~p1,~nb,~nh>) then we pick
+   * the TSnd fact (as it's last) and its last parameter <~p1,~nb,~nh> and parse that as target.
+   * No fact names are hardcoded.
    *
    * @param rule the rule from which to extract the target message
-   * @return the target message extracted from the rule
+   * @return the target message extracted from the rule, or null if unavailable
    */
   @Override
   public Message extractTargetFromRule(Rule rule) {
-    for (Fact fact : rule.getPostconditions()) {
-      if ("SndS".equals(fact.getF_name())) {
-        List<Object> params = fact.getParameters();
-        if (!params.isEmpty()) {
-          Object lastParam = params.get(params.size() - 1);
-          String paramStr = lastParam.toString().trim();
-          return parseTargetParam(paramStr);
-        }
-      }
+    List<Fact> posts = rule.getPostconditions();
+    if (posts == null || posts.isEmpty()) return null;
+
+    Fact lastFact = posts.get(posts.size() - 1);
+    List<Object> params = lastFact.getParameters();
+    if (params == null || params.isEmpty()) return null;
+
+    Object lastParam = params.get(params.size() - 1);
+    String paramStr = payloadToString(lastParam).trim();
+    return parseTargetParam(paramStr);
+  }
+
+  // Convert a Fact parameter to its plain string form; unwrap Value when present
+  private String payloadToString(Object obj) {
+    if (obj instanceof Value v) {
+      return v.getName();
     }
-    return null;
+    return String.valueOf(obj);
   }
 
   /**

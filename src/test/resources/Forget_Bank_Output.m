@@ -1,0 +1,188 @@
+/****MODEL****/
+
+theory Bank
+
+begin
+
+/* Channel rules */
+
+rule ChanSndS:
+  [ SndS($A,$B,xn,x) ]
+  --[ ChanSndS($A,$B,xn,x) ]->
+  [ !Sec($A,$B,xn,x) ]
+
+rule ChanRcvS:
+  [ !Sec($A,$B,xn,x) ]
+  --[ ChanRcvS($A,$B,xn,x) ]->
+  [ RcvS($A,$B,xn,x) ]
+
+/****RULES****/
+
+
+rule humansetup:
+[ Fr(~nh)
+, Fr(~nb)
+]
+--[ OnlyOnce()
+, Neq(p1,p2)
+]->
+[ !Type($User,'useridentity',uid)
+, !Type($User,'password',p1)
+, !Type($User,'password',p2)
+, !Type($User,'nonce',~nh)
+, !Type($RA,'nonce',~nb)
+, !Wallet(p1,p2)
+]
+
+rule Setup:
+[ !Wallet(p1,p2)
+]
+--[ Setup($User)
+, Roles($User,$Intruder,$Bank2)
+, !HasSK($Intruder,$Bank1)
+]->
+[ State($User,'1',<$uid,p1,p2,~nh>)
+, State($Intruder,'1',SKB1)
+, State($Bank2,'1',~nb)
+]
+
+rule User_1:
+[ State($User,'1',<$uid,p1,p2,~nh>)
+]
+--[ H()
+, Send($User,'useridentity',$uid)
+, Send($User,'nonce',nh)
+, To($Intruder)
+]->
+[ State($User,'2',<$uid,p1,p2,~nh>)
+, SndS($User,$Intruder,<'useridentity','nonce'>,<$uid,~nh>)
+]
+
+rule Intruder_1:
+[ State($Intruder,'1',SKB1)
+, RcvS($User,$Intruder,<'useridentity','nonce'>,<$uid,~nh>)
+]
+--[ Receive($Intruder,$User,$uid)
+, Receive($Intruder,$User,~nh)
+, Send($Intruder,'useridentity',$uid)
+, Send($Intruder,'nonce',nh)
+, To($Bank2)
+]->
+[ State($Intruder,'2',<SKB1,$uid,~nh>)
+, SndS($Intruder,$Bank2,<'useridentity','nonce'>,<$uid,~nh>)
+]
+
+rule Bank2_1:
+[ State($Bank2,'1',~nb)
+, RcvS($Intruder,$Bank2,<'useridentity','nonce'>,<$uid,~nh>)
+]
+--[ Receive($Bank2,$Intruder,$uid)
+, Receive($Bank2,$Intruder,~nh)
+, Challenge($Bank2,$Intruder,~nb)
+]->
+[ State($Bank2,'2',<~nb,~nh>)
+, SndS($Bank2,$Intruder,<'nonce'>,<~nb>)
+]
+
+rule Intruder_2:
+[ State($Intruder,'2',<SKB1,$uid,~nh>)
+, RcvS($Bank2,$Intruder,<'nonce'>,<~nb>)
+]
+--[ Receive($Intruder,$Bank2,~nb)
+, Send($Intruder,'nonce',nb)
+, To($User)
+]->
+[ State($Intruder,'3',<SKB1,$uid,~nh,~nb>)
+, SndS($Intruder,$User,<'nonce'>,<~nb>)
+]
+
+rule User_2_M:
+[ State($User,'2',<$uid,p1,p2,~nh>)
+, RcvS($Intruder,$User,<'nonce'>,<~nb>)
+]
+--[ H()
+, Receive($User,$Intruder,~nb)
+, Send($User,'password',p2)
+, Send($User,'nonce',~nh)
+, Send($User,'nonce',~nb)
+, To($Intruder)
+]->
+[ State($User,'3',<$uid,p1,p2,~nh,~nb>)
+, SndS($User,$Intruder,<'password','nonce','nonce'>,<p2,~nh,~nb>)
+]
+
+rule Intruder_3_M:
+[ State($Intruder,'3',<SKB1,$uid,~nh,~nb>)
+, RcvS($User,$Intruder,<'password','nonce','nonce'>,<p2,~nh,~nb>)
+]
+--[ Receive($Intruder,$User,p2)
+, Receive($Intruder,$User,~nh)
+, Receive($Intruder,$User,~nb)
+, Send($Intruder,'password',p2)
+, Send($Intruder,'nonce',nh)
+, Send($Intruder,'nonce',nb)
+, To($Bank2)
+]->
+[ State($Intruder,'4',<SKB1,$uid,~nh,~nb>)
+, SndS($Intruder,$Bank2,<'password','nonce','nonce'>,<p2,~nh,~nb>)
+]
+
+rule Bank2_2_M:
+[ State($Bank2,'2',<~nb,~nh>)
+, RcvS($Intruder,$Bank2,<'password','nonce','nonce'>,<p2,~nh,~nb>)
+]
+--[ Receive($Bank2,$Intruder,p2)
+, Receive($Bank2,$Intruder,~nh)
+, Receive($Bank2,$Intruder,~nb)
+, Send($Bank2,'access','Granted')
+, To($Intruder)
+]->
+[ State($Bank2,'2',<~nb,~nh,p2>)
+, SndS($Bank2,$Intruder,<'access'>,<'Granted'>)
+]
+
+rule Intruder_4_M:
+[ State($Intruder,'4',<SKB1,$uid,~nh,~nb>)
+, RcvS($Bank2,$Intruder,<'access'>,<'Granted'>)
+]
+--[ Receive($Intruder,$Bank2,'Granted')
+, Commit($Intruder,'access','Granted')
+, To($User)
+]->
+[ State($Intruder,'5',<SKB1,$uid,~nh,~nb,'Granted'>)
+, SndS($Intruder,$User,<'access'>,<'Denied'>)
+]
+
+rule User_3_M:
+[ State($User,'3',<$uid,p1,p2,~nh,~nb>)
+, RcvS($Intruder,$User,<'access'>,<'Denied'>)
+]
+--[ H()
+, Hfin($User,'access','Denied')
+]->
+[ 
+]
+
+
+/****ENDOFRULES****/
+
+restriction UniqueRole:
+  "All U1 U2 I1 I2 B1 B2 #i #j. Roles(H1, I1) @i & Roles(H2, I2) @j ==> not H1 = I1 & not H1 = I2 & not H1 = B1 & not H1 = B2 & H1 = H2"
+
+restriction OnlyOnce:
+  "All #i #j. OnlyOnce() @#i & OnlyOnce() @#j ==> #i = #j"
+
+restriction Inequality:
+  "All x #i. Neq(x, x) @#i ==> F"
+
+lemma Challenge_Injective: all-traces
+  "(All B2 nb #i #j. Challenge(B2, nb) @i & Challenge(B2, nb) @j ==> #i = #j)"
+
+lemma Complete_Verification: all-traces
+  "(All U 'Denied' #j. Hfin(U, 'access', 'Denied') @j ==> (Ex B2 I ~nb #i. Challenge($B2, I, ~nb) @i & i<j))"
+
+lemma functional: exists-trace
+  "(All U1 U2 #i #j. Setup(U1) @i & Setup(U2) @j ==> #i = #j) & (Ex U I #k #l. Hfin(U, 'access', 'Denied') @k & Commit(I, U, 'Denied') @l)"
+
+end
+/****ENDOFMODEL****/

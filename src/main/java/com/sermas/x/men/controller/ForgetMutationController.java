@@ -65,8 +65,13 @@ public class ForgetMutationController {
       parametersBundle.addExtraContent("preamble", sections.preamble());
       parametersBundle.addExtraContent("postamble", sections.postamble());
 
-      // Parse forget mutations and set flag
+      // Parse forget mutations and set flag (mirror MutationController behavior)
       ArrayList<Rule> originalRules = parametersBundle.getCollections().get(0);
+      // Extract setup knowledge to support propagation where needed
+      parametersBundle.getFlags().setTrueReplace(true);
+      Map<String, String> setupKnowledgeValues =
+          setupKnowledgeExtractor.processProtocolModel(originalRules);
+      parametersBundle.setExistingSetupKnowledge(setupKnowledgeValues);
       parametersBundle = ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle);
       parametersBundle.getFlags().setForgetMutation(true);
 
