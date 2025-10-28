@@ -65,6 +65,7 @@ public class MutationController {
       @RequestHeader(value = "Replace-Type", required = false) Boolean replaceType,
       @RequestHeader(value = "True-Replace", required = false) Boolean trueReplace,
       @RequestHeader(value = "Forget-Mutation", required = false) Boolean forgetMutation,
+      @RequestHeader(value = "Neglect-Mutation", required = false) Boolean neglectMutation,
       @RequestParam("file") MultipartFile file)
       throws Exception {
 
@@ -99,6 +100,9 @@ public class MutationController {
       }
         if (Boolean.TRUE.equals(forgetMutation)) {
             mutationSet.add(Mutations.FORGET);
+        }
+        if (Boolean.TRUE.equals(neglectMutation)) {
+            mutationSet.add(Mutations.NEGLECT);
         }
 
       // Process file content

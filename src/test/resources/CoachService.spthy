@@ -1,0 +1,160 @@
+/****MODEL****/
+theory CoachService
+
+begin
+
+rule send_secure:
+  [SndS(A,B,m)]
+  -->
+  [Sec(A,B,m)]
+
+rule receive_secure:
+  [Sec(A,B,m)]
+  -->
+  [RcvS(A,B,m)]
+
+
+rule send_dy:
+  [SndDY(A,B,m)]
+  -->
+  [Out(<A,B,m>)]
+
+rule receive_dy:
+  [In(<A,B,m>)]
+  -->
+  [RcvDY(A,B,m)]
+
+
+/****RULES****/
+
+builtins: signing, symmetric-encryption
+
+rule setup:
+  [Fr(~kS)]
+  --[OnlyOnce()
+  , Roles($Client,$S,$D)]->
+  [ State($S,'1',<~kS,$D>)
+  , State($D,'1',~kS)
+  , State($Client,'1',<$S>)
+  , State($Client,'1_1',<$D>)
+  ]
+
+rule H_1:
+  let
+    journey = < ~date, ~dtime, $from, $to >
+  in
+  [ State($Client,'1',<$S>)
+  , Fr(~date)
+  , Fr(~dtime)
+  ]
+  -->
+  [ State($Client,'2',<$S,~date,~dtime,$from,$to>)
+  , SndS($Client,$S,journey)
+  ]
+
+rule S_1:
+  let
+    journey = < date, dtime, from, to >
+    solution = < date, dtime, from, to, ~price>
+  in
+  [ State($S,'1',<~kS,$D>)
+  , RcvS(Client,$S,journey)
+  , Fr(~price)
+  ]
+  -->
+  [ State($S,'2',<~kS, $D, Client, ~price, date, dtime, from, to>)
+  , SndS($S,Client,solution)
+  ] 
+
+rule H_2:
+  let
+    solution = < date, dtime, from, to, price>
+    confirmation = <price,'ok'>
+  in
+  [ State(Client,'2',<S,date,dtime,from,to>)
+  , RcvS(S,Client,solution)]
+  -->
+  [ State(Client,'3',<S,date,dtime,from,to,price>)
+  , SndS(Client,S,confirmation)
+  ]
+
+rule S_2:
+  let
+    confirmation = <price,'ok'>
+    ticket = <Client,~tknumber,price,date,dtime,from,to>
+    encTicket = senc{ticket}kS
+    msg = <ticket,encTicket> 
+  in
+  [ State(S,'2',<kS, D, Client, price, date, dtime, from, to>)
+  , RcvS(Client,S,confirmation)
+  , Fr(~tknumber)
+  ]
+  --[ValidTicket(S,Client,'tn',~tknumber,date)]->
+  [ SndDY(S,Client,msg)  
+  ]
+
+rule D_1:
+  let
+    tck = <encClient,encTKnumber,encPrice,encDate,encDTime,encFrom,encTo>
+    encTicket = senc{tck}~kS
+    ticket = <Client,tknumber,price,date,dtime,from,to>
+    msg = <ticket,encTicket> 
+    ack = <tknumber,date, 'ack', 'valid'>
+  in
+  [ State($D,'1',~kS)
+  , RcvDY(Client,$D,msg)
+  ]
+  --[H()
+  , Eq(tknumber,encTKnumber)
+  , Eq(Client,encClient)
+  , Eq(price,encPrice)  
+    /*This is the action removed during the mutation*/
+  , Eq(date,encDate)   
+  , Eq(dtime,encDTime)
+  , Eq(from,encFrom)
+  , Eq(to,encTo)]->
+  [ SndS($D,Client,ack)]
+
+rule H_4:
+  let
+    ack = <tknumber,dateF, 'ack', 'valid'>
+  in
+  [ State(Client,'1_1',<D>)
+  , RcvS(D,Client,ack)
+  ]
+  --[End(Client,'ack','valid',tknumber,dateF)]->
+  []
+
+/****ENDOFRULES****/
+
+restriction notSameRole:
+  "All Client1 Client2 S1 S2 D1 D2 #i #j. 
+    Roles(Client1,S1,D1) @i & Roles(Client2,S2,D2) @j ==>
+      not Client1 = S1
+    & not Client1 = S2
+    & not Client1 = D1
+    & not Client1 = D2
+    & not S1 = D1
+    & not S1 = D2
+    & Client1 = Client2
+  "
+
+restriction Equality:
+  "All x y #i. Eq(x,y) @i ==> x = y"
+
+restriction OnlyOnce:
+  "All #i #j. OnlyOnce()@#i & OnlyOnce()@#j ==> #i = #j"
+
+lemma functional: exists-trace
+  "(Ex Client tkn date #m. 
+    End(Client,'ack','valid',tkn,date)@m)"
+
+lemma auth: all-traces
+  "All Client tn date #i. 
+    End(Client,'ack','valid',tn,date)@i ==> 
+      Ex Driver #j. 
+        ValidTicket(Driver,Client,'tn',tn,date)@j & j<i"
+
+end
+
+/****ENDOFMODEL****/

@@ -17,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 public class FSpecial extends Special implements Cloneable {
 
   @NonNull private String fname;
-  private ArrayList<Object> group;
+  // initialize to avoid NPE when adding values
+  private ArrayList<Object> group = new ArrayList<>();
   private Abs_Value key;
 
   /**
@@ -27,7 +28,17 @@ public class FSpecial extends Special implements Cloneable {
    */
   @Override
   public ArrayList<Value> getGroup() {
-    return this.getGroup();
+    // Convert internal Object list to a Value list (skip non-Value entries)
+    ArrayList<Value> res = new ArrayList<>();
+    if (this.group == null) {
+      return res;
+    }
+    for (Object o : this.group) {
+      if (o instanceof Value) {
+        res.add((Value) o);
+      }
+    }
+    return res;
   }
 
   /**
@@ -37,7 +48,12 @@ public class FSpecial extends Special implements Cloneable {
    */
   @Override
   public void setGroup(ArrayList<Value> group) {
-    this.setGroup(group);
+    if (group == null) {
+      this.group = new ArrayList<>();
+      return;
+    }
+    this.group = new ArrayList<>(group.size());
+    this.group.addAll(group);
   }
 
   /**
@@ -47,6 +63,9 @@ public class FSpecial extends Special implements Cloneable {
    * @param x The name of the special object.
    */
   public void addValue(Value x) {
+    if (this.group == null) {
+      this.group = new ArrayList<>();
+    }
     this.group.add(x);
   }
 
@@ -80,6 +99,9 @@ public class FSpecial extends Special implements Cloneable {
    * @return A new ArrayList containing cloned items from the original list.
    */
   private static ArrayList<Object> cloneList(ArrayList<Object> list) {
+    if (list == null) {
+      return new ArrayList<>();
+    }
     ArrayList<Object> clone = new ArrayList(list.size());
     Iterator var2 = list.iterator();
 
@@ -105,6 +127,10 @@ public class FSpecial extends Special implements Cloneable {
   public String toString() {
     String name = "";
 
+    if (this.group == null || this.group.isEmpty()) {
+      return "";
+    }
+
     for (int i = 0; i < this.group.size(); ++i) {
       Object c = this.group.get(i);
       if (c instanceof Variable) {
@@ -129,7 +155,7 @@ public class FSpecial extends Special implements Cloneable {
     }
 
     if (!name.equals("")) {
-      return this.fname + "{" + name + "}" + this.key.toString();
+      return this.fname + "{" + name + "}" + (this.key != null ? this.key.toString() : "");
     } else {
       return "";
     }

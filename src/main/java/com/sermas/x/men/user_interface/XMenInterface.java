@@ -47,6 +47,7 @@ public class XMenInterface extends Application {
   private CheckBox cbCombineAddition;
   private CheckBox cbCombineOnly;
   private CheckBox cbForget; // Added forget mutation checkbox
+  private CheckBox cbNeglect; // Added neglect mutation checkbox
 
   private Button buttonUpload;
   private Button buttonStart;
@@ -332,6 +333,9 @@ public class XMenInterface extends Application {
     cbForget = new CheckBox("Forget Mutation");
     cbForget.setId("cbForget");
 
+    cbNeglect = new CheckBox("Neglect Mutation");
+    cbNeglect.setId("cbNeglect");
+
     // Apply style to check boxes.
     cbSkipS.setStyle(checkboxStyle);
     cbSkipSR.setStyle(checkboxStyle);
@@ -344,6 +348,7 @@ public class XMenInterface extends Application {
     cbCombineAddition.setStyle(checkboxStyle);
     cbCombineOnly.setStyle(checkboxStyle);
     cbForget.setStyle(checkboxStyle);
+    cbNeglect.setStyle(checkboxStyle);
 
     // Use an updated CSS drop-shadow with all required parameters.
     String labelStyle =
@@ -359,6 +364,8 @@ public class XMenInterface extends Application {
     lblCombine.setStyle(labelStyle);
     Label lblForget = new Label("Forget mutation:");
     lblForget.setStyle(labelStyle);
+    Label lblNeglect = new Label("Neglect mutation:");
+    lblNeglect.setStyle(labelStyle);
 
     // Arrange components in rows.
     checkboxPanel.addRow(0, lblSkip, cbSkipS, cbSkipSR, cbSkipR);
@@ -368,7 +375,8 @@ public class XMenInterface extends Application {
     checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
     // Add the button row at the bottom.
     checkboxPanel.addRow(5, lblForget, cbForget);
-    checkboxPanel.addRow(6, new Label(""), buttonUpload, buttonStart);
+    checkboxPanel.addRow(6, lblNeglect, cbNeglect);
+    checkboxPanel.addRow(7, new Label(""), buttonUpload, buttonStart);
 
     return checkboxPanel;
   }
@@ -433,6 +441,9 @@ public class XMenInterface extends Application {
     }
     if (cbForget.isSelected()) {
       requestBuilder.addHeader("Forget-Mutation", "true");
+    }
+    if (cbNeglect.isSelected()) {
+      requestBuilder.addHeader("Neglect-Mutation", "true");
     }
 
     RequestBody requestBody = multipartBuilder.build();
