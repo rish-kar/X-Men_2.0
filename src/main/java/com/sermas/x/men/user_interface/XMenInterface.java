@@ -48,6 +48,9 @@ public class XMenInterface extends Application {
   private CheckBox cbCombineOnly;
   private CheckBox cbForget; // Added forget mutation checkbox
   private CheckBox cbNeglect; // Added neglect mutation checkbox
+  private RadioButton rbSimpleInput; // Simple input radio button
+  private RadioButton rbComplexInput; // Complex input radio button
+  private ToggleGroup forgetInputGroup; // Toggle group for forget input options
 
   private Button buttonUpload;
   private Button buttonStart;
@@ -336,6 +339,33 @@ public class XMenInterface extends Application {
     cbNeglect = new CheckBox("Neglect Mutation");
     cbNeglect.setId("cbNeglect");
 
+    // Create radio buttons for forget mutation input type
+    forgetInputGroup = new ToggleGroup();
+    rbSimpleInput = new RadioButton("Simple Input");
+    rbSimpleInput.setId("rbSimpleInput");
+    rbSimpleInput.setToggleGroup(forgetInputGroup);
+    rbSimpleInput.setDisable(true); // Disabled until forget mutation is selected
+
+    rbComplexInput = new RadioButton("Complex Input");
+    rbComplexInput.setId("rbComplexInput");
+    rbComplexInput.setToggleGroup(forgetInputGroup);
+    rbComplexInput.setDisable(true); // Disabled until forget mutation is selected
+
+    // Add listener to enable/disable radio buttons based on Forget checkbox state
+    cbForget.selectedProperty().addListener((observable, oldValue, newValue) -> {
+      if (newValue) {
+        // Enable radio buttons and select Simple Input by default
+        rbSimpleInput.setDisable(false);
+        rbComplexInput.setDisable(false);
+        rbSimpleInput.setSelected(true);
+      } else {
+        // Disable radio buttons and clear selection
+        rbSimpleInput.setDisable(true);
+        rbComplexInput.setDisable(true);
+        forgetInputGroup.selectToggle(null);
+      }
+    });
+
     // Apply style to check boxes.
     cbSkipS.setStyle(checkboxStyle);
     cbSkipSR.setStyle(checkboxStyle);
@@ -349,6 +379,8 @@ public class XMenInterface extends Application {
     cbCombineOnly.setStyle(checkboxStyle);
     cbForget.setStyle(checkboxStyle);
     cbNeglect.setStyle(checkboxStyle);
+    rbSimpleInput.setStyle(checkboxStyle);
+    rbComplexInput.setStyle(checkboxStyle);
 
     // Use an updated CSS drop-shadow with all required parameters.
     String labelStyle =
@@ -373,9 +405,10 @@ public class XMenInterface extends Application {
     checkboxPanel.addRow(2, lblReplace, cbSubmessages, cbType);
     checkboxPanel.addRow(3, lblAdd, cbAdd);
     checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
-    // Add the button row at the bottom.
-    checkboxPanel.addRow(5, lblForget, cbForget);
+    // Add forget mutation with radio buttons for input type
+    checkboxPanel.addRow(5, lblForget, cbForget, rbSimpleInput, rbComplexInput);
     checkboxPanel.addRow(6, lblNeglect, cbNeglect);
+    // Add the button row at the bottom.
     checkboxPanel.addRow(7, new Label(""), buttonUpload, buttonStart);
 
     return checkboxPanel;
@@ -441,6 +474,10 @@ public class XMenInterface extends Application {
     }
     if (cbForget.isSelected()) {
       requestBuilder.addHeader("Forget-Mutation", "true");
+      // Only send Haskell-Activate header if Complex Input is selected
+      if (rbComplexInput.isSelected()) {
+        requestBuilder.addHeader("Haskell-Activate", "true");
+      }
     }
     if (cbNeglect.isSelected()) {
       requestBuilder.addHeader("Neglect-Mutation", "true");

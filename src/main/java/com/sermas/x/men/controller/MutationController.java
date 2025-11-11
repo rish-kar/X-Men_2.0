@@ -37,6 +37,8 @@ public class MutationController {
 
   @Autowired private ZipService zipService;
 
+  @Autowired private DerivationTreeService derivationTreeService;
+
   /**
    * Generates mutations based on the provided file and mutation options.
    *
@@ -66,10 +68,12 @@ public class MutationController {
       @RequestHeader(value = "True-Replace", required = false) Boolean trueReplace,
       @RequestHeader(value = "Forget-Mutation", required = false) Boolean forgetMutation,
       @RequestHeader(value = "Neglect-Mutation", required = false) Boolean neglectMutation,
+      @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate,
       @RequestParam("file") MultipartFile file)
       throws Exception {
 
     Map<String, String> setupKnowledgeValues;
+    boolean haskellWasEnabled = false;
 
     try {
       // Create mutation set from headers
@@ -129,6 +133,35 @@ public class MutationController {
 
       // Generate mutations
       ArrayList<Rule> originalRules = parametersBundle.getCollections().get(0);
+
+      // If Haskell-Activate header is true and Forget mutation is requested, enable Haskell derivation
+      if (Boolean.TRUE.equals(haskellActivate) && Boolean.TRUE.equals(forgetMutation)) {
+        log.info("Haskell-Activate header detected with Forget mutation, enabling Haskell derivation service");
+
+        // Check if Haskell service is available
+        if (!derivationTreeService.isServiceAvailable()) {
+          log.warn("Haskell service requested but unavailable, using Java derivation");
+        } else {
+          try {
+            // Extract theory name from filename
+            String theoryName = file.getOriginalFilename().replace(".spthy", "");
+
+            // Enable Haskell derivation in HybridDerivationService
+            com.sermas.x.men.service.impl.HybridDerivationService.enableHaskellDerivation(
+                originalRules, theoryName);
+
+            haskellWasEnabled = true;
+
+            log.info("Haskell derivation ENABLED for theory: {}", theoryName);
+            log.info("Forget mutation will use Haskell service for derivability checks");
+
+          } catch (Exception e) {
+            log.error("Error enabling Haskell derivation: {}", e.getMessage());
+          }
+        }
+      }
+
+      // Continue with standard mutation processing
       // Only set flag if trueReplace header is available for random replacement for a similar value
       // from the knowledge
       // If true replacement is needed, then extract values from the setup knowledge
@@ -163,6 +196,12 @@ public class MutationController {
     } catch (Exception e) {
       log.error("Error generating mutations: " + e.getMessage(), e);
       return ResponseEntity.status(500).body(e.getMessage());
+    } finally {
+      // Always disable Haskell derivation after processing
+      if (haskellWasEnabled) {
+        com.sermas.x.men.service.impl.HybridDerivationService.disableHaskellDerivation();
+        log.info("Haskell derivation DISABLED after mutation processing");
+      }
     }
   }
 }

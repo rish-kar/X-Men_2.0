@@ -9,10 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /** Controller for forget mutation. */
@@ -29,16 +26,21 @@ public class ForgetMutationController {
   @Autowired private FileSplitterService fileSplitterService;
   @Autowired private SetupKnowledgeExtractor setupKnowledgeExtractor;
   @Autowired private ZipService zipService;
+  @Autowired private DerivationTreeService derivationTreeService;
 
   /**
    * Trigger of forget mutation.
    *
    * @param file The file to process.
+   * @param haskellActivate Optional header to activate Haskell derivation service
    * @return A ResponseEntity containing the zipped mutation files.
    */
   @PostMapping("/forget/mutations")
-  public ResponseEntity<?> forgetMutations(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> forgetMutations(
+      @RequestParam("file") MultipartFile file,
+      @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate)
       throws Exception {
+    boolean haskellWasEnabled = false;
     try {
       // Only FORGET mutation
       Set<Mutations> mutationSet = EnumSet.of(Mutations.FORGET);
@@ -67,6 +69,35 @@ public class ForgetMutationController {
 
       // Parse forget mutations and set flag (mirror MutationController behavior)
       ArrayList<Rule> originalRules = parametersBundle.getCollections().get(0);
+
+      // If Haskell-Activate header is true, enable Haskell derivation for forget mutation processing
+      if (Boolean.TRUE.equals(haskellActivate)) {
+        log.info("Haskell-Activate header detected, enabling Haskell derivation service");
+
+        // Check if Haskell service is available
+        if (!derivationTreeService.isServiceAvailable()) {
+          log.warn("Haskell service requested but unavailable, using Java derivation");
+        } else {
+          try {
+            // Extract theory name from filename
+            String theoryName = file.getOriginalFilename().replace(".spthy", "");
+
+            // Enable Haskell derivation in HybridDerivationService
+            com.sermas.x.men.service.impl.HybridDerivationService.enableHaskellDerivation(
+                originalRules, theoryName);
+
+            haskellWasEnabled = true;
+
+            log.info("Haskell derivation ENABLED for theory: {}", theoryName);
+            log.info("Forget mutation will use Haskell service for derivability checks");
+
+          } catch (Exception e) {
+            log.error("Error enabling Haskell derivation: {}", e.getMessage());
+          }
+        }
+      }
+
+      // Continue with standard forget mutation processing
       // Extract setup knowledge to support propagation where needed
       parametersBundle.getFlags().setTrueReplace(true);
       Map<String, String> setupKnowledgeValues =
@@ -89,6 +120,12 @@ public class ForgetMutationController {
     } catch (Exception e) {
       log.error("Error generating forget mutations: " + e.getMessage(), e);
       return ResponseEntity.status(500).body(e.getMessage());
+    } finally {
+      // Always disable Haskell derivation after processing
+      if (haskellWasEnabled) {
+        com.sermas.x.men.service.impl.HybridDerivationService.disableHaskellDerivation();
+        log.info("Haskell derivation DISABLED after forget mutation processing");
+      }
     }
   }
 }
