@@ -49,12 +49,26 @@ public class ForgetMutationStrategy implements MutationStrategy {
     Set<String> forgetSet = parametersBundle.getForgetMutationSet().get(rule.getRule_name());
     if (forgetSet == null || forgetSet.isEmpty()) return parametersBundle;
 
+    // Ensure original rules are in collections for knowledge extraction
+    if (parametersBundle.getCollections() == null) {
+      parametersBundle.setCollections(new ArrayList<>());
+    }
+    // Store original rules temporarily for knowledge extraction
+    ArrayList<ArrayList> tempCollections = new ArrayList<>();
+    tempCollections.add(rules);
+    ParametersBundle knowledgeBundle = new ParametersBundle();
+    knowledgeBundle.setCollections(tempCollections);
+    knowledgeBundle.setForgetMutationSet(parametersBundle.getForgetMutationSet());
+
     // Handle the case where no forget values are provided
     for (String forgottenOriginal : forgetSet) {
       String forgotten = canonicalize(forgottenOriginal);
 
+      // Set the current rule name in parametersBundle for knowledge extraction
+      knowledgeBundle.addExtraContent("currentRuleName", rule.getRule_name());
+
       Message target = derivationCheckService.extractTargetFromRule(rule);
-      Set<Message> knowledge = derivationCheckService.extractKnowledge(parametersBundle);
+      Set<Message> knowledge = derivationCheckService.extractKnowledge(knowledgeBundle);
 
       log.info("Checking if target '{}' is derivable from current knowledge...", target);
       boolean derivable = derivationCheckService.isDerivable(target, knowledge);

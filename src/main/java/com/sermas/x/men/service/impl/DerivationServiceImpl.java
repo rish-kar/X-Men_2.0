@@ -62,15 +62,23 @@ public class DerivationServiceImpl implements DerivationService {
       return results;
     }
 
+    // Use a separate variable to keep original history untouched for lambda capture
+    List<String> updatedHistory = history;
+    String norm = target.represent();
+    if (updatedHistory.contains("GOAL:" + norm)) {
+      return results;
+    }
+    updatedHistory = append(updatedHistory, "GOAL:" + norm);
+
     // Handle Pair explicitly
     if (target instanceof Pair pair) {
       System.out.println("Target is a Pair: " + pair.represent());
 
       Set<String> leftDerivations =
-          deriveRecursive(pair.getLeft(), knowledge, depthLimit - 1, append(history, "Pair-Left"));
+          deriveRecursive(pair.getLeft(), knowledge, depthLimit - 1, append(updatedHistory, "Pair-Left"));
       Set<String> rightDerivations =
           deriveRecursive(
-              pair.getRight(), knowledge, depthLimit - 1, append(history, "Pair-Right"));
+              pair.getRight(), knowledge, depthLimit - 1, append(updatedHistory, "Pair-Right"));
 
       if (!leftDerivations.isEmpty() && !rightDerivations.isEmpty()) {
         for (String left : leftDerivations) {
@@ -87,12 +95,12 @@ public class DerivationServiceImpl implements DerivationService {
     for (Message msg : knowledge) {
       if (msg instanceof Encrypt encrypt
           && encrypt.getMsg().equals(target)
-          && !lastRule(history, "Encryption")) {
+          && !lastRule(updatedHistory, "Encryption")) {
         System.out.println("Target can be obtained via Decryption: " + target.represent());
 
         Set<String> keyDerivations =
             deriveRecursive(
-                encrypt.getKey(), knowledge, depthLimit - 1, append(history, "Decryption"));
+                encrypt.getKey(), knowledge, depthLimit - 1, append(updatedHistory, "Decryption"));
         for (String key : keyDerivations) {
           results.add(
               "Decryption: ("
@@ -127,6 +135,7 @@ public class DerivationServiceImpl implements DerivationService {
     // Handle PredictiveFunction explicitly
     if (target instanceof PredictiveFunction func) {
       System.out.println("Target is a PredictiveFunction: " + func.represent());
+      final List<String> finalHistory = updatedHistory; // effectively final for lambda capture
       List<Set<String>> argsDerivations =
           func.getArgs().stream()
               .map(
@@ -135,9 +144,8 @@ public class DerivationServiceImpl implements DerivationService {
                           arg,
                           knowledge,
                           depthLimit - 1,
-                          append(history, "PredictiveFunction-" + func.getName())))
-              .collect(Collectors.toList());
-
+                          append(finalHistory, "PredictiveFunction-" + func.getName())))
+              .collect(java.util.stream.Collectors.toList());
       Set<List<String>> cartesianProducts = cartesianProduct(argsDerivations);
       for (List<String> combo : cartesianProducts) {
         results.add(
@@ -213,6 +221,7 @@ public class DerivationServiceImpl implements DerivationService {
   @Override
   public void printDerivationTree(Message target, Set<Message> knowledge, int depthLimit) {
     System.out.println("\nDerivation Tree for target: " + target.represent());
+    System.out.println("Knowledge: " + knowledge.stream().map(Message::represent).toList());
     printDerivationRecursive(target, knowledge, depthLimit, 0);
   }
 
