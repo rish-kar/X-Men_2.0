@@ -1,7 +1,6 @@
 package com.sermas.x.men.model;
 
 import java.util.*;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

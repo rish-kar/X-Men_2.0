@@ -1,6 +1,8 @@
 package com.sermas.x.men.service;
 
 import com.sermas.x.men.model.Rule;
+import java.time.Duration;
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,9 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
-import java.util.ArrayList;
 
 /**
  * Service to integrate with external Haskell derivation-tree microservice.

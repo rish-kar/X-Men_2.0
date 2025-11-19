@@ -3,12 +3,10 @@ package com.sermas.x.men.service;
 import com.sermas.x.men.model.Fact;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.model.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 /**
  * Converts SPTHY protocol rules into Haskell derivation service format.

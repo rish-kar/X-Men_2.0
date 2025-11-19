@@ -5,13 +5,12 @@ import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.DerivationService;
 import com.sermas.x.men.service.DerivationTreeService;
 import com.sermas.x.men.service.HaskellFormatConverter;
+import java.util.ArrayList;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Set;
 
 /**
  * Hybrid Derivation Service that can use either:

@@ -21,7 +21,7 @@
     - [Setup and Configuration](#haskell-setup-and-configuration)
     - [Usage](#haskell-usage)
     - [How It Works](#haskell-how-it-works)
-    - [API Endpoints](#haskell-api-endpoints)
+- [API Endpoints](#haskell-api-endpoints)
 
 ---
 
@@ -161,12 +161,20 @@ Follow these steps to set up the project locally and start working with X-Men.
 2. **Run the Application**
     - In IntelliJ, go to `Run -> Edit Configurations`.
     - Click `+` and select `Spring Boot` -> `Application`.
-    - Choose the main class of the application and save the configuration.
-    - Click `Run` to start the application.
+    - Choose the main class of the application.
+    - Modify Options -> Add VM Options -> `-Djava.awt.headless=false`.
+    - Add Environment Variables -> `JAVA_OPTS` = `-Djava.awt.headless=false`.
+    - Save the configuration
+    - Click `Run` to start the application to start Native UI.
 
-3. **Access the Application**
-    - Open your browser and navigate to `http://localhost:8081`.
+3. **Access the Application via Native UI**
+    - Select Checkbox for required mutation
+    - Upload `.spthy` file containing input rules
+    - Click on `Start Mutation`
+   
+      ![img.png](src/main/resources/images/img.png)
 
+4. **Access the Application via API**: Details Below
 ---
 
 ### Setting Up Postman
@@ -378,143 +386,215 @@ Target IS derivable from knowledge. Skipping mutation.
 
 ### <a name="haskell-api-endpoints"></a>API Endpoints
 
-#### **1. Forget Mutations with Haskell**
+#### **1. Forget Mutations with Haskell (Simple vs Complex Input)**
 
 **Endpoint:** `POST /api/forget/mutations`
 
-**Headers:**
-- `Haskell-Activate: true` (optional)
-
-**Request:**
-```bash
-curl -X POST http://localhost:8081/api/forget/mutations \
-  -H "Haskell-Activate: true" \
-  -F "file=@protocol.spthy"
-```
-
-**Response:**
-- `200 OK`: ZIP file with generated mutations
-- `400 Bad Request`: Invalid file format
-- `503 Service Unavailable`: Haskell service not reachable
-
-#### **2. Multi-Endpoint with Haskell**
-
-**Endpoint:** `POST /api/generateMutations`
+- **Purpose:** Generate *Forget* mutations, i.e., rules where a selected value is "forgotten" and the intruder knowledge is adapted.
+- **Input:** Multipart form upload with a single `.spthy` file.
+- **Output:** A `.zip` archive containing mutated `.m` files.
 
 **Headers:**
-- `Forget-Mutation: true`
-- `Haskell-Activate: true`
+- *(optional)* `Haskell-Activate: true` → enable **complex input** mode and call the external Haskell derivation service.
+  - When **absent**: X-Men uses its built-in Java derivation (simple input mode).
+  - When **present**: X-Men forwards a converted model to the Haskell service and uses its derivation result.
 
-**Request:**
-```bash
-curl -X POST http://localhost:8081/api/generateMutations \
-  -H "Forget-Mutation: true" \
-  -H "Haskell-Activate: true" \
-  -F "file=@protocol.spthy"
-```
+> To trigger the Haskell-based derivation service, ensure the external app from
+> `https://github.kcl.ac.uk/SERMAS/Derivation-Service` is running (default: `http://localhost:9091`).
 
-#### **3. Derivation Service Health Check**
+**Example Requests:**
 
-**Endpoint:** `GET /api/derive/health`
+- Simple input (Java-only):
+  ```bash
+  curl -X POST "http://localhost:8081/api/forget/mutations" \
+    -F "file=@path/to/your/input.spthy" \
+    -o forget_mutations_simple.zip
+  ```
 
-**Request:**
-```bash
-curl http://localhost:8081/api/derive/health
-```
-
-**Response:**
-- `200 OK`: "Derivation service is available"
-- `503 Service Unavailable`: "Derivation service is unavailable"
-
----
-
-### **Key Components**
-
-#### **HaskellFormatConverter**
-Converts parsed SPTHY rules into Haskell-compatible format by:
-- Extracting initial knowledge from setup rules
-- Mapping protocol messages from Snd/Rcv facts
-- Identifying derivation goals
-
-#### **DerivationTreeService**
-- Calls external Haskell service via WebClient
-- Converts rules using HaskellFormatConverter
-- Formats and returns derivation tree analysis
-
-#### **HybridDerivationService**
-Smart router that chooses between:
-- **Haskell derivation** (when `Haskell-Activate: true`)
-- **Java derivation** (standard behavior)
-
-Uses `ThreadLocal` for thread-safe per-request state management.
+- Complex input (Haskell activated):
+  ```bash
+  curl -X POST "http://localhost:8081/api/forget/mutations" \
+    -H "Haskell-Activate: true" \
+    -F "file=@path/to/your/input.spthy" \
+    -o forget_mutations_haskell.zip
+  ```
 
 ---
 
-### **Graceful Fallback**
+## API Reference (from Postman Collection)
 
-If the Haskell service is unavailable:
-- ⚠️ Warning logged: "Haskell service unavailable"
-- ✅ **Automatic fallback** to Java derivation
-- ✅ Mutations still generated successfully
-- ✅ No errors or failures
+This section summarizes the HTTP API exposed by X-Men as captured in `src/main/resources/X-Men.postman_collection.json`.
 
----
+All endpoints listen on `http://localhost:8081` by default and expect a single `.spthy` file uploaded as `file` in `multipart/form-data` unless stated otherwise.
 
-### **Logging**
+### 1. Health Checks
 
-**When Haskell is Active:**
-```
-INFO  Haskell derivation ENABLED for theory: CoachService
-INFO  Forget mutation will use Haskell service for derivability checks
-INFO  Using HASKELL derivation service for target: (p2, (~nh, ~nb))
-INFO  Haskell derivation result: target is DERIVABLE
-INFO  Haskell derivation DISABLED after mutation processing
-```
+#### `GET /actuator/health/`
 
-**When Haskell is Unavailable:**
-```
-WARN  Haskell service requested but unavailable, using Java derivation
-```
+- **Purpose:** Check if the Spring Boot application is up.
+- **Response:** Standard Spring Boot health JSON (liveness/readiness, disk space, etc.).
 
 ---
 
-### **Troubleshooting**
+### 2. Individual Mutation Endpoints
 
-#### **Issue: Service Unavailable (503)**
-**Solution:**
-- Ensure Haskell service is running: `curl http://localhost:9091/health`
-- Check firewall settings
-- Verify port 9091 is not in use
+These endpoints each perform **one specific mutation pattern** and return a `.zip` of mutated models.
 
-#### **Issue: Connection Timeout**
-**Solution:**
-- Increase timeout in `DerivationTreeService` configuration
-- Check network connectivity
-- Verify Haskell service performance
+Each request:
+- Method: `POST`
+- Body: `form-data` with key `file` → your input `.spthy` model
+- Response: `application/octet-stream` (`.zip` containing `.m` files)
 
-#### **Issue: Java Derivation Still Used**
-**Solution:**
-- Verify `Haskell-Activate: true` header is set
-- Check logs for "Haskell derivation ENABLED"
-- Ensure both `Forget-Mutation` and `Haskell-Activate` are true for multi-endpoint
+#### 2.1 `POST /api/skip/sendMutations` – *Skip Send*
+- **Mutation type:** Remove or skip selected `Send(...)` actions from rules.
+- **Effect:** Models scenarios where a participant **fails to send** an expected message.
+
+#### 2.2 `POST /api/skip/receiveMutations` – *Skip Receive*
+- **Mutation type:** Remove or skip selected `Receive(...)` actions.
+- **Effect:** Models scenarios where a participant **ignores or misses** an incoming message.
+
+#### 2.3 `POST /api/skip/sendReceiveMutations` – *Skip Send → Receive chain*
+- **Mutation type:** Skip a `Send` followed by its corresponding `Receive`.
+- **Effect:** Models end-to-end message loss on the channel.
+
+#### 2.4 `POST /api/skip/receiveSendMutations` – *Skip Receive → Send chain*
+- **Mutation type:** Skip a `Receive` and the subsequent `Send` that depends on it.
+- **Effect:** Models a participant not reacting to a received message.
+
+#### 2.5 `POST /api/skip/receiveSendReceive` – *Skip Receive → Send → Receive chain*
+- **Mutation type:** Skip a longer chain of dependent actions.
+- **Effect:** Models more complex user or network failures across multiple steps.
+
+#### 2.6 `POST /api/addMutations` – *Add Mutation*
+- **Mutation type:** Add extra rules or messages to the model.
+- **Effect:** Models **unexpected extra behavior**, such as a user sending an additional message.
+
+#### 2.7 `POST /api/replace/subMessagesMutations` – *Replace Sub-messages*
+- **Mutation type:** Replace sub-parts of messages (e.g., change a nonce, user ID, or field inside a tuple).
+- **Effect:** Models **data entry errors** or **message tampering** on subfields.
+
+#### 2.8 `POST /api/replace/typeMutations` – *Replace Type*
+- **Mutation type:** Replace the type tag in `Type(...)` annotations.
+- **Effect:** Models misuse of credentials, e.g., using a password where a user ID was expected.
+
+#### 2.9 `POST /api/neglect/mutations` – *Neglect Mutation*
+- **Mutation type:** Drop or neglect parts of the postcondition state.
+- **Effect:** Models **forgetfulness or omission**, such as not storing a value for later use.
+
+#### 2.10 `POST /api/forget/mutations` – *Forget Mutation (Simple Input)*
+- **Same endpoint as in 1**, but without `Haskell-Activate` header.
+- **Mutation type:** Forget a chosen value from the state and check derivability using Java-only logic.
+
+#### 2.11 `POST /api/forget/mutations` – *Forget Mutation (Complex Input)*
+- **Headers:** `Haskell-Activate: true`.
+- **Mutation type:** Same as above, but derivability is decided via the external Haskell derivation service.
+- **Important:** Requires the external Derivation-Service to be running (see below).
 
 ---
 
-### **Benefits**
+### 3. Combined Mutation Endpoint – `POST /api/generateMutations`
 
-✅ **Advanced Analysis**: Leverage Haskell's powerful derivation logic  
-✅ **Visualization**: See detailed derivation trees in console  
-✅ **Flexibility**: Enable/disable per request via header  
-✅ **Backward Compatible**: Works without affecting standard behavior  
-✅ **Safe Fallback**: Automatic Java derivation if Haskell unavailable  
-✅ **Thread-Safe**: Concurrent requests handled independently
+This endpoint drives the **main mutation engine**. Which mutations are applied is controlled by HTTP headers.
+
+**Base Endpoint:** `POST /api/generateMutations`
+
+- **Input:** Multipart form with `file=@your_model.spthy`.
+- **Output:** `.zip` with all generated mutant models.
+
+#### 3.1 Skip-based Mutations
+
+Set one or more of these headers to `true`:
+
+- `Skip-Send` → enable **Skip Send** mutations.
+- `Skip-Receive` → enable **Skip Receive** mutations.
+- `Skip-Send-Receive` → enable **Skip Send Receive** chain.
+- `Skip-Receive-Send` → enable **Skip Receive Send** chain.
+- `Skip-Receive-Send-Receive` → enable **longer skip chains**.
+
+#### 3.2 Add / Replace / Neglect Mutations
+
+- `Add-Mutation: true` → add extra rules/messages.
+- `Replace-Sub-Messages: true` → replace message subcomponents.
+- `Replace-Type: true` → mutate type annotations.
+- `Neglect-Mutation: true` → neglect selected state components.
+
+#### 3.3 Forget Mutations (from Combined Endpoint)
+
+- `Forget-Mutation: true` → enable **Forget mutations** inside the combined generator.
+- `True-Replace: true` → for certain configurations, enables knowledge-based replacements rather than purely random ones.
+- `Haskell-Activate: true` → route Forget derivation to the external Haskell service (complex input).
+
+**Examples:**
+
+- Only Skip Send:
+  ```bash
+  curl -X POST "http://localhost:8081/api/generateMutations" \
+    -H "Skip-Send: true" \
+    -F "file=@path/to/model.spthy" \
+    -o mutants_skip_send.zip
+  ```
+
+- Add + Replace Sub-messages + Replace Type (combined):
+  ```bash
+  curl -X POST "http://localhost:8081/api/generateMutations" \
+    -H "Add-Mutation: true" \
+    -H "Replace-Sub-Messages: true" \
+    -H "Replace-Type: true" \
+    -F "file=@path/to/model.spthy" \
+    -o mutants_add_replace.zip
+  ```
+
+- Add Replace Sub-messages **only** (knowledge-based):
+  ```bash
+  curl -X POST "http://localhost:8081/api/generateMutations" \
+    -H "Replace-Sub-Messages: true" \
+    -H "True-Replace: true" \
+    -F "file=@path/to/model.spthy" \
+    -o mutants_true_replace.zip
+  ```
+
+- Forget mutation with Haskell derivation:
+  ```bash
+  curl -X POST "http://localhost:8081/api/generateMutations" \
+    -H "Forget-Mutation: true" \
+    -H "Haskell-Activate: true" \
+    -F "file=@path/to/model.spthy" \
+    -o mutants_forget_haskell.zip
+  ```
+
+> **Note:** When combining multiple headers, the mutation engine will generate
+> mutants for **all enabled mutation types** over the given model.
 
 ---
 
-For more detailed technical documentation, see:
-- `HASKELL_COMPLETE_SOLUTION.md`
-- `HASKELL_ACTIVATION_GUIDE.md`
-- `HASKELL_CONVERTER_IMPLEMENTATION.md`
+### 4. External Derivation Service
 
----
+X-Men integrates with a separate **Derivation-Service** microservice for complex Forget mutations.
 
+- Repository: `https://github.kcl.ac.uk/SERMAS/Derivation-Service`
+- Default URL: `http://localhost:9091`
+
+#### 4.1 Healthcheck
+
+- **Endpoint:** `GET /health`
+- **Example:**
+  ```bash
+  curl http://localhost:9091/health
+  ```
+
+#### 4.2 Sample Derivation Request
+
+- **Endpoint:** `POST /derive`
+- **Headers:** `Content-Type: text/plain`
+- **Body:** Plain text derivation command (generated by X-Men internally).
+- **Example:**
+  ```bash
+  curl -X POST "http://localhost:9091/derive" \
+    -H "Content-Type: text/plain" \
+    -d "derive ex_f1 ex_r"
+  ```
+
+When you enable `Haskell-Activate: true` on Forget-related requests, X-Men
+internally builds and sends a request like this to the Derivation-Service and
+uses its response to decide whether a value is derivable and whether a
+particular mutation should be applied.

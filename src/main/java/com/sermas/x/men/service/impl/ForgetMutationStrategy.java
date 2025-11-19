@@ -2,13 +2,12 @@ package com.sermas.x.men.service.impl;
 
 import com.sermas.x.men.model.*;
 import com.sermas.x.men.service.*;
+import com.sermas.x.men.utilities.*;
 import com.sermas.x.men.utilities.UtilityFunctions;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.sermas.x.men.utilities.*;
-
-import java.util.*;
 
 /**
  * ForgetMutationStrategy class. This class implements the mutation strategy for forgetting values

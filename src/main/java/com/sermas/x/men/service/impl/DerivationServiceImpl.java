@@ -9,7 +9,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
-
 /**
  * DerivationServiceImpl class implements the DerivationService interface. This service provides
  * methods to derive a target message from a set of knowledge messages and to print the derivation

@@ -28,12 +28,8 @@ management:
   endpoint:
     health:
       show-details: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:never}
-      probes:
-        enabled: true
   health:
     livenessstate:
-      enabled: true
-    readinessstate:
       enabled: true
 
 # Application specific properties

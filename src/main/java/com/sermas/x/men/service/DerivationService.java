@@ -1,7 +1,6 @@
 package com.sermas.x.men.service;
 
 import com.sermas.x.men.model.Message;
-
 import java.util.Set;
 
 /**
