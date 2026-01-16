@@ -1,9 +1,6 @@
 package com.sermas.x.men.service.impl;
 
-import com.sermas.x.men.model.Encrypt;
-import com.sermas.x.men.model.Message;
-import com.sermas.x.men.model.Pair;
-import com.sermas.x.men.model.PredictiveFunction;
+import com.sermas.x.men.model.*;
 import com.sermas.x.men.service.DerivationService;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,13 +24,38 @@ public class DerivationServiceImpl implements DerivationService {
    * @return a set of strings representing the derived messages
    */
   @Override
-  public Set<String> derive(Message target, Set<Message> knowledge, int depthLimit) {
+  public Set<String> deriveLimited(Message target, Set<Message> knowledge, int depthLimit) {
     System.out.println(
         "\nDerive called with target: " + target.represent() + ", depthLimit: " + depthLimit);
     System.out.println(
         "Knowledge: " + knowledge.stream().map(Message::represent).collect(Collectors.toSet()));
 
     return deriveRecursive(target, knowledge, depthLimit, new LinkedList<>());
+  }
+
+  @Override
+  public Set<Derivation> deriveToDepth(
+      Message target, Set<Message> knowledge, int depthLimit) {
+    return deriveAllRecursive(target, knowledge, depthLimit, new java.util.HashSet<>());
+  }
+
+  @Override
+  public Set<Derivation> deriveToInfinity(Message target, Set<Message> knowledge) {
+    // depthLeft = null means “no limit”
+    return deriveAllRecursive(target, knowledge, null, new java.util.HashSet<>());
+  }
+
+  @Override
+  public void printAllDerivationTrees(Set<Derivation> trees) {
+    if (trees == null || trees.isEmpty()) {
+      System.out.println("No derivations found.");
+      return;
+    }
+    int i = 1;
+    for (Derivation t : trees) {
+      System.out.println("\n=== Derivation " + (i++) + " ===");
+      printDerivationTreeFromNode(t, 0);
+    }
   }
 
   /**
@@ -74,7 +96,8 @@ public class DerivationServiceImpl implements DerivationService {
       System.out.println("Target is a Pair: " + pair.represent());
 
       Set<String> leftDerivations =
-          deriveRecursive(pair.getLeft(), knowledge, depthLimit - 1, append(updatedHistory, "Pair-Left"));
+          deriveRecursive(
+              pair.getLeft(), knowledge, depthLimit - 1, append(updatedHistory, "Pair-Left"));
       Set<String> rightDerivations =
           deriveRecursive(
               pair.getRight(), knowledge, depthLimit - 1, append(updatedHistory, "Pair-Right"));
@@ -288,4 +311,132 @@ public class DerivationServiceImpl implements DerivationService {
     // If no rule applies, print that no derivation was found at this branch.
     System.out.println(indentStr + "No further derivation found for: " + target.represent());
   }
+  
+  // ------------- Specified Depth or Infinite Derivations Logic -------------------------
+
+      // Use a String key to avoid relying on Message.hashCode/equals if they’re complex.
+// If Message.equals/hashCode is strong, you can store Message itself instead.
+      private String goalKey(Message m) {
+            return (m == null) ? "null" : m.represent();
+      }
+
+      private Set<Derivation> deriveAllRecursive(
+              Message target,
+              Set<Message> knowledge,
+              Integer depthLeft,                 // null => infinite
+              Set<String> visitedGoals           // cycle safety
+      ) {
+            Set<Derivation> results = new java.util.LinkedHashSet<>();
+
+            if (target == null) return results;
+
+            if (depthLeft != null && depthLeft < 0) return results;
+
+            String key = goalKey(target);
+            if (visitedGoals.contains(key)) {
+                  return results; // prevent cycles in infinite mode (and also helps bounded mode)
+            }
+
+            Set<String> nextVisited = new java.util.HashSet<>(visitedGoals);
+            nextVisited.add(key);
+
+            // 1) Initial
+            if (knowledge != null && knowledge.contains(target)) {
+                  results.add(new Derivation(target, "Initial", java.util.List.of()));
+                  // DO NOT return; other derivations may exist.
+            }
+
+            // 2) Pair construction: target = <L,R>
+            if (target instanceof Pair pair) {
+                  Integer nextDepth = (depthLeft == null) ? null : depthLeft - 1;
+
+                  Set<Derivation> leftDerivs = deriveAllRecursive(pair.getLeft(), knowledge, nextDepth, nextVisited);
+                  Set<Derivation> rightDerivs = deriveAllRecursive(pair.getRight(), knowledge, nextDepth, nextVisited);
+
+                  for (Derivation ld : leftDerivs) {
+                        for (Derivation rd : rightDerivs) {
+                              results.add(new Derivation(target, "Pairing", java.util.List.of(ld, rd)));
+                        }
+                  }
+            }
+
+            // 3) Decryption: for ALL Encrypt in knowledge where enc.msg == target
+            if (knowledge != null) {
+                  Integer nextDepth = (depthLeft == null) ? null : depthLeft - 1;
+
+                  for (Message msg : knowledge) {
+                        if (msg instanceof Encrypt enc && enc.getMsg().equals(target)) {
+                              Set<Derivation> keyDerivs = deriveAllRecursive(enc.getKey(), knowledge, nextDepth, nextVisited);
+                              for (Derivation kd : keyDerivs) {
+                                    results.add(new Derivation(target, "Decryption(" + enc.represent() + ")", java.util.List.of(kd)));
+                              }
+                        }
+                  }
+            }
+
+            // 4) Projection: for ALL pairs in knowledge containing target
+            if (knowledge != null) {
+                  for (Message msg : knowledge) {
+                        if (msg instanceof Pair p) {
+                              if (p.getLeft().equals(target)) {
+                                    results.add(new Derivation(target, "Projection-First(" + p.represent() + ")", java.util.List.of()));
+                              }
+                              if (p.getRight().equals(target)) {
+                                    results.add(new Derivation(target, "Projection-Second(" + p.represent() + ")", java.util.List.of()));
+                              }
+                        }
+                  }
+            }
+
+            // 5) PredictiveFunction: all combinations of argument derivations
+            if (target instanceof PredictiveFunction func) {
+                  Integer nextDepth = (depthLeft == null) ? null : depthLeft - 1;
+
+                  java.util.List<java.util.List<Derivation>> argOptions = new java.util.ArrayList<>();
+                  boolean impossible = false;
+
+                  for (Message arg : func.getArgs()) {
+                        Set<Derivation> argDerivs = deriveAllRecursive(arg, knowledge, nextDepth, nextVisited);
+                        if (argDerivs.isEmpty()) {
+                              impossible = true;
+                              break;
+                        }
+                        argOptions.add(new java.util.ArrayList<>(argDerivs));
+                  }
+
+                  if (!impossible) {
+                        buildCartesian(func, target, argOptions, 0, new java.util.ArrayList<>(), results);
+                  }
+            }
+
+            return results;
+      }
+
+      private void buildCartesian(
+              PredictiveFunction func,
+              Message target,
+              java.util.List<java.util.List<Derivation>> options,
+              int idx,
+              java.util.List<Derivation> current,
+              Set<Derivation> out
+      ) {
+            if (idx == options.size()) {
+                  out.add(new Derivation(target, "PredictiveFunction(" + func.getName() + ")", new java.util.ArrayList<>(current)));
+                  return;
+            }
+            for (Derivation choice : options.get(idx)) {
+                  current.add(choice);
+                  buildCartesian(func, target, options, idx + 1, current, out);
+                  current.remove(current.size() - 1);
+            }
+      }
+
+      private void printDerivationTreeFromNode(Derivation node, int indent) {
+            String pad = "  ".repeat(Math.max(0, indent));
+            System.out.println(pad + node.getRule() + " ⇒ " + node.getGoal().represent());
+            for (Derivation premise : node.getPremises()) {
+                  printDerivationTreeFromNode(premise, indent + 1);
+            }
+      }
+
 }

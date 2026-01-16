@@ -2,6 +2,7 @@ package com.sermas.x.men.controller;
 
 import com.sermas.x.men.model.*;
 import com.sermas.x.men.service.*;
+import com.sermas.x.men.service.impl.DerivationModeContext;
 import com.sermas.x.men.utilities.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -34,7 +35,7 @@ public class MutationController {
 
   @Autowired private ZipService zipService;
 
-  @Autowired private DerivationTreeService derivationTreeService;
+  @Autowired private HaskellDerivationFetcher haskellDerivationFetcher;
 
   /**
    * Generates mutations based on the provided file and mutation options.
@@ -133,29 +134,26 @@ public class MutationController {
 
       // If Haskell-Activate header is true and Forget mutation is requested, enable Haskell derivation
       if (Boolean.TRUE.equals(haskellActivate) && Boolean.TRUE.equals(forgetMutation)) {
-        log.info("Haskell-Activate header detected with Forget mutation, enabling Haskell derivation service");
+        log.info("Haskell-Activate header detected with Forget mutation, enabling HybridDerivationService");
 
-        // Check if Haskell service is available
-        if (!derivationTreeService.isServiceAvailable()) {
+        if (!haskellDerivationFetcher.isServiceAvailable()) {
           log.warn("Haskell service requested but unavailable, using Java derivation");
         } else {
           try {
-            // Extract theory name from filename
             String theoryName = file.getOriginalFilename().replace(".spthy", "");
-
-            // Enable Haskell derivation in HybridDerivationService
             com.sermas.x.men.service.impl.HybridDerivationService.enableHaskellDerivation(
                 originalRules, theoryName);
-
+            DerivationModeContext.enableHaskell();
             haskellWasEnabled = true;
-
-            log.info("Haskell derivation ENABLED for theory: {}", theoryName);
-            log.info("Forget mutation will use Haskell service for derivability checks");
-
           } catch (Exception e) {
             log.error("Error enabling Haskell derivation: {}", e.getMessage());
+            com.sermas.x.men.service.impl.HybridDerivationService.disableHaskellDerivation();
+            DerivationModeContext.disableHaskell();
           }
         }
+      } else {
+        com.sermas.x.men.service.impl.HybridDerivationService.disableHaskellDerivation();
+        DerivationModeContext.disableHaskell();
       }
 
       // Continue with standard mutation processing
@@ -197,6 +195,7 @@ public class MutationController {
       // Always disable Haskell derivation after processing
       if (haskellWasEnabled) {
         com.sermas.x.men.service.impl.HybridDerivationService.disableHaskellDerivation();
+        DerivationModeContext.disableHaskell();
         log.info("Haskell derivation DISABLED after mutation processing");
       }
     }

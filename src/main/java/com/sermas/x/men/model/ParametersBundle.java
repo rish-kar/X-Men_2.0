@@ -26,6 +26,10 @@ public class ParametersBundle {
   Map<String, String> existingSetupKnowledge = new HashMap<>();
   Map<String, LinkedHashSet<String>> forgetMutationSet = new HashMap<>();
 
+  // Special parameters to handle the derivation tree logic
+  String derivationType;
+  int derivationDepth;
+
   // New field to store additional content
   private Map<String, String> extraContent = new HashMap<>();
 
