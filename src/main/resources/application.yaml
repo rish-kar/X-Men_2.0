@@ -5,6 +5,7 @@ spring:
     name: ${APP_NAME:X-Men}
   main:
     headless: false
+    log-startup-info: true
   web:
     resources:
       static-locations: classpath:/static/
@@ -16,8 +17,10 @@ server:
 
 logging:
   level:
+    root: INFO
     web: DEBUG
     org.springframework.web: DEBUG
+
 
 # Actuator / Health configuration
 management:
