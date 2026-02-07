@@ -21,7 +21,7 @@ public interface DerivationCheckService {
    * @param knowledge the set of knowledge messages
    * @return true if the target can be derived from the knowledge, false otherwise
    */
-  boolean isDerivable(Message target, Set<Message> knowledge);
+  boolean isDerivable(Message target, Set<Message> knowledge, String derivationType, int derivationDepth);
 
   /**
    * Extracts the target message from a rule.

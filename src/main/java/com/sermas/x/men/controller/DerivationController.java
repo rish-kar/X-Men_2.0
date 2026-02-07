@@ -1,6 +1,6 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.service.DerivationTreeService;
+import com.sermas.x.men.service.HaskellDerivationFetcher;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class DerivationController {
 
-  @Autowired private DerivationTreeService derivationTreeService;
+  @Autowired private HaskellDerivationFetcher haskellDerivationFetcher;
 
   /**
    * Analyzes a SPTHY file and returns the derivation tree from the Haskell service.
@@ -45,7 +45,7 @@ public class DerivationController {
       log.info("Received derivation request for file: {}", filename);
 
       // Check if derivation service is available
-      if (!derivationTreeService.isServiceAvailable()) {
+      if (!haskellDerivationFetcher.isServiceAvailable()) {
         log.warn("Derivation service is not available");
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
             .body(
@@ -54,7 +54,7 @@ public class DerivationController {
       }
 
       // Call the derivation service
-      String result = derivationTreeService.deriveAnalysis(spthyContent);
+      String result = haskellDerivationFetcher.deriveAnalysis(spthyContent);
 
       return ResponseEntity.ok(result);
 
@@ -75,7 +75,7 @@ public class DerivationController {
    */
   @GetMapping("/derive/health")
   public ResponseEntity<String> checkDerivationServiceHealth() {
-    boolean available = derivationTreeService.isServiceAvailable();
+    boolean available = haskellDerivationFetcher.isServiceAvailable();
     if (available) {
       return ResponseEntity.ok("Derivation service is available");
     } else {

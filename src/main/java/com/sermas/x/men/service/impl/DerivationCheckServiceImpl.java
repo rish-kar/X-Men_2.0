@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DerivationCheckServiceImpl implements DerivationCheckService {
 
-  private final DerivationService derivationService;
+  private final DerivationService hybridDerivationService;
+  private final DerivationService javaDerivationService;
 
   private static final Set<String> RULES_TO_SKIP =
       Set.of("humansetup", "Setup", "ChanSndS", "ChanRcvS");
@@ -24,10 +25,20 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
   /**
    * Constructor for DerivationCheckServiceImpl.
    *
-   * @param derivationService the DerivationService to use for derivation operations
+   * @param hybridDerivationService hybrid facade that may proxy to Haskell
+   * @param javaDerivationService pure Java derivation implementation
    */
-  public DerivationCheckServiceImpl(DerivationService derivationService) {
-    this.derivationService = derivationService;
+  public DerivationCheckServiceImpl(
+      HybridDerivationService hybridDerivationService,
+      DerivationServiceImpl javaDerivationService) {
+    this.hybridDerivationService = hybridDerivationService;
+    this.javaDerivationService = javaDerivationService;
+  }
+
+  private DerivationService resolveDerivationService() {
+    return DerivationModeContext.isHaskellEnabled()
+        ? hybridDerivationService
+        : javaDerivationService;
   }
 
   /**
@@ -38,19 +49,29 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
    * @return true if the target can be derived from the knowledge, false otherwise
    */
   @Override
-  public boolean isDerivable(Message target, Set<Message> knowledge) {
+  public boolean isDerivable(
+      Message target, Set<Message> knowledge, String derivationType, int derivationDepth) {
     // Dolev–Yao style backward derivation
-    Set<String> derivations = derivationService.derive(target, knowledge, 5);
-    derivationService.printDerivationTree(target, knowledge, 5);
+    Set<Derivation> derivations = new HashSet<>();
+    if (derivationType.equalsIgnoreCase(String.valueOf(DerivationType.LIMITED))) {
+      Set<String> derivationsStrings =
+          resolveDerivationService().deriveLimited(target, knowledge, 5);
+      resolveDerivationService().printDerivationTree(target, knowledge, 5);
+      return !derivationsStrings.isEmpty();
+    } else if (derivationType.equalsIgnoreCase(String.valueOf(DerivationType.DEPTH_SPECIFIED))) {
+      derivations = resolveDerivationService().deriveToDepth(target, knowledge, derivationDepth);
+    } else {
+      derivations = resolveDerivationService().deriveToInfinity(target, knowledge);
+    }
     return !derivations.isEmpty();
   }
 
   /**
    * Extracts the target message from a rule by taking the last postcondition's last parameter.
    *
-   * Example: if postconditions contain ... , TSnd(H,I,'response',<~p1,~nb,~nh>) then we pick
-   * the TSnd fact (as it's last) and its last parameter <~p1,~nb,~nh> and parse that as target.
-   * No fact names are hardcoded.
+   * <p>Example: if postconditions contain ... , TSnd(H,I,'response',<~p1,~nb,~nh>) then we pick the
+   * TSnd fact (as it's last) and its last parameter <~p1,~nb,~nh> and parse that as target. No fact
+   * names are hardcoded.
    *
    * @param rule the rule from which to extract the target message
    * @return the target message extracted from the rule, or null if unavailable
@@ -110,13 +131,12 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
   }
 
   /**
-   * Extracts knowledge messages from the PARAMETERS BUNDLE by:
-   * 1) Locating the CURRENT rule
-   * 2) Extracting the values inside the POSTCONDITION State that corresponds to the same State
-   *    variable(s) present in the precondition (e.g., $User)
-   * 3) Applying Forget(~x) by removing x from the knowledge
+   * Extracts knowledge messages from the PARAMETERS BUNDLE by: 1) Locating the CURRENT rule 2)
+   * Extracting the values inside the POSTCONDITION State that corresponds to the same State
+   * variable(s) present in the precondition (e.g., $User) 3) Applying Forget(~x) by removing x from
+   * the knowledge
    *
-   * This matches the requirement to use the rule's own postcondition as the basis of knowledge.
+   * <p>This matches the requirement to use the rule's own postcondition as the basis of knowledge.
    */
   @Override
   public Set<Message> extractKnowledge(ParametersBundle parametersBundle) {
@@ -203,9 +223,11 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
       for (String forgotten : forgetSet) {
         String canonicalForgotten = forgotten.startsWith("~") ? forgotten.substring(1) : forgotten;
         log.info("Applying Forget on value: {}", canonicalForgotten);
-        knowledge.removeIf(msg -> (msg instanceof Atom a)
-            && (a.getValue().startsWith("~") ? a.getValue().substring(1) : a.getValue())
-                .equals(canonicalForgotten));
+        knowledge.removeIf(
+            msg ->
+                (msg instanceof Atom a)
+                    && (a.getValue().startsWith("~") ? a.getValue().substring(1) : a.getValue())
+                        .equals(canonicalForgotten));
       }
     }
 
@@ -281,6 +303,16 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
   private Message parseStringToMessage(String raw) {
     String str = raw.trim();
 
+    //  Support Tamarin tuple syntax: <a,b,c> => Pair(a, Pair(b, c))
+    // This is needed so State(...) can contribute Pair terms to knowledge (enabling Projection
+    // trees).
+    if (str.startsWith("<") && str.endsWith(">")) {
+      String inner = str.substring(1, str.length() - 1).trim();
+      if (inner.isEmpty()) return new Atom(str);
+      List<String> parts = splitTopLevelCommas(inner);
+      return buildNestedPair(parts);
+    }
+
     if (str.startsWith("{") && str.contains("}_")) return parseEncryption(str);
     if (str.startsWith("(") && str.endsWith(")")) return parsePair(str);
     if (str.contains("(") && str.endsWith(")")) return parseFunction(str);
@@ -315,7 +347,10 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
       if (c == '{') depth++;
       else if (c == '}') {
         depth--;
-        if (depth == 0) { i++; break; }
+        if (depth == 0) {
+          i++;
+          break;
+        }
       }
     }
     String keyPart = s.substring(keyStart + 1, i - 1).trim();
@@ -340,9 +375,7 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
     return new Pair(parseStringToMessage(left), parseStringToMessage(right));
   }
 
-  /**
-   * Parses a string representation of a function into a Message.
-   */
+  /** Parses a string representation of a function into a Message. */
   private Message parseFunction(String str) {
     int idx = str.indexOf('(');
     String name = str.substring(0, idx).trim();
@@ -354,9 +387,7 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
     return new PredictiveFunction(name, args);
   }
 
-  /**
-   * Finds a top-level comma in a string (commas not buried in parentheses).
-   */
+  /** Finds a top-level comma in a string (commas not buried in parentheses). */
   private int findTopLevelComma(String s) {
     int depth = 0;
     for (int i = 0; i < s.length(); i++) {
@@ -368,12 +399,11 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
     return -1;
   }
 
-  /**
-   * Splits a string by top-level commas, ignoring nested parentheses/angles.
-   */
+  /** Splits a string by top-level commas, ignoring nested parentheses/angles. */
   private List<String> splitTopLevelCommas(String s) {
     List<String> parts = new ArrayList<>();
-    int depth = 0; int last = 0;
+    int depth = 0;
+    int last = 0;
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
       if (c == '(' || c == '<') depth++;
@@ -387,9 +417,7 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
     return parts;
   }
 
-  /**
-   * Parses a State payload string like "<$uid, p1, p2, ~nh>" into atomic messages.
-   */
+  /** Parses a State payload string like "<$uid, p1, p2, ~nh>" into atomic messages. */
   private Set<Message> parseStateParam(String payload) {
     Set<Message> out = new LinkedHashSet<>();
     String s = payload.trim();

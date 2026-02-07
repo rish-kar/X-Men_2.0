@@ -1,6 +1,7 @@
 package com.sermas.x.men.service;
 
-import com.sermas.x.men.model.Message;
+import com.sermas.x.men.model.*;
+
 import java.util.Set;
 
 /**
@@ -18,7 +19,13 @@ public interface DerivationService {
    * @param depthLimit the maximum depth for derivation
    * @return a set of strings representing the derived messages
    */
-  Set<String> derive(Message target, Set<Message> knowledge, int depthLimit);
+  Set<String> deriveLimited(Message target, Set<Message> knowledge, int depthLimit);
+
+
+  Set<Derivation> deriveToDepth(Message target, Set<Message> knowledge, int depthLimit);
+  Set<Derivation> deriveToInfinity(Message target, Set<Message> knowledge);
+
+  void printAllDerivationTrees(Set<Derivation> trees);
 
   /**
    * Prints the derivation tree for a target message based on a set of knowledge messages and a

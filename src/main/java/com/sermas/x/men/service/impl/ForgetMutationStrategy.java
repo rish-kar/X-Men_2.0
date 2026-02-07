@@ -70,7 +70,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
       Set<Message> knowledge = derivationCheckService.extractKnowledge(knowledgeBundle);
 
       log.info("Checking if target '{}' is derivable from current knowledge...", target);
-      boolean derivable = derivationCheckService.isDerivable(target, knowledge);
+      boolean derivable = derivationCheckService.isDerivable(target, knowledge, parametersBundle.getDerivationType(), parametersBundle.getDerivationDepth());
       if (derivable) {
         log.info(
             "Target '{}' IS derivable from knowledge. Skipping mutation for forgotten value '{}'.",

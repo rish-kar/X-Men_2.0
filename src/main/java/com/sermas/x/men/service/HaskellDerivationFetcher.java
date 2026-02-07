@@ -21,21 +21,21 @@ import reactor.core.publisher.Mono;
  */
 @Service
 @Slf4j
-public class DerivationTreeService {
+public class HaskellDerivationFetcher {
 
   private final WebClient webClient;
 
   @Autowired
   private HaskellFormatConverter haskellConverter;
 
-  public DerivationTreeService(
+  public HaskellDerivationFetcher(
       @Value("${derivation.service.url:http://localhost:9091}") String derivationServiceUrl) {
     this.webClient =
         WebClient.builder()
             .baseUrl(derivationServiceUrl)
             .defaultHeader("Content-Type", "text/plain")
             .build();
-    log.info("DerivationTreeService initialized with base URL: {}", derivationServiceUrl);
+    log.info("HaskellDerivationFetcher initialized with base URL: {}", derivationServiceUrl);
   }
 
   /**
