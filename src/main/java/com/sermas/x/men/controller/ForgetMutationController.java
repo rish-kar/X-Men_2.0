@@ -43,7 +43,7 @@ public class ForgetMutationController {
       @RequestParam("file") MultipartFile file,
       @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate,
       @RequestHeader(value= "Derivation-Type", required = false) String derivationType,
-      @RequestHeader(value = "Derivation-Depth", required = false) int derivationDepth)
+      @RequestHeader(value = "Derivation-Depth", required = false) Integer derivationDepth)
       throws Exception {
     boolean haskellWasEnabled = false;
     try {
@@ -106,8 +106,8 @@ public class ForgetMutationController {
       // Extract setup knowledge to support propagation where needed
       parametersBundle.getFlags().setTrueReplace(true);
       parametersBundle.setDerivationType(derivationType);
-      if (derivationType.equals(String.valueOf(DerivationType.DEPTH_SPECIFIED))) {
-            parametersBundle.setDerivationDepth(derivationDepth);
+      if (DerivationType.DEPTH_SPECIFIED.name().equals(derivationType) && derivationDepth != null) {
+        parametersBundle.setDerivationDepth(derivationDepth);
       }
       Map<String, String> setupKnowledgeValues =
           setupKnowledgeExtractor.processProtocolModel(originalRules);

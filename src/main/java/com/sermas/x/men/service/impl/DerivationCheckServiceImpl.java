@@ -303,6 +303,16 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
   private Message parseStringToMessage(String raw) {
     String str = raw.trim();
 
+    //  Support Tamarin tuple syntax: <a,b,c> => Pair(a, Pair(b, c))
+    // This is needed so State(...) can contribute Pair terms to knowledge (enabling Projection
+    // trees).
+    if (str.startsWith("<") && str.endsWith(">")) {
+      String inner = str.substring(1, str.length() - 1).trim();
+      if (inner.isEmpty()) return new Atom(str);
+      List<String> parts = splitTopLevelCommas(inner);
+      return buildNestedPair(parts);
+    }
+
     if (str.startsWith("{") && str.contains("}_")) return parseEncryption(str);
     if (str.startsWith("(") && str.endsWith(")")) return parsePair(str);
     if (str.contains("(") && str.endsWith(")")) return parseFunction(str);

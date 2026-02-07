@@ -36,13 +36,19 @@ public class DerivationServiceImpl implements DerivationService {
   @Override
   public Set<Derivation> deriveToDepth(
       Message target, Set<Message> knowledge, int depthLimit) {
-    return deriveAllRecursive(target, knowledge, depthLimit, new java.util.HashSet<>());
+    Set<Derivation> derivations =
+        deriveAllRecursive(target, knowledge, depthLimit, new java.util.HashSet<>());
+    printAllDerivationTrees(derivations);
+    return derivations;
   }
 
   @Override
   public Set<Derivation> deriveToInfinity(Message target, Set<Message> knowledge) {
     // depthLeft = null means “no limit”
-    return deriveAllRecursive(target, knowledge, null, new java.util.HashSet<>());
+    Set<Derivation> derivations =
+        deriveAllRecursive(target, knowledge, null, new java.util.HashSet<>());
+    printAllDerivationTrees(derivations);
+    return derivations;
   }
 
   @Override
