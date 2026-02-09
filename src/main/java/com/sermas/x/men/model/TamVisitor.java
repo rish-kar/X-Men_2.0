@@ -162,6 +162,9 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
    * @return a Fact object
    */
   public Object visitFact(TamarinParser.FactContext ctx) {
+    if (ctx == null || ctx.getChildCount() == 0 || ctx.getChild(0) == null) {
+      throw new IllegalArgumentException("Malformed fact node (parser recovery produced empty FactContext).");
+    }
     int x = ctx.getChildCount();
     Fact newf = new Fact(ctx.getChild(0).getText());
     if (x >= 4) {

@@ -37,6 +37,8 @@ public class MutationController {
 
   @Autowired private HaskellDerivationFetcher haskellDerivationFetcher;
 
+  @Autowired private DerivationTreeCaptureService derivationTreeCaptureService;
+
   /**
    * Generates mutations based on the provided file and mutation options.
    *
@@ -72,8 +74,12 @@ public class MutationController {
 
     Map<String, String> setupKnowledgeValues;
     boolean haskellWasEnabled = false;
+    String derivationTreeContent = null;
 
     try {
+      // Start capturing derivation tree output
+      derivationTreeCaptureService.startCapture();
+
       // Create mutation set from headers
       Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
       if (Boolean.TRUE.equals(skipSend)) {
@@ -182,9 +188,15 @@ public class MutationController {
 
       mutationGeneratorService.generateMutation(originalRules, mutationSet, parametersBundle);
 
+      // Stop capturing and get derivation tree content
+      derivationTreeContent = derivationTreeCaptureService.stopCaptureAndGet();
+      if (derivationTreeContent != null) {
+        log.info("Captured derivation tree output ({} characters)", derivationTreeContent.length());
+      }
+
       // Extract base filename for ZIP creation
       String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
-      return zipService.createZipResponse(baseFileName);
+      return zipService.createZipResponse(baseFileName, derivationTreeContent);
     } catch (IllegalArgumentException e) {
       log.error("Error generating mutations: " + e.getMessage(), e);
       return ResponseEntity.status(400).body(e.getMessage());
@@ -198,6 +210,8 @@ public class MutationController {
         DerivationModeContext.disableHaskell();
         log.info("Haskell derivation DISABLED after mutation processing");
       }
+      // Clear any remaining capture state
+      derivationTreeCaptureService.clearCapture();
     }
   }
 }

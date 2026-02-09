@@ -736,18 +736,21 @@ public class TamarinParser extends Parser {
       this.setState(126);
       this.match(20);
       this.setState(127);
-      this.fact();
-      this.setState(132);
       this._errHandler.sync(this);
-
-      int _la;
-      for (_la = this._input.LA(1); _la == 4; _la = this._input.LA(1)) {
-        this.setState(128);
-        this.match(4);
-        this.setState(129);
+      int _la = this._input.LA(1);
+      if (_la != 21) {
         this.fact();
-        this.setState(134);
+        this.setState(132);
         this._errHandler.sync(this);
+
+        for (_la = this._input.LA(1); _la == 4; _la = this._input.LA(1)) {
+          this.setState(128);
+          this.match(4);
+          this.setState(129);
+          this.fact();
+          this.setState(134);
+          this._errHandler.sync(this);
+        }
       }
 
       this.setState(135);
@@ -1442,7 +1445,7 @@ public class TamarinParser extends Parser {
     this.enterRule(_localctx, 46, 23);
 
     try {
-      this.setState(285);
+      this.setState(286);
       this._errHandler.sync(this);
       switch (this._input.LA(1)) {
         case 44:
@@ -1456,7 +1459,7 @@ public class TamarinParser extends Parser {
         case 52:
         case 53:
           this.enterOuterAlt(_localctx, 2);
-          this.setState(284);
+          this.setState(285);
           this.digit();
           break;
         case 54:
@@ -1465,24 +1468,22 @@ public class TamarinParser extends Parser {
           this._errHandler.sync(this);
           int _alt = 1;
 
-          while (true) {
+          do {
             switch (_alt) {
               case 1:
                 this.setState(279);
                 this.match(54);
-                this.setState(282);
-                this._errHandler.sync(this);
-                _alt =
-                    this.getInterpreter()
-                        .adaptivePredict(this._input, 23, this._ctx);
-                if (_alt == 2 || _alt == 0) {
-                  return _localctx;
-                }
                 break;
               default:
                 throw new NoViableAltException(this);
             }
-          }
+
+            this.setState(282);
+            this._errHandler.sync(this);
+            _alt = this.getInterpreter().adaptivePredict(this._input, 25, this._ctx);
+          } while (_alt != 2 && _alt != 0);
+
+          break;
         default:
           throw new NoViableAltException(this);
       }

@@ -127,6 +127,12 @@ public class ModelLoader {
       ParseTree parseTree = tamarinParser.theory();
       log.debug("Parsed theory rule");
 
+      // Log syntax errors but don't block (for debugging)
+      int syntaxErrors = tamarinParser.getNumberOfSyntaxErrors();
+      if (syntaxErrors > 0) {
+        log.warn("SPTHY file has {} syntax errors - attempting to continue", syntaxErrors);
+      }
+
       TamVisitor tamVisitor = new TamVisitor();
       ArrayList<Rule> ruleList = (ArrayList<Rule>) tamVisitor.visit(parseTree);
       componentList.addAll(ruleList);

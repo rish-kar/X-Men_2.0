@@ -26,6 +26,17 @@ public class ZipService {
    * @return ResponseEntity containing the ZIP file as a ByteArrayResource
    */
   public ResponseEntity<ByteArrayResource> createZipResponse(String baseFileName) {
+    return createZipResponse(baseFileName, null);
+  }
+
+  /**
+   * Creates a ZIP file containing mutation files and optionally derivation tree.
+   *
+   * @param baseFileName The base name of the original file (without extension)
+   * @param derivationTreeContent Optional derivation tree content to include
+   * @return ResponseEntity containing the ZIP file as a ByteArrayResource
+   */
+  public ResponseEntity<ByteArrayResource> createZipResponse(String baseFileName, String derivationTreeContent) {
     try {
       // Find all generated mutation files
       File directory = new File(Paths.get("").toAbsolutePath().toString());
@@ -40,6 +51,20 @@ public class ZipService {
       // Create ZIP in memory
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+
+        // Add derivation tree file if provided
+        if (derivationTreeContent != null && !derivationTreeContent.trim().isEmpty()) {
+          try {
+            String derivationFileName = baseFileName + "_DerivationTree.txt";
+            ZipEntry derivationEntry = new ZipEntry(derivationFileName);
+            zos.putNextEntry(derivationEntry);
+            zos.write(derivationTreeContent.getBytes());
+            zos.closeEntry();
+            log.info("Added derivation tree to ZIP: {}", derivationFileName);
+          } catch (IOException e) {
+            log.error("Error adding derivation tree to ZIP: {}", e.getMessage());
+          }
+        }
 
         for (File file : mutationFiles) {
           try {

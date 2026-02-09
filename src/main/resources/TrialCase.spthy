@@ -1,0 +1,177 @@
+/****MODEL****/
+theory BankLogin_StateStyle
+
+begin
+
+/* Channel rules */
+rule ChanSndS:
+  [ SndS($A,$B,xt,x) ]
+  --[ ChanSndS($A,$B,xt,x) ]->
+  [ !Sec($A,$B,xt,x) ]
+
+rule ChanRcvS:
+  [ !Sec($A,$B,xt,x) ]
+  --[ ChanRcvS($A,$B,xt,x) ]->
+  [ RcvS($A,$B,xt,x) ]
+
+
+/****RULES****/
+
+builtins: symmetric-encryption
+functions: tok/2
+
+rule humansetup:
+  [ ]
+  --[ OnlyOnce()
+    , Neq('H','B')
+    , Neq('User1','User2')
+    , Neq('User1','User3')
+    , Neq('User2','User3')
+    ]->
+  [ /* agents + usernames */
+    !Type('H','agent','H')
+  , !Type('B','agent','B')
+  , !Type('H','username','User1')
+  , !Type('H','username','User2')
+  , !Type('H','username','User3')
+
+    /* base messages */
+  , !Type('H','msg',m1)
+  , !Type('H','msg',m2)
+  , !Type('H','msg',m3)
+
+    /* passwords are the ACTUAL terms (no pw1 aliasing) */
+  , !Type('H','pw',senc(m1,m2))        /* pw for User1 */
+  , !Type('H','pw',<m1,m2>)            /* pw for User2 */
+  , !Type('H','pw',<<m1,m2>,m2>)       /* pw for User3 (triple encoded safely) */
+  , !Type('H','pw',senc(m2,m1))        /* extra pw */
+
+    /* bank DB (3 valid pairs) */
+  , !Cred('B','User1',senc(m1,m2))
+  , !Cred('B','User2',<m1,m2>)
+  , !Cred('B','User3',<<m1,m2>,m2>)
+  ]
+
+
+/* setup */
+rule Setup:
+  [ !Cred('B','User1',senc(m1,m2)) ]
+  --[ Setup('H')
+    , Roles('H','B')
+    ]->
+  [ State('H','1',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1)>)
+  , State('B','1',<'ready'>)
+  ]
+
+
+/* ===================================================== */
+/*                    HUMAN ROLE                          */
+/* ===================================================== */
+
+rule H_1:
+  [ State('H','1',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1)>)
+  , Fr(~nH)
+  ]
+  --[ H()
+    , Send('H','agent','H')
+    , Forget(senc(m1,m2))
+    , Send('H','nonce',~nH)
+    , To('B')
+    ]->
+  [ State('H','2',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),~nH>)
+  , SndS('H','B',<'agent','nonce'>,<'H',~nH>)
+  ]
+
+
+rule B_1:
+  [ State('B','1',<'ready'>)
+  , RcvS('H','B',<'agent','nonce'>,<'H',nH>)
+  , Fr(~nB)
+  ]
+  --[ Receive('B','H',nH)
+    , Send('B','nonce',nH)
+    , Send('B','nonce',~nB)
+    , To('H')
+    , B_Running('B','H',nH,~nB)
+    ]->
+  [ State('B','2',<'H',nH,~nB>)
+  , SndS('B','H',<'nonce','nonce'>,<nH,~nB>)
+  ]
+
+
+rule H_2:
+  [ State('H','2',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH>)
+  , RcvS('B','H',<'nonce','nonce'>,<nH,nB>)
+  ]
+  --[ H()
+    , Receive('H','B',nB)
+    , Send('H','username','User1')
+    , Send('H','pw',senc(m1,m2))
+    , Send('H','nonce',nH)
+    , Send('H','nonce',nB)
+    , To('B')
+    , PasswordAttempt('H','B','User1',senc(m1,m2),nH,nB)
+    ]->
+  [ State('H','3',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH,nB>)
+  , SndS('H','B',<'username','pw','nonce','nonce'>,<'User1',senc(m1,m2),nH,nB>)
+  ]
+
+
+rule B_2_Accept:
+  [ State('B','2',<'H',nH,nB>)
+  , RcvS('H','B',<'username','pw','nonce','nonce'>,<u,p,nH,nB>)
+  , !Cred('B',u,p)
+  ]
+  --[ Receive('B','H',u)
+    , Receive('B','H',p)
+    , LoginOK('B','H',u,p,nH,nB)
+    , Send('B','access','Granted')
+    , Send('B','token',tok(nH,nB))
+    , To('H')
+    ]->
+  [ State('B','3',<'H',nH,nB,'Granted'>)
+  , SndS('B','H',<'access','token'>,<'Granted',tok(nH,nB)>)
+  ]
+
+
+rule B_2_Deny:
+  [ State('B','2',<'H',nH,nB>)
+  , RcvS('H','B',<'username','pw','nonce','nonce'>,<u,p,nH,nB>)
+  ]
+  --[ Receive('B','H',u)
+    , Receive('B','H',p)
+    , LoginFail('B','H',u,p,nH,nB)
+    , Send('B','access','Denied')
+    , Send('B','token',tok(nH,nB))
+    , To('H')
+    ]->
+  [ State('B','3',<'H',nH,nB,'Denied'>)
+  , SndS('B','H',<'access','token'>,<'Denied',tok(nH,nB)>)
+  ]
+
+
+rule H_3:
+  [ State('H','3',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH,nB>)
+  , RcvS('B','H',<'access','token'>,<res,tok(nH,nB)>)
+  ]
+  --[ H()
+    , Receive('H','B',res)
+    , HFin('H',res)
+    ]->
+  [ State('H','4',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH,nB,res>) ]
+
+
+/****ENDOFRULES****/
+
+restriction OnlyOnce:
+  "All #i #j. OnlyOnce()@#i & OnlyOnce()@#j ==> #i = #j"
+
+restriction Inequality:
+  "All x #i. Neq(x,x) @ #i ==> F"
+
+
+lemma BankAccept_implies_HumanInit: all-traces
+  "(All u p nH nB #i. LoginOK('B','H',u,p,nH,nB) @ i ==> (Ex #j. Send('H','nonce',nH) @ j & j < i))"
+
+end
+/****ENDOFMODEL****/
