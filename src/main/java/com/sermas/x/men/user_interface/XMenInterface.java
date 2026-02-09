@@ -1,13 +1,19 @@
 package com.sermas.x.men.user_interface;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.concurrent.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -16,8 +22,8 @@ import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
@@ -47,14 +53,22 @@ public class XMenInterface extends Application {
   private CheckBox cbCombineOnly;
   private CheckBox cbForget; // Added forget mutation checkbox
   private CheckBox cbNeglect; // Added neglect mutation checkbox
-  private RadioButton rbSimpleInput; // Simple input radio button
-  private RadioButton rbComplexInput; // Complex input radio button
-  private ToggleGroup forgetInputGroup; // Toggle group for forget input options
+  private CheckBox cbForgetHaskell; // New checkbox for Haskell derivation
+
+  private ToggleGroup derivationTypeGroup;
+  private RadioButton rbDerivationLimited;
+  private RadioButton rbDerivationSpecified;
+  private RadioButton rbDerivationInfinite;
+  private TextField tfDerivationDepth;
+  private CheckBox cbShowDerivationTree;
 
   private Button buttonUpload;
   private Button buttonStart;
 
   private static final String message = "Error while performing mutation";
+
+  // Keep a reference to the root StackPane so we can show a glass overlay.
+  private StackPane mainRoot;
 
   @Override
   public void start(Stage stage) {
@@ -132,6 +146,7 @@ public class XMenInterface extends Application {
    */
   private Scene createMainScene(Stage stage) {
     StackPane root = new StackPane();
+    this.mainRoot = root;
     Scene scene = new Scene(root, 1080, 720);
 
     // CSS
@@ -338,32 +353,86 @@ public class XMenInterface extends Application {
     cbNeglect = new CheckBox("Neglect Mutation");
     cbNeglect.setId("cbNeglect");
 
-    // Create radio buttons for forget mutation input type
-    forgetInputGroup = new ToggleGroup();
-    rbSimpleInput = new RadioButton("Simple Input");
-    rbSimpleInput.setId("rbSimpleInput");
-    rbSimpleInput.setToggleGroup(forgetInputGroup);
-    rbSimpleInput.setDisable(true); // Disabled until forget mutation is selected
+    // New: Forget mutation using external Haskell script
+    cbForgetHaskell = new CheckBox("Forget Mutation using external Haskell Script");
+    cbForgetHaskell.setId("cbForgetHaskell");
+    cbForgetHaskell.setDisable(true); // enabled only when Forget is selected
 
-    rbComplexInput = new RadioButton("Complex Input");
-    rbComplexInput.setId("rbComplexInput");
-    rbComplexInput.setToggleGroup(forgetInputGroup);
-    rbComplexInput.setDisable(true); // Disabled until forget mutation is selected
+    // Create radio buttons for derivation type (Forget mutation)
+    derivationTypeGroup = new ToggleGroup();
+    rbDerivationLimited = new RadioButton("Limited Depth");
+    rbDerivationLimited.setId("rbDerivationLimited");
+    rbDerivationLimited.setToggleGroup(derivationTypeGroup);
+    rbDerivationLimited.setDisable(true);
 
-    // Add listener to enable/disable radio buttons based on Forget checkbox state
-    cbForget.selectedProperty().addListener((observable, oldValue, newValue) -> {
-      if (newValue) {
-        // Enable radio buttons and select Simple Input by default
-        rbSimpleInput.setDisable(false);
-        rbComplexInput.setDisable(false);
-        rbSimpleInput.setSelected(true);
-      } else {
-        // Disable radio buttons and clear selection
-        rbSimpleInput.setDisable(true);
-        rbComplexInput.setDisable(true);
-        forgetInputGroup.selectToggle(null);
-      }
-    });
+    rbDerivationSpecified = new RadioButton("Specified Depth");
+    rbDerivationSpecified.setId("rbDerivationSpecified");
+    rbDerivationSpecified.setToggleGroup(derivationTypeGroup);
+    rbDerivationSpecified.setDisable(true);
+
+    rbDerivationInfinite = new RadioButton("Infinite");
+    rbDerivationInfinite.setId("rbDerivationInfinite");
+    rbDerivationInfinite.setToggleGroup(derivationTypeGroup);
+    rbDerivationInfinite.setDisable(true);
+
+    tfDerivationDepth = new TextField();
+    tfDerivationDepth.setId("tfDerivationDepth");
+    tfDerivationDepth.setPromptText("Depth");
+    tfDerivationDepth.setMaxWidth(90);
+    tfDerivationDepth.setDisable(true);
+
+    cbShowDerivationTree = new CheckBox("Show derivation tree on screen");
+    cbShowDerivationTree.setId("cbShowDerivationTree");
+    cbShowDerivationTree.setDisable(true);
+
+    // Enable/disable derivation controls together with Forget
+    cbForget
+        .selectedProperty()
+        .addListener(
+            (observable, oldValue, newValue) -> {
+              if (newValue) {
+                rbDerivationLimited.setDisable(false);
+                rbDerivationSpecified.setDisable(false);
+                rbDerivationInfinite.setDisable(false);
+                cbShowDerivationTree.setDisable(false);
+                cbForgetHaskell.setDisable(false);
+
+                // Default choice: Limited
+                rbDerivationLimited.setSelected(true);
+
+                // Depth box only for specified
+                tfDerivationDepth.setText("");
+                tfDerivationDepth.setDisable(true);
+
+              } else {
+                rbDerivationLimited.setDisable(true);
+                rbDerivationSpecified.setDisable(true);
+                rbDerivationInfinite.setDisable(true);
+                derivationTypeGroup.selectToggle(null);
+
+                tfDerivationDepth.setDisable(true);
+                tfDerivationDepth.setText("");
+
+                cbShowDerivationTree.setDisable(true);
+                cbShowDerivationTree.setSelected(false);
+
+                cbForgetHaskell.setDisable(true);
+                cbForgetHaskell.setSelected(false);
+              }
+            });
+
+    // Depth enabled only when "Specified Depth" selected
+    derivationTypeGroup
+        .selectedToggleProperty()
+        .addListener(
+            (obs, oldToggle, newToggle) -> {
+              if (newToggle == rbDerivationSpecified) {
+                tfDerivationDepth.setDisable(false);
+              } else {
+                tfDerivationDepth.setDisable(true);
+                tfDerivationDepth.setText("");
+              }
+            });
 
     // Apply style to check boxes.
     cbSkipS.setStyle(checkboxStyle);
@@ -378,8 +447,11 @@ public class XMenInterface extends Application {
     cbCombineOnly.setStyle(checkboxStyle);
     cbForget.setStyle(checkboxStyle);
     cbNeglect.setStyle(checkboxStyle);
-    rbSimpleInput.setStyle(checkboxStyle);
-    rbComplexInput.setStyle(checkboxStyle);
+    cbForgetHaskell.setStyle(checkboxStyle);
+    rbDerivationLimited.setStyle(checkboxStyle);
+    rbDerivationSpecified.setStyle(checkboxStyle);
+    rbDerivationInfinite.setStyle(checkboxStyle);
+    cbShowDerivationTree.setStyle(checkboxStyle);
 
     // Use an updated CSS drop-shadow with all required parameters.
     String labelStyle =
@@ -395,6 +467,10 @@ public class XMenInterface extends Application {
     lblCombine.setStyle(labelStyle);
     Label lblForget = new Label("Forget mutation:");
     lblForget.setStyle(labelStyle);
+
+    Label lblForgetHaskell = new Label("Forget mutation (Haskell derivation):");
+    lblForgetHaskell.setStyle(labelStyle);
+
     Label lblNeglect = new Label("Neglect mutation:");
     lblNeglect.setStyle(labelStyle);
 
@@ -404,11 +480,24 @@ public class XMenInterface extends Application {
     checkboxPanel.addRow(2, lblReplace, cbSubmessages, cbType);
     checkboxPanel.addRow(3, lblAdd, cbAdd);
     checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
-    // Add forget mutation with radio buttons for input type
-    checkboxPanel.addRow(5, lblForget, cbForget, rbSimpleInput, rbComplexInput);
-    checkboxPanel.addRow(6, lblNeglect, cbNeglect);
-    // Add the button row at the bottom.
-    checkboxPanel.addRow(7, new Label(""), buttonUpload, buttonStart);
+    // Forget mutation (Java derivation)
+    checkboxPanel.addRow(5, lblForget, cbForget);
+    checkboxPanel.addRow(
+        6,
+        new Label(""),
+        rbDerivationLimited,
+        rbDerivationSpecified,
+        tfDerivationDepth,
+        rbDerivationInfinite);
+    checkboxPanel.addRow(7, new Label(""), cbShowDerivationTree);
+    // Forget mutation (external Haskell script)
+    checkboxPanel.addRow(8, lblForgetHaskell, cbForgetHaskell);
+
+    // Neglect
+    checkboxPanel.addRow(9, lblNeglect, cbNeglect);
+
+    // Buttons
+    checkboxPanel.addRow(10, new Label(""), buttonUpload, buttonStart);
 
     return checkboxPanel;
   }
@@ -425,11 +514,12 @@ public class XMenInterface extends Application {
    * request includes the selected file and mutation options as headers.
    */
   private void sendMutationRequest() {
-      OkHttpClient client = new OkHttpClient.Builder()
-              .connectTimeout(30, TimeUnit.MINUTES)
-              .writeTimeout(30, TimeUnit.MINUTES)
-              .readTimeout(30, TimeUnit.MINUTES)
-              .build();
+    OkHttpClient client =
+        new OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.MINUTES)
+            .writeTimeout(30, TimeUnit.MINUTES)
+            .readTimeout(30, TimeUnit.MINUTES)
+            .build();
 
     // Create a MediaType for the file.
     MediaType mediaType = MediaType.parse("application/octet-stream");
@@ -440,10 +530,22 @@ public class XMenInterface extends Application {
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", selectedFile.getName(), fileBody);
 
-    // Updated URL: using environment variables for API configuration
-    String apiBaseUrl = System.getProperty("API_BASE_URL", System.getenv().getOrDefault("API_BASE_URL", "http://localhost:8081"));
-    String apiEndpoint = System.getProperty("API_GENERATE_MUTATIONS_ENDPOINT", System.getenv().getOrDefault("API_GENERATE_MUTATIONS_ENDPOINT", "/api/generateMutations"));
-    String apiUrl = System.getProperty("API_FULL_URL", System.getenv().getOrDefault("API_FULL_URL", apiBaseUrl + apiEndpoint));
+    String apiBaseUrl =
+        System.getProperty(
+            "API_BASE_URL", System.getenv().getOrDefault("API_BASE_URL", "http://localhost:8081"));
+
+    // If Forget is selected, call the Forget endpoint; otherwise keep existing behavior.
+    String apiEndpoint;
+    if (cbForget.isSelected()) {
+      apiEndpoint = "/api/forget/mutations";
+    } else {
+      apiEndpoint =
+          System.getProperty(
+              "API_GENERATE_MUTATIONS_ENDPOINT",
+              System.getenv().getOrDefault("API_GENERATE_MUTATIONS_ENDPOINT", "/api/generateMutations"));
+    }
+
+    String apiUrl = apiBaseUrl + apiEndpoint;
     Request.Builder requestBuilder = new Request.Builder().url(apiUrl);
 
     // Add headers based on the state of the checkboxes.
@@ -473,13 +575,24 @@ public class XMenInterface extends Application {
     }
     if (cbForget.isSelected()) {
       requestBuilder.addHeader("Forget-Mutation", "true");
-      // Only send Haskell-Activate header if Complex Input is selected
-      if (rbComplexInput.isSelected()) {
+
+      // Haskell derivation (external script path)
+      if (cbForgetHaskell != null && cbForgetHaskell.isSelected()) {
         requestBuilder.addHeader("Haskell-Activate", "true");
       }
-    }
-    if (cbNeglect.isSelected()) {
-      requestBuilder.addHeader("Neglect-Mutation", "true");
+
+      // Derivation headers (Forget endpoint)
+      String derivationTypeHeader = getSelectedDerivationTypeHeader();
+      if (derivationTypeHeader != null) {
+        requestBuilder.addHeader("Derivation-Type", derivationTypeHeader);
+      }
+
+      if ("DEPTH_SPECIFIED".equals(derivationTypeHeader)) {
+        Integer depth = parseDepthOrNull(tfDerivationDepth.getText());
+        if (depth != null) {
+          requestBuilder.addHeader("Derivation-Depth", depth.toString());
+        }
+      }
     }
 
     RequestBody requestBody = multipartBuilder.build();
@@ -515,15 +628,22 @@ public class XMenInterface extends Application {
               public void onResponse(@NotNull Call call, @NotNull Response response)
                   throws IOException {
                 if (response.isSuccessful()) {
-                  log.debug("Mutation generation succeeded!");
+                  byte[] bodyBytes = response.body() != null ? response.body().bytes() : new byte[0];
+
+                  String derivationTreeText = null;
+                  if (bodyBytes.length > 0 && cbForget.isSelected() && cbShowDerivationTree.isSelected()) {
+                    derivationTreeText = extractDerivationTreeFromZip(bodyBytes);
+                  }
+
+                  String finalDerivationTreeText = derivationTreeText;
                   Platform.runLater(
                       () -> {
+                        // Existing success alert
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Success");
                         alert.setHeaderText(null);
                         alert.setContentText("Mutation Generation Succeeded");
 
-                        // Set your custom logo
                         ImageView customLogo =
                             new ImageView(
                                 new Image(
@@ -533,7 +653,6 @@ public class XMenInterface extends Application {
                         customLogo.setFitHeight(120);
                         alert.setGraphic(customLogo);
 
-                        // Load the custom CSS file from resources
                         String cssPath =
                             Objects.requireNonNull(getClass().getResource("/css/alert.css"))
                                 .toExternalForm();
@@ -542,6 +661,10 @@ public class XMenInterface extends Application {
                         dialogPane.getStyleClass().add("my-alert");
 
                         alert.showAndWait();
+
+                        if (finalDerivationTreeText != null && !finalDerivationTreeText.isBlank()) {
+                          showDerivationOverlay(finalDerivationTreeText);
+                        }
                       });
                 } else {
                   // Log the response code and message
@@ -616,6 +739,142 @@ public class XMenInterface extends Application {
                 response.close();
               }
             });
+  }
+
+  private String getSelectedDerivationTypeHeader() {
+    Toggle selected = derivationTypeGroup != null ? derivationTypeGroup.getSelectedToggle() : null;
+    if (selected == rbDerivationLimited) {
+      return "LIMITED";
+    }
+    if (selected == rbDerivationSpecified) {
+      return "DEPTH_SPECIFIED";
+    }
+    if (selected == rbDerivationInfinite) {
+      return "INFINITE";
+    }
+    return null;
+  }
+
+  private Integer parseDepthOrNull(String raw) {
+    if (raw == null) return null;
+    String trimmed = raw.trim();
+    if (trimmed.isEmpty()) return null;
+    try {
+      return Integer.parseInt(trimmed);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  private String extractDerivationTreeFromZip(byte[] zipBytes) {
+    try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        String name = entry.getName();
+        if (name != null && name.endsWith("_DerivationTree.txt")) {
+          ByteArrayOutputStream baos = new ByteArrayOutputStream();
+          byte[] buffer = new byte[8192];
+          int read;
+          while ((read = zis.read(buffer)) != -1) {
+            baos.write(buffer, 0, read);
+          }
+          return baos.toString(StandardCharsets.UTF_8);
+        }
+        zis.closeEntry();
+      }
+    } catch (Exception e) {
+      log.warn("Could not extract derivation tree from ZIP: {}", e.getMessage());
+    }
+    return null;
+  }
+
+  private void showDerivationOverlay(String derivationText) {
+    if (mainRoot == null) return;
+
+    StackPane overlay = new StackPane();
+    overlay.setId("derivationOverlay");
+    overlay.setPickOnBounds(true);
+    overlay.setStyle(
+        "-fx-background-color: rgba(0,0,0,0.72); -fx-padding: 24px;");
+
+    VBox panel = new VBox(12);
+    panel.setMaxWidth(980);
+    panel.setMaxHeight(680);
+    panel.setPadding(new Insets(18));
+    panel.setStyle(
+        "-fx-background-color: rgba(15, 15, 18, 0.92);"
+            + "-fx-background-radius: 14;"
+            + "-fx-border-radius: 14;"
+            + "-fx-border-color: rgba(255,255,255,0.18);"
+            + "-fx-border-width: 1;"
+            + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.75), 24, 0.25, 0, 8);");
+
+    Label title = new Label("Derivation Tree");
+    title.setStyle(
+        "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px;");
+
+    Label subtitle = new Label("You can copy or save the full derivation as a .txt file.");
+    subtitle.setStyle("-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;");
+
+    TextArea textArea = new TextArea(derivationText);
+    textArea.setEditable(false);
+    textArea.setWrapText(false);
+    textArea.setStyle(
+        "-fx-font-family: 'Consolas'; -fx-font-size: 12px; -fx-control-inner-background: #0b0b0d; -fx-text-fill: #e8e8e8;");
+    VBox.setVgrow(textArea, Priority.ALWAYS);
+
+    Button btnCopy = new Button("Copy");
+    Button btnSave = new Button("Save as .txt");
+    Button btnClose = new Button("Close");
+
+    // Keep button sizing but make them a bit cleaner
+    btnCopy.setPrefSize(140, 38);
+    btnSave.setPrefSize(160, 38);
+    btnClose.setPrefSize(120, 38);
+
+    btnCopy.setStyle("-fx-font-weight: bold;");
+    btnSave.setStyle("-fx-font-weight: bold;");
+    btnClose.setStyle("-fx-font-weight: bold;");
+
+    btnCopy.setOnAction(
+        e -> {
+          Clipboard clipboard = Clipboard.getSystemClipboard();
+          ClipboardContent content = new ClipboardContent();
+          content.putString(derivationText);
+          clipboard.setContent(content);
+        });
+
+    btnSave.setOnAction(
+        e -> {
+          FileChooser fc = new FileChooser();
+          fc.setTitle("Save Derivation Tree");
+          fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text File", "*.txt"));
+          fc.setInitialFileName("DerivationTree.txt");
+          File out =
+              fc.showSaveDialog(
+                  mainRoot.getScene() != null ? mainRoot.getScene().getWindow() : null);
+          if (out != null) {
+            try (OutputStream os = Files.newOutputStream(out.toPath())) {
+              os.write(derivationText.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException ex) {
+              log.error("Failed to save derivation tree: {}", ex.getMessage());
+            }
+          }
+        });
+
+    btnClose.setOnAction(e -> mainRoot.getChildren().remove(overlay));
+
+    Region spacer = new Region();
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+    HBox buttons = new HBox(10, btnCopy, btnSave, spacer, btnClose);
+    buttons.setAlignment(Pos.CENTER_LEFT);
+
+    panel.getChildren().addAll(title, subtitle, textArea, buttons);
+    overlay.getChildren().add(panel);
+    StackPane.setAlignment(panel, Pos.CENTER);
+
+    mainRoot.getChildren().add(overlay);
   }
 
   /**
