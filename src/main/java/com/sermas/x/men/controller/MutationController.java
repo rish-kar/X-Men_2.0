@@ -179,7 +179,7 @@ public class MutationController {
         setupKnowledgeValues = setupKnowledgeExtractor.processProtocolModel(originalRules);
         parametersBundle.setExistingSetupKnowledge(setupKnowledgeValues);
         parametersBundle =
-            ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle);
+            ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle, fileContent);
         parametersBundle.getFlags().setForgetMutation(true);
       }
 

@@ -2,6 +2,8 @@ package com.sermas.x.men.service.impl;
 
 import com.sermas.x.men.model.*;
 import com.sermas.x.men.service.DerivationService;
+import com.sermas.x.men.service.derivation.DerivationConfig;
+import com.sermas.x.men.service.derivation.DerivationTreePrinter;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -10,9 +12,34 @@ import org.springframework.stereotype.Service;
  * DerivationServiceImpl class implements the DerivationService interface. This service provides
  * methods to derive a target message from a set of knowledge messages and to print the derivation
  * tree.
+ *
+ * IMPORTANT: This implementation restricts projections to a whitelist of built-in Tamarin
+ * functions and never decomposes user-defined functions to prevent exponential blow-up.
  */
 @Service
 public class DerivationServiceImpl implements DerivationService {
+
+  /** Configuration for derivation (whitelist, user-defined functions, limits) */
+  private DerivationConfig config = new DerivationConfig();
+
+  /** Printer for clean derivation tree output */
+  private DerivationTreePrinter printer = new DerivationTreePrinter(config);
+
+  /**
+   * Sets the derivation configuration (for controlling projections).
+   * @param config The configuration to use
+   */
+  public void setConfig(DerivationConfig config) {
+    this.config = config != null ? config : new DerivationConfig();
+    this.printer = new DerivationTreePrinter(this.config);
+  }
+
+  /**
+   * Gets the current derivation configuration.
+   */
+  public DerivationConfig getConfig() {
+    return this.config;
+  }
 
   /**
    * Derives a target message from a set of knowledge messages up to a specified depth limit
@@ -37,30 +64,33 @@ public class DerivationServiceImpl implements DerivationService {
   public Set<Derivation> deriveToDepth(
       Message target, Set<Message> knowledge, int depthLimit) {
     Set<Derivation> derivations =
-        deriveAllRecursive(target, knowledge, depthLimit, new java.util.HashSet<>());
-    printAllDerivationTrees(derivations);
+        deriveAllRecursive(target, knowledge, depthLimit, new java.util.HashSet<>(), 0);
+    // Use the printer with full context; it now handles the zero-derivation case too
+    printer.printAllTrees(derivations, target, knowledge);
     return derivations;
   }
 
   @Override
   public Set<Derivation> deriveToInfinity(Message target, Set<Message> knowledge) {
-    // depthLeft = null means “no limit”
+    // Use config max depth instead of truly infinite to prevent explosion
     Set<Derivation> derivations =
-        deriveAllRecursive(target, knowledge, null, new java.util.HashSet<>());
-    printAllDerivationTrees(derivations);
+        deriveAllRecursive(target, knowledge, config.getMaxDepth(), new java.util.HashSet<>(), 0);
+    // Use the printer with full context; it now handles the zero-derivation case too
+    printer.printAllTrees(derivations, target, knowledge);
     return derivations;
   }
 
   @Override
   public void printAllDerivationTrees(Set<Derivation> trees) {
+    // When only the trees are known, delegate to printer without extra context.
+    // DerivationTreePrinter will fall back to a compact view.
     if (trees == null || trees.isEmpty()) {
-      System.out.println("No derivations found.");
+      printer.printZeroDerivationReport(null, Collections.emptySet());
       return;
     }
     int i = 1;
     for (Derivation t : trees) {
-      System.out.println("\n=== Derivation " + (i++) + " ===");
-      printDerivationTreeFromNode(t, 0);
+      printer.printTree(t, i++);
     }
   }
 
@@ -161,8 +191,17 @@ public class DerivationServiceImpl implements DerivationService {
     }
 
     // Handle PredictiveFunction explicitly
+    // IMPORTANT: Only decompose if the function is in the whitelist AND not user-defined
     if (target instanceof PredictiveFunction func) {
-      System.out.println("Target is a PredictiveFunction: " + func.represent());
+      String funcName = func.getName();
+
+      // Check if this function should be decomposed
+      if (!config.isDecomposable(funcName)) {
+        // User-defined or blacklisted function - treat as opaque, no decomposition
+        return results;
+      }
+
+      System.out.println("Target is a PredictiveFunction (decomposable): " + func.represent());
       final List<String> finalHistory = updatedHistory; // effectively final for lambda capture
       List<Set<String>> argsDerivations =
           func.getArgs().stream()
@@ -304,7 +343,16 @@ public class DerivationServiceImpl implements DerivationService {
       }
     }
     // Handle PredictiveFunction explicitly
+    // IMPORTANT: Only decompose if the function is in the whitelist AND not user-defined
     if (target instanceof PredictiveFunction func) {
+      String funcName = func.getName();
+
+      if (!config.isDecomposable(funcName)) {
+        // User-defined or blacklisted function - treat as opaque
+        System.out.println(indentStr + "Opaque function (not decomposable): " + func.represent());
+        return;
+      }
+
       System.out.println(indentStr + "PredictiveFunction: " + func.represent());
       int argIndex = 0;
       for (Message arg : func.getArgs()) {
@@ -330,7 +378,8 @@ public class DerivationServiceImpl implements DerivationService {
               Message target,
               Set<Message> knowledge,
               Integer depthLeft,                 // null => infinite
-              Set<String> visitedGoals           // cycle safety
+              Set<String> visitedGoals,           // cycle safety
+              int recursionDepth                  // for limiting output depth
       ) {
             Set<Derivation> results = new java.util.LinkedHashSet<>();
 
@@ -356,8 +405,8 @@ public class DerivationServiceImpl implements DerivationService {
             if (target instanceof Pair pair) {
                   Integer nextDepth = (depthLeft == null) ? null : depthLeft - 1;
 
-                  Set<Derivation> leftDerivs = deriveAllRecursive(pair.getLeft(), knowledge, nextDepth, nextVisited);
-                  Set<Derivation> rightDerivs = deriveAllRecursive(pair.getRight(), knowledge, nextDepth, nextVisited);
+                  Set<Derivation> leftDerivs = deriveAllRecursive(pair.getLeft(), knowledge, nextDepth, nextVisited, recursionDepth);
+                  Set<Derivation> rightDerivs = deriveAllRecursive(pair.getRight(), knowledge, nextDepth, nextVisited, recursionDepth);
 
                   for (Derivation ld : leftDerivs) {
                         for (Derivation rd : rightDerivs) {
@@ -372,7 +421,7 @@ public class DerivationServiceImpl implements DerivationService {
 
                   for (Message msg : knowledge) {
                         if (msg instanceof Encrypt enc && enc.getMsg().equals(target)) {
-                              Set<Derivation> keyDerivs = deriveAllRecursive(enc.getKey(), knowledge, nextDepth, nextVisited);
+                              Set<Derivation> keyDerivs = deriveAllRecursive(enc.getKey(), knowledge, nextDepth, nextVisited, recursionDepth);
                               for (Derivation kd : keyDerivs) {
                                     results.add(new Derivation(target, "Decryption(" + enc.represent() + ")", java.util.List.of(kd)));
                               }
@@ -381,28 +430,46 @@ public class DerivationServiceImpl implements DerivationService {
             }
 
             // 4) Projection: for ALL pairs in knowledge containing target
+            // FIX D: Include the pair as an Initial premise so hypothesis extraction
+            // correctly identifies the PAIR (not the projected component) as the hypothesis
             if (knowledge != null) {
                   for (Message msg : knowledge) {
                         if (msg instanceof Pair p) {
+                              // Create an Initial node for the pair (the actual hypothesis from knowledge)
+                              Derivation pairInitial = new Derivation(p, "Initial", java.util.List.of());
+
                               if (p.getLeft().equals(target)) {
-                                    results.add(new Derivation(target, "Projection-First(" + p.represent() + ")", java.util.List.of()));
+                                    // The projection node has the pair as its premise
+                                    results.add(new Derivation(target, "Projection-First", java.util.List.of(pairInitial)));
                               }
                               if (p.getRight().equals(target)) {
-                                    results.add(new Derivation(target, "Projection-Second(" + p.represent() + ")", java.util.List.of()));
+                                    results.add(new Derivation(target, "Projection-Second", java.util.List.of(pairInitial)));
                               }
                         }
                   }
             }
 
             // 5) PredictiveFunction: all combinations of argument derivations
+            // IMPORTANT: Only decompose if the function is in the whitelist AND not user-defined
             if (target instanceof PredictiveFunction func) {
+                  String funcName = func.getName();
+
+                  // Check if this function should be decomposed
+                  if (!config.isDecomposable(funcName)) {
+                        // User-defined or blacklisted function - treat as opaque
+                        // Only derivable if directly in knowledge (already handled above)
+                        // DO NOT expand into arguments
+                        return results;
+                  }
+
+                  // Whitelist function - decompose into arguments
                   Integer nextDepth = (depthLeft == null) ? null : depthLeft - 1;
 
                   java.util.List<java.util.List<Derivation>> argOptions = new java.util.ArrayList<>();
                   boolean impossible = false;
 
                   for (Message arg : func.getArgs()) {
-                        Set<Derivation> argDerivs = deriveAllRecursive(arg, knowledge, nextDepth, nextVisited);
+                        Set<Derivation> argDerivs = deriveAllRecursive(arg, knowledge, nextDepth, nextVisited, recursionDepth);
                         if (argDerivs.isEmpty()) {
                               impossible = true;
                               break;
@@ -426,11 +493,19 @@ public class DerivationServiceImpl implements DerivationService {
               java.util.List<Derivation> current,
               Set<Derivation> out
       ) {
+            // Limit cartesian product explosion
+            if (out.size() >= config.getMaxDerivationsPerTarget()) {
+                  return;
+            }
+
             if (idx == options.size()) {
                   out.add(new Derivation(target, "PredictiveFunction(" + func.getName() + ")", new java.util.ArrayList<>(current)));
                   return;
             }
             for (Derivation choice : options.get(idx)) {
+                  if (out.size() >= config.getMaxDerivationsPerTarget()) {
+                        return;
+                  }
                   current.add(choice);
                   buildCartesian(func, target, options, idx + 1, current, out);
                   current.remove(current.size() - 1);

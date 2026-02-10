@@ -276,9 +276,20 @@ public class FileHandler {
         if (rule.getRule_name().equalsIgnoreCase("humansetup")) {
           for (Fact postcondition : rule.getPostconditions()) {
             if (postcondition.getF_name().equalsIgnoreCase("!Type")) {
-              Value value = (Value) postcondition.getParameter(2);
-              value.setTag(((Value) postcondition.getParameter(1)).getName());
-              persistentTags.add(value);
+              Object param2 = postcondition.getParameter(2);
+              Object param1 = postcondition.getParameter(1);
+
+              // Handle both Value and other types (PSpecial, etc.)
+              if (param2 instanceof Value && param1 instanceof Value) {
+                Value value = (Value) param2;
+                value.setTag(((Value) param1).getName());
+                persistentTags.add(value);
+              } else if (param2 != null && param1 instanceof Value) {
+                // For non-Value types like PSpecial, create a Value from their string representation
+                Value value = new Value(param2.toString(), false, false, false);
+                value.setTag(((Value) param1).getName());
+                persistentTags.add(value);
+              }
             }
           }
           break;
@@ -327,31 +338,39 @@ public class FileHandler {
 
           // Spread the tags in the 'State' precondition
           Fact statePrecondition = rule.getPreconditionFactByMatchingName("State");
-          if (statePrecondition != null && !valuesWithTags.isEmpty()) {
+          if (statePrecondition != null && !valuesWithTags.isEmpty() && statePrecondition.getParameters().size() > 2) {
             valuesWithTags = new ArrayList<>(new LinkedHashSet<>(valuesWithTags));
-            PSpecial knowledge = (PSpecial) statePrecondition.getParameter(2);
-            for (Value tagValue : valuesWithTags) {
-              for (Value knowledgeValue : knowledge.getGroup()) {
-                if (knowledgeValue.getTag() == null
-                    && knowledgeValue.getName().equals(tagValue.getName())) {
-                  knowledgeValue.setTag(tagValue.getTag());
+            Object stateParam = statePrecondition.getParameter(2);
+            if (stateParam instanceof PSpecial) {
+              PSpecial knowledge = (PSpecial) stateParam;
+              for (Value tagValue : valuesWithTags) {
+                for (Value knowledgeValue : knowledge.getGroup()) {
+                  if (knowledgeValue.getTag() == null
+                      && knowledgeValue.getName().equals(tagValue.getName())) {
+                    knowledgeValue.setTag(tagValue.getTag());
+                  }
                 }
               }
             }
+            // If it's not a PSpecial (e.g., a Value), we skip tag spreading for this fact
           }
 
           // Spread the tags in the 'State' postcondition
           Fact statePostcondition = rule.getPostconditionFactByMatchingName("State");
-          if (statePostcondition != null && !valuesWithTags.isEmpty()) {
-            PSpecial knowledge = (PSpecial) statePostcondition.getParameter(2);
-            for (Value tagValue : valuesWithTags) {
-              for (Value knowledgeValue : knowledge.getGroup()) {
-                if (knowledgeValue.getTag() == null
-                    && knowledgeValue.getName().equals(tagValue.getName())) {
-                  knowledgeValue.setTag(tagValue.getTag());
+          if (statePostcondition != null && !valuesWithTags.isEmpty() && statePostcondition.getParameters().size() > 2) {
+            Object statePostParam = statePostcondition.getParameter(2);
+            if (statePostParam instanceof PSpecial) {
+              PSpecial knowledge = (PSpecial) statePostParam;
+              for (Value tagValue : valuesWithTags) {
+                for (Value knowledgeValue : knowledge.getGroup()) {
+                  if (knowledgeValue.getTag() == null
+                      && knowledgeValue.getName().equals(tagValue.getName())) {
+                    knowledgeValue.setTag(tagValue.getTag());
+                  }
                 }
               }
             }
+            // If it's not a PSpecial (e.g., a Value), we skip tag spreading for this fact
           }
         }
       }
@@ -552,7 +571,7 @@ public class FileHandler {
           ((Value) stateParameters).persistentKnowledge();
         }
       }
-    } else {
+    } else if (stateParameters instanceof PSpecial) {
       for (Value stateValue : ((PSpecial) stateParameters).getGroup()) {
         for (Value storageValue : storageBox) {
           if (storageValue
@@ -564,6 +583,7 @@ public class FileHandler {
         }
       }
     }
+    // If neither Value nor PSpecial, do nothing - this handles other types gracefully
   }
 
   /**

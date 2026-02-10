@@ -1312,6 +1312,7 @@ public class TamarinParser extends Parser {
 
   /**
    * Parses an n-ary application in Tamarin.
+   * Modified to support comma-separated arguments like senc(m1,m2).
    *
    * @return the context of the parsed n-ary application
    * @throws RecognitionException if there is a parsing error
@@ -1329,13 +1330,20 @@ public class TamarinParser extends Parser {
       this.setState(261);
       this._errHandler.sync(this);
 
-      for (int _la = this._input.LA(1);
-          (_la & -64) == 0 && (1L << _la & 144115072782827520L) != 0L;
-          _la = this._input.LA(1)) {
+      // First multterm if present
+      int _la = this._input.LA(1);
+      if ((_la & -64) == 0 && (1L << _la & 144115072782827520L) != 0L) {
         this.setState(258);
         this.multterm();
         this.setState(263);
         this._errHandler.sync(this);
+
+        // Allow comma-separated multterms: handle pattern multterm (',' multterm)*
+        while (this._input.LA(1) == 4) { // 4 is ','
+          this.match(4); // consume ','
+          this.multterm();
+          this._errHandler.sync(this);
+        }
       }
 
       this.setState(264);

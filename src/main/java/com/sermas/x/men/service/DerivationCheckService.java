@@ -63,4 +63,14 @@ public interface DerivationCheckService {
    * @return the state ID extracted from the rule
    */
   String extractStateIdFromRule(Rule rule);
+
+  /**
+   * Extracts knowledge messages from a parameters bundle WITHOUT removing forgotten items.
+   * This is used for the Algorithm 1 forget mutation where K is monotonic (never shrinks)
+   * and Forget is tracked separately.
+   *
+   * @param parametersBundle the parameters bundle from which to extract knowledge
+   * @return a set of knowledge messages (full K, not K minus Forget)
+   */
+  Set<Message> extractKnowledgeWithoutForgetRemoval(ParametersBundle parametersBundle);
 }

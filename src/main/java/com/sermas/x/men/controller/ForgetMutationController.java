@@ -118,7 +118,7 @@ public class ForgetMutationController {
       Map<String, String> setupKnowledgeValues =
           setupKnowledgeExtractor.processProtocolModel(originalRules);
       parametersBundle.setExistingSetupKnowledge(setupKnowledgeValues);
-      parametersBundle = ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle);
+      parametersBundle = ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle, fileContent);
       parametersBundle.getFlags().setForgetMutation(true);
 
       parametersBundle.getCollections().clear();

@@ -53,6 +53,13 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
       Message target, Set<Message> knowledge, String derivationType, int derivationDepth) {
     // Dolev–Yao style backward derivation
     Set<Derivation> derivations = new HashSet<>();
+
+    // Handle null or empty derivationType by defaulting to LIMITED
+    if (derivationType == null || derivationType.isEmpty()) {
+      derivationType = String.valueOf(DerivationType.LIMITED);
+      log.debug("derivationType was null, defaulting to LIMITED");
+    }
+
     if (derivationType.equalsIgnoreCase(String.valueOf(DerivationType.LIMITED))) {
       Set<String> derivationsStrings =
           resolveDerivationService().deriveLimited(target, knowledge, 5);
@@ -67,11 +74,11 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
   }
 
   /**
-   * Extracts the target message from a rule by taking the last postcondition's last parameter.
+   * Extracts the target message (m2 - the send payload) from a rule.
    *
-   * <p>Example: if postconditions contain ... , TSnd(H,I,'response',<~p1,~nb,~nh>) then we pick the
-   * TSnd fact (as it's last) and its last parameter <~p1,~nb,~nh> and parse that as target. No fact
-   * names are hardcoded.
+   * FIX G: Prioritize SndS facts for target extraction since m2 per the paper
+   * is the send message in the transition. Fall back to last postcondition only
+   * if no SndS fact is found.
    *
    * @param rule the rule from which to extract the target message
    * @return the target message extracted from the rule, or null if unavailable
@@ -81,6 +88,25 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
     List<Fact> posts = rule.getPostconditions();
     if (posts == null || posts.isEmpty()) return null;
 
+    // First, try to find a SndS fact (the send postcondition)
+    for (Fact fact : posts) {
+      if ("SndS".equals(fact.getF_name())) {
+        // SndS typically has format: SndS(sender, receiver, labels, values)
+        // The values (last parameter) is the send payload = m2
+        List<Object> params = fact.getParameters();
+        if (params != null && params.size() >= 4) {
+          Object valuesParam = params.get(params.size() - 1);
+          String paramStr = payloadToString(valuesParam).trim();
+          Message target = parseTargetParam(paramStr);
+          if (target != null) {
+            log.debug("Extracted target from SndS: {}", target.represent());
+            return target;
+          }
+        }
+      }
+    }
+
+    // Fallback: use the last postcondition's last parameter (original behavior)
     Fact lastFact = posts.get(posts.size() - 1);
     List<Object> params = lastFact.getParameters();
     if (params == null || params.isEmpty()) return null;
@@ -292,6 +318,95 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
       }
     }
     return null;
+  }
+
+  /**
+   * Extracts knowledge messages from the parameters bundle WITHOUT removing forgotten items.
+   * This implements the paper's requirement that K is monotonic (never shrinks).
+   * Forget items are tracked separately in ForgetContext.
+   *
+   * FIX 2: Monotonic knowledge includes:
+   * - Everything from the PRECONDITION State (what was known before)
+   * - Everything from the POSTCONDITION State (what is known after)
+   * - Everything received (from RcvS preconditions)
+   * This ensures K_{i+1} ⊇ K_i per the paper.
+   *
+   * @param parametersBundle the parameters bundle from which to extract knowledge
+   * @return a set of knowledge messages (full K, not K minus Forget)
+   */
+  @Override
+  public Set<Message> extractKnowledgeWithoutForgetRemoval(ParametersBundle parametersBundle) {
+    Set<Message> knowledge = new LinkedHashSet<>();
+
+    if (parametersBundle.getCollections() == null || parametersBundle.getCollections().isEmpty()) {
+      log.warn("No collections found in parametersBundle");
+      return knowledge;
+    }
+
+    @SuppressWarnings("unchecked")
+    List<Rule> allRules = (List<Rule>) parametersBundle.getCollections().get(0);
+
+    String currentRuleName = parametersBundle.getExtraContent("currentRuleName");
+    if (currentRuleName == null || currentRuleName.isEmpty()) {
+      log.warn("No current rule name found in parametersBundle");
+      return knowledge;
+    }
+
+    Rule currentRule = null;
+    for (Rule r : allRules) {
+      if (currentRuleName.equals(r.getRule_name())) {
+        currentRule = r;
+        break;
+      }
+    }
+    if (currentRule == null) {
+      log.warn("Current rule not found: {}", currentRuleName);
+      return knowledge;
+    }
+
+    if (RULES_TO_SKIP.contains(currentRule.getRule_name())) {
+      log.info("Skipping knowledge extraction for rule: {}", currentRule.getRule_name());
+      return knowledge;
+    }
+
+    log.info("Extracting MONOTONIC knowledge for rule: {}", currentRuleName);
+
+    // FIX 2: Extract from PRECONDITION State first (what was already known)
+    for (Fact pre : currentRule.getPreconditions()) {
+      if ("State".equals(pre.getF_name()) && pre.getParameters().size() >= 3) {
+        Object stateData = pre.getParameters().get(pre.getParameters().size() - 1);
+        String stateRaw = payloadToString(stateData);
+        log.info("Precondition State data: {}", stateRaw);
+        knowledge.addAll(parseStateParam(stateRaw));
+      }
+    }
+
+    // FIX 2: Extract from POSTCONDITION State (what is known after transition)
+    for (Fact post : currentRule.getPostconditions()) {
+      if ("State".equals(post.getF_name()) && post.getParameters().size() >= 3) {
+        Object stateData = post.getParameters().get(post.getParameters().size() - 1);
+        String stateRaw = payloadToString(stateData);
+        log.info("Postcondition State data: {}", stateRaw);
+        knowledge.addAll(parseStateParam(stateRaw));
+      }
+    }
+
+    // FIX 2: Extract from RcvS preconditions (received messages)
+    for (Fact pre : currentRule.getPreconditions()) {
+      if ("RcvS".equals(pre.getF_name()) && pre.getParameters().size() >= 4) {
+        // RcvS(sender, receiver, labels, values) - extract the values (last param)
+        Object valuesData = pre.getParameters().get(pre.getParameters().size() - 1);
+        String valuesRaw = payloadToString(valuesData);
+        log.info("RcvS received data: {}", valuesRaw);
+        knowledge.addAll(parseStateParam(valuesRaw));
+      }
+    }
+
+    // DO NOT remove forgotten items - K is monotonic per Algorithm 1
+    log.info("Full MONOTONIC knowledge K: {}",
+             knowledge.stream().map(Message::represent).toList());
+
+    return knowledge;
   }
 
   /**

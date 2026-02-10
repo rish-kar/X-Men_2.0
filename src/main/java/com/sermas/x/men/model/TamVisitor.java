@@ -2,9 +2,11 @@ package com.sermas.x.men.model;
 
 import java.util.ArrayList;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 /** This class is a visitor for a parse tree. Extends the TamarinBaseVisitor class. */
 @NoArgsConstructor
+@Slf4j
 public class TamVisitor extends TamarinBaseVisitor<Object> {
 
   /**
@@ -18,8 +20,15 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
     int v = ctx.getChildCount() - 1;
 
     for (int i = 0; i < v; ++i) {
-      Component tmp = (Component) this.visit(ctx.getChild(i));
-      theory.add(tmp);
+      try {
+        Object result = this.visit(ctx.getChild(i));
+        if (result instanceof Component) {
+          theory.add((Component) result);
+        }
+      } catch (Exception e) {
+        log.warn("Failed to parse component at index {}: {}", i, e.getMessage());
+        // Continue parsing other components
+      }
     }
 
     return theory;
@@ -59,38 +68,52 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
       ArrayList facts = (ArrayList) this.visit(ctx.getChild(4));
 
       for (i = 0; i < facts.size(); ++i) {
-        Fact x = (Fact) facts.get(i);
-        switch (x.getType()) {
-          case PRE:
-            newRule.addPrecondition(x);
-            break;
-          case ACTION:
-            newRule.addAction(x);
-            break;
-          case POST:
-            newRule.addPostcondition(x);
-            break;
-          default:
-            throw new IllegalArgumentException("Unknown fact type: " + x.getType());
+        Object item = facts.get(i);
+        if (item instanceof Fact) {
+          Fact x = (Fact) item;
+          if (x.getType() != null) {
+            switch (x.getType()) {
+              case PRE:
+                newRule.addPrecondition(x);
+                break;
+              case ACTION:
+                newRule.addAction(x);
+                break;
+              case POST:
+                newRule.addPostcondition(x);
+                break;
+              default:
+                log.warn("Unknown fact type: {} for fact: {}", x.getType(), x.getF_name());
+            }
+          } else {
+            log.warn("Fact type is null for: {}", x.getF_name());
+          }
         }
       }
     } else {
       lets = (ArrayList) this.visit(ctx.getChild(3));
 
       for (i = 0; i < lets.size(); ++i) {
-        Fact x = (Fact) lets.get(i);
-        switch (x.getType()) {
-          case PRE:
-            newRule.addPrecondition(x);
-            break;
-          case ACTION:
-            newRule.addAction(x);
-            break;
-          case POST:
-            newRule.addPostcondition(x);
-            break;
-          default:
-            throw new IllegalArgumentException("Unknown fact type: " + x.getType());
+        Object item = lets.get(i);
+        if (item instanceof Fact) {
+          Fact x = (Fact) item;
+          if (x.getType() != null) {
+            switch (x.getType()) {
+              case PRE:
+                newRule.addPrecondition(x);
+                break;
+              case ACTION:
+                newRule.addAction(x);
+                break;
+              case POST:
+                newRule.addPostcondition(x);
+                break;
+              default:
+                log.warn("Unknown fact type: {} for fact: {}", x.getType(), x.getF_name());
+            }
+          } else {
+            log.warn("Fact type is null for: {}", x.getF_name());
+          }
         }
       }
     }
@@ -125,9 +148,19 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
           t = TypeFact.POST;
           break;
         default:
-          Fact ft = (Fact) this.visit(ctx.getChild(i));
-          ft.setType(t);
-          array.add(ft);
+          try {
+            Object result = this.visit(ctx.getChild(i));
+            if (result instanceof Fact) {
+              Fact ft = (Fact) result;
+              ft.setType(t);
+              array.add(ft);
+            } else if (result != null) {
+              // If we got something other than a Fact, create a placeholder fact
+              log.warn("Expected Fact but got {} for: {}", result.getClass().getSimpleName(), ctx.getChild(i).getText());
+            }
+          } catch (Exception e) {
+            log.warn("Failed to parse fact at index {}: {}", i, e.getMessage());
+          }
       }
     }
 
@@ -179,6 +212,7 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
 
   /**
    * Visits the group of term context and returns a Pspecial object.
+   * Supports nested structures like <<m1,m2>,m2> and function applications like senc(m1,m2).
    *
    * @param ctx the group of term context
    * @return a Pspecial object
@@ -189,15 +223,44 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
     int i = 0;
 
     while (i < v) {
-      switch (ctx.getChild(i).getText()) {
-        default:
-          Value newParameter = new Value(ctx.getChild(i).getText(), false, false, false);
-          gop.addValue(newParameter);
-          // fall through
+      String childText = ctx.getChild(i).getText();
+      switch (childText) {
         case "<":
         case ">":
         case ",":
           ++i;
+          break;
+        default:
+          try {
+            // Recursively visit the child to properly handle nested structures
+            Object childResult = this.visit(ctx.getChild(i));
+            if (childResult instanceof Value) {
+              gop.addValue((Value) childResult);
+            } else if (childResult instanceof PSpecial) {
+              // Nested group - convert to Value with text representation for compatibility
+              Value nestedValue = new Value(childText, false, false, false);
+              gop.addValue(nestedValue);
+            } else if (childResult instanceof FSpecial) {
+              // Function application - convert to Value with text representation
+              Value funcValue = new Value(childText, false, false, false);
+              gop.addValue(funcValue);
+            } else if (childResult != null) {
+              // Fallback to text representation
+              Value newParameter = new Value(childText, false, false, false);
+              gop.addValue(newParameter);
+            } else {
+              // Null result - use text
+              Value newParameter = new Value(childText, false, false, false);
+              gop.addValue(newParameter);
+            }
+          } catch (Exception e) {
+            // If recursive visit fails, use text representation
+            log.debug("Using text representation for group element: {}", childText);
+            Value newParameter = new Value(childText, false, false, false);
+            gop.addValue(newParameter);
+          }
+          ++i;
+          break;
       }
     }
 
@@ -218,18 +281,33 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
     while (i < v) {
       switch (ctx.getChild(i).getText()) {
         default:
-          Object termsOfFact = this.visit(ctx.getChild(i));
-          if (termsOfFact instanceof PSpecial) {
-            factParameters.add(termsOfFact);
-          } else if (termsOfFact instanceof Value) {
-            factParameters.add(termsOfFact);
-          } else {
-            Value newParameter;
-            if (termsOfFact instanceof Fact) {
-              newParameter = new Value(ctx.getChild(i).getText(), false, false, false);
-              factParameters.add(newParameter);
+          try {
+            Object termsOfFact = this.visit(ctx.getChild(i));
+            if (termsOfFact instanceof PSpecial) {
+              factParameters.add(termsOfFact);
+            } else if (termsOfFact instanceof Value) {
+              factParameters.add(termsOfFact);
+            } else if (termsOfFact instanceof FSpecial) {
+              // Handle FSpecial (function applications like senc{x}k)
+              factParameters.add(termsOfFact);
             } else if (termsOfFact instanceof Nary_app) {
-              newParameter = new Value(ctx.getChild(i).getText(), false, false, false);
+              // Keep as Nary_app or convert to Value
+              Value newParameter = new Value(ctx.getChild(i).getText(), false, false, false);
+              factParameters.add(newParameter);
+            } else if (termsOfFact instanceof Fact) {
+              Value newParameter = new Value(ctx.getChild(i).getText(), false, false, false);
+              factParameters.add(newParameter);
+            } else if (termsOfFact != null) {
+              // Fallback: convert to Value using text representation
+              Value newParameter = new Value(ctx.getChild(i).getText(), false, false, false);
+              factParameters.add(newParameter);
+            }
+          } catch (Exception e) {
+            // If parsing fails, use the raw text as a Value
+            String text = ctx.getChild(i).getText();
+            if (text != null && !text.isEmpty() && !",".equals(text)) {
+              log.debug("Using text representation for complex term: {}", text);
+              Value newParameter = new Value(text, false, false, false);
               factParameters.add(newParameter);
             }
           }
@@ -299,15 +377,46 @@ public class TamVisitor extends TamarinBaseVisitor<Object> {
 
   /**
    * Visit a parse tree produced by {@link TamarinParser#nary_app}.
+   * Modified to handle comma-separated arguments like senc(m1,m2).
    *
    * @param ctx the parse tree
    * @return the visitor result
    */
   public Object visitNary_app(TamarinParser.Nary_appContext ctx) {
-    int v = ctx.getChildCount();
-    Nary_app newNary = new Nary_app((String) this.visit(ctx.getChild(0)));
-    newNary.addValue((Value) this.visit(ctx.getChild(2)));
-    return newNary;
+    try {
+      int v = ctx.getChildCount();
+      Object funcName = this.visit(ctx.getChild(0));
+      String fname = funcName instanceof String ? (String) funcName : ctx.getChild(0).getText();
+      Nary_app newNary = new Nary_app(fname);
+
+      // Parse arguments: func '(' arg1 ',' arg2 ',' ... ')'
+      // Children: [0]=func, [1]='(', [2]=arg1, [3]=',', [4]=arg2, ..., [last]=')'
+      for (int i = 2; i < v - 1; i++) {
+        String childText = ctx.getChild(i).getText();
+        if (",".equals(childText)) {
+          continue; // skip commas
+        }
+        try {
+          Object argResult = this.visit(ctx.getChild(i));
+          if (argResult instanceof Value) {
+            newNary.addValue((Value) argResult);
+          } else if (argResult instanceof PSpecial) {
+            // Handle nested pairs like <m1,m2>
+            newNary.addValue(new Value(childText, false, false, false));
+          } else if (argResult != null) {
+            newNary.addValue(new Value(childText, false, false, false));
+          }
+        } catch (Exception e) {
+          // Fallback to text representation
+          newNary.addValue(new Value(childText, false, false, false));
+        }
+      }
+      return newNary;
+    } catch (Exception e) {
+      // If parsing fails, return a Value with the full text
+      log.debug("Failed to parse nary_app, using text: {}", ctx.getText());
+      return new Value(ctx.getText(), false, false, false);
+    }
   }
 
   /**

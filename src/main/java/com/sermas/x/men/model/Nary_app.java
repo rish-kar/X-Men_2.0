@@ -3,7 +3,6 @@ package com.sermas.x.men.model;
 import java.util.ArrayList;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,33 +13,48 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-@RequiredArgsConstructor
 public class Nary_app extends Abs_Value {
 
   @NonNull private String fname;
-  private ArrayList<Value> group;
+  private ArrayList<Value> group = new ArrayList<>();
 
   /**
    * Constructor for Nary_app.
    *
-   * @param x the name of the function
+   * @param fname the name of the function
+   */
+  public Nary_app(String fname) {
+    this.fname = fname;
+    this.group = new ArrayList<>();
+  }
+
+  /**
+   * Adds a value to the group.
+   *
+   * @param x the value to add
    */
   public void addValue(Value x) {
+    if (this.group == null) {
+      this.group = new ArrayList<>();
+    }
     this.group.add(x);
   }
 
   /**
    * Returns a string representation of the Nary_app function call.
    *
-   * @return A string in the format "fname(value1 value2 ...)" where fname is the function name and
+   * @return A string in the format "fname(value1,value2,...)" where fname is the function name
    */
   public String toString() {
-    String name = "";
+    if (this.group == null || this.group.isEmpty()) {
+      return this.fname + "()";
+    }
 
+    StringBuilder name = new StringBuilder();
     for (int i = 0; i < this.group.size(); ++i) {
-      name = name + this.group.get(i);
+      name.append(this.group.get(i));
       if (i < this.group.size() - 1) {
-        name = name + " ";
+        name.append(",");
       }
     }
 
