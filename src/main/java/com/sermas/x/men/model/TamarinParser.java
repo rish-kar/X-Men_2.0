@@ -1313,6 +1313,7 @@ public class TamarinParser extends Parser {
   /**
    * Parses an n-ary application in Tamarin.
    * Modified to support comma-separated arguments like senc(m1,m2).
+   * Grammar: nary_app : binary_fun '(' (multterm (',' multterm)*)? ')';
    *
    * @return the context of the parsed n-ary application
    * @throws RecognitionException if there is a parsing error
@@ -1326,19 +1327,16 @@ public class TamarinParser extends Parser {
       this.setState(256);
       this.binary_fun();
       this.setState(257);
-      this.match(27);
-      this.setState(261);
-      this._errHandler.sync(this);
+      this.match(27); // '('
 
-      // First multterm if present
+      // Check if there are arguments (not immediately ')')
       int _la = this._input.LA(1);
-      if ((_la & -64) == 0 && (1L << _la & 144115072782827520L) != 0L) {
-        this.setState(258);
+      // Token bitmask for valid term starters: includes '<', ALPHA, SQUOTE, '$', '~', '#', digits, aenc/sign/pk/senc, '(', '!', 'all'
+      if (_la != 28) { // Not ')'
         this.multterm();
-        this.setState(263);
         this._errHandler.sync(this);
 
-        // Allow comma-separated multterms: handle pattern multterm (',' multterm)*
+        // Handle comma-separated arguments: (',' multterm)*
         while (this._input.LA(1) == 4) { // 4 is ','
           this.match(4); // consume ','
           this.multterm();
@@ -1346,8 +1344,7 @@ public class TamarinParser extends Parser {
         }
       }
 
-      this.setState(264);
-      this.match(28);
+      this.match(28); // ')'
     } catch (RecognitionException var7) {
       RecognitionException re = var7;
       _localctx.exception = re;

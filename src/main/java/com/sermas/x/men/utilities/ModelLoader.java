@@ -21,6 +21,12 @@ import org.springframework.web.multipart.MultipartFile;
 @org.springframework.stereotype.Component
 public class ModelLoader {
 
+  /**
+   * Maximum number of syntax errors allowed before failing the parse.
+   * Set to 0 to fail on any syntax error, or higher to be more lenient.
+   */
+  private static final int MAX_SYNTAX_ERRORS_THRESHOLD = 1;
+
   ArrayList<Rule> theory = new ArrayList<>();
 
   @Autowired private FileHandler fileHandler;
@@ -127,10 +133,17 @@ public class ModelLoader {
       ParseTree parseTree = tamarinParser.theory();
       log.debug("Parsed theory rule");
 
-      // Log syntax errors but don't block (for debugging)
+      // Check syntax errors and fail if threshold exceeded
       int syntaxErrors = tamarinParser.getNumberOfSyntaxErrors();
-      if (syntaxErrors > 0) {
-        log.warn("SPTHY file has {} syntax errors - attempting to continue", syntaxErrors);
+      if (syntaxErrors > MAX_SYNTAX_ERRORS_THRESHOLD) {
+        String errorMsg = String.format(
+            "SPTHY file '%s' has %d syntax errors (threshold: %d). " +
+            "Cannot proceed with corrupted AST. Please check file syntax.",
+            spthyFile.getOriginalFilename(), syntaxErrors, MAX_SYNTAX_ERRORS_THRESHOLD);
+        log.error(errorMsg);
+        throw new IllegalArgumentException(errorMsg);
+      } else if (syntaxErrors > 0) {
+        log.warn("SPTHY file has {} syntax error(s) - proceeding with caution", syntaxErrors);
       }
 
       TamVisitor tamVisitor = new TamVisitor();

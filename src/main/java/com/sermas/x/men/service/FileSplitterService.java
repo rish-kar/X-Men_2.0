@@ -41,8 +41,14 @@ public class FileSplitterService {
       }
     }
 
+    // Append 'end' to rules section to make it a valid Tamarin theory for parsing
+    String rulesStr = String.join("\n", rules);
+    if (!rulesStr.trim().endsWith("end")) {
+      rulesStr = rulesStr + "\nend\n";
+    }
+
     return new FileSections(
-        String.join("\n", preamble), String.join("\n", rules), String.join("\n", postamble));
+        String.join("\n", preamble), rulesStr, String.join("\n", postamble));
   }
 
   /**
