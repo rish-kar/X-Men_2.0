@@ -1,10 +1,19 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.*;
-import com.sermas.x.men.utilities.*;
+import com.sermas.x.men.model.Flags;
+import com.sermas.x.men.model.InMemoryMultipartFile;
+import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
+import com.sermas.x.men.model.Rule;
+import com.sermas.x.men.service.FileLoadingService;
+import com.sermas.x.men.service.FileSplitterService;
+import com.sermas.x.men.service.MutationGeneratorService;
+import com.sermas.x.men.service.ZipService;
+import com.sermas.x.men.utilities.TagSetter;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,9 +32,11 @@ public class NeglectMutationController {
 
   @Autowired private FileLoadingService fileLoadingService;
   @Autowired private TagSetter tagSetter;
+
   @Autowired
   @Qualifier("mutationGeneratorServiceImpl")
   MutationGeneratorService mutationGeneratorService;
+
   @Autowired private FileSplitterService fileSplitterService;
   @Autowired private ZipService zipService;
 
@@ -39,7 +50,7 @@ public class NeglectMutationController {
   public ResponseEntity<?> neglectMutations(@RequestParam("file") MultipartFile file)
       throws Exception {
     try {
-      // Only NEGLECT mutation
+
       Set<Mutations> mutationSet = EnumSet.of(Mutations.NEGLECT);
 
       // Process file content
@@ -83,4 +94,3 @@ public class NeglectMutationController {
     }
   }
 }
-

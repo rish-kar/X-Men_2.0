@@ -59,7 +59,7 @@ public class SkipMutationController {
             "text/plain",
             sections.rules().getBytes(StandardCharsets.UTF_8));
 
-    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
+
     parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
     ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
     parametersBundle.getCollections().clear();
@@ -97,7 +97,6 @@ public class SkipMutationController {
             "text/plain",
             sections.rules().getBytes(StandardCharsets.UTF_8));
 
-    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
     parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
     ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
     parametersBundle.getCollections().clear();
@@ -135,7 +134,6 @@ public class SkipMutationController {
             "text/plain",
             sections.rules().getBytes(StandardCharsets.UTF_8));
 
-    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
     parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
     ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
     parametersBundle.getCollections().clear();
@@ -173,7 +171,6 @@ public class SkipMutationController {
             "text/plain",
             sections.rules().getBytes(StandardCharsets.UTF_8));
 
-    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
     parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
     ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
     parametersBundle.getCollections().clear();
@@ -211,7 +208,6 @@ public class SkipMutationController {
             "text/plain",
             sections.rules().getBytes(StandardCharsets.UTF_8));
 
-    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
     parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
     ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
     parametersBundle.getCollections().clear();

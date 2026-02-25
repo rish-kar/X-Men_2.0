@@ -294,7 +294,6 @@ public class ReplaceMutationService {
         }
       }
     } else if (valuesSent instanceof Variable) {
-      // If "Snd" carries a variable, you could handle that here (TODO)
       // TODO: Handle Variable case if needed
     } else if (valuesSent instanceof Value sentValue) {
       // If "Snd" is a single Value, do a direct substitution or functional replacement

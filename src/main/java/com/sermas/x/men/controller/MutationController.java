@@ -1,16 +1,36 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.*;
+import com.sermas.x.men.model.DerivationType;
+import com.sermas.x.men.model.Flags;
+import com.sermas.x.men.model.InMemoryMultipartFile;
+import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
+import com.sermas.x.men.model.Rule;
+import com.sermas.x.men.service.DerivationTreeCaptureService;
+import com.sermas.x.men.service.FileLoadingService;
+import com.sermas.x.men.service.FileSplitterService;
+import com.sermas.x.men.service.HaskellDerivationFetcher;
+import com.sermas.x.men.service.MutationGeneratorService;
+import com.sermas.x.men.service.ZipService;
 import com.sermas.x.men.service.impl.DerivationModeContext;
-import com.sermas.x.men.utilities.*;
+import com.sermas.x.men.utilities.ForgetMutationParser;
+import com.sermas.x.men.utilities.SetupKnowledgeExtractor;
+import com.sermas.x.men.utilities.TagSetter;
+import com.sermas.x.men.utilities.UtilityFunctions;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import lombok.extern.slf4j.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /** Controller for mutation generation. */
@@ -69,6 +89,8 @@ public class MutationController {
       @RequestHeader(value = "Forget-Mutation", required = false) Boolean forgetMutation,
       @RequestHeader(value = "Neglect-Mutation", required = false) Boolean neglectMutation,
       @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate,
+      @RequestHeader(value = "Derivation-Type", required = false) String derivationType,
+      @RequestHeader(value = "Derivation-Depth", required = false) Integer derivationDepth,
       @RequestParam("file") MultipartFile file)
       throws Exception {
 
@@ -106,12 +128,12 @@ public class MutationController {
       if (Boolean.TRUE.equals(replaceType)) {
         mutationSet.add(Mutations.REPLACE_TYPE);
       }
-        if (Boolean.TRUE.equals(forgetMutation)) {
-            mutationSet.add(Mutations.FORGET);
-        }
-        if (Boolean.TRUE.equals(neglectMutation)) {
-            mutationSet.add(Mutations.NEGLECT);
-        }
+      if (Boolean.TRUE.equals(forgetMutation)) {
+        mutationSet.add(Mutations.FORGET);
+      }
+      if (Boolean.TRUE.equals(neglectMutation)) {
+        mutationSet.add(Mutations.NEGLECT);
+      }
 
       // Process file content
       String fileContent = new String(file.getBytes());
@@ -138,9 +160,12 @@ public class MutationController {
       // Generate mutations
       ArrayList<Rule> originalRules = parametersBundle.getCollections().get(0);
 
-      // If Haskell-Activate header is true and Forget mutation is requested, enable Haskell derivation
+      // If Haskell-Activate header is true and Forget mutation is requested, enable Haskell
+      // derivation
       if (Boolean.TRUE.equals(haskellActivate) && Boolean.TRUE.equals(forgetMutation)) {
-        log.info("Haskell-Activate header detected with Forget mutation, enabling HybridDerivationService");
+        log.info(
+            "Haskell-Activate header detected with Forget mutation, "
+                + "enabling HybridDerivationService");
 
         if (!haskellDerivationFetcher.isServiceAvailable()) {
           log.warn("Haskell service requested but unavailable, using Java derivation");
@@ -181,6 +206,12 @@ public class MutationController {
         parametersBundle =
             ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle, fileContent);
         parametersBundle.getFlags().setForgetMutation(true);
+      }
+
+      // If derivation type/depth are specified, set them on the parameters bundle
+      parametersBundle.setDerivationType(derivationType);
+      if (DerivationType.DEPTH_SPECIFIED.name().equals(derivationType) && derivationDepth != null) {
+        parametersBundle.setDerivationDepth(derivationDepth);
       }
 
       parametersBundle.getCollections().clear();

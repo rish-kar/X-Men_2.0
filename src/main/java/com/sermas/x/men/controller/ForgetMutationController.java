@@ -1,19 +1,36 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.*;
-import com.sermas.x.men.utilities.*;
+import com.sermas.x.men.model.DerivationType;
+import com.sermas.x.men.model.Flags;
+import com.sermas.x.men.model.InMemoryMultipartFile;
+import com.sermas.x.men.model.Mutations;
+import com.sermas.x.men.model.ParametersBundle;
+import com.sermas.x.men.model.Rule;
+import com.sermas.x.men.service.DerivationTreeCaptureService;
+import com.sermas.x.men.service.FileLoadingService;
+import com.sermas.x.men.service.FileSplitterService;
+import com.sermas.x.men.service.HaskellDerivationFetcher;
+import com.sermas.x.men.service.MutationGeneratorService;
+import com.sermas.x.men.service.ZipService;
 import com.sermas.x.men.service.impl.DerivationModeContext;
+import com.sermas.x.men.utilities.ForgetMutationParser;
+import com.sermas.x.men.utilities.SetupKnowledgeExtractor;
+import com.sermas.x.men.utilities.TagSetter;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 /** Controller for forget mutation. */
 @RestController
@@ -43,7 +60,7 @@ public class ForgetMutationController {
   public ResponseEntity<?> forgetMutations(
       @RequestParam("file") MultipartFile file,
       @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate,
-      @RequestHeader(value= "Derivation-Type", required = false) String derivationType,
+      @RequestHeader(value = "Derivation-Type", required = false) String derivationType,
       @RequestHeader(value = "Derivation-Depth", required = false) Integer derivationDepth)
       throws Exception {
     boolean haskellWasEnabled = false;
@@ -118,7 +135,9 @@ public class ForgetMutationController {
       Map<String, String> setupKnowledgeValues =
           setupKnowledgeExtractor.processProtocolModel(originalRules);
       parametersBundle.setExistingSetupKnowledge(setupKnowledgeValues);
-      parametersBundle = ForgetMutationParser.parseForgetMutations(originalRules, parametersBundle, fileContent);
+      parametersBundle =
+          ForgetMutationParser.parseForgetMutations(
+              originalRules, parametersBundle, fileContent);
       parametersBundle.getFlags().setForgetMutation(true);
 
       parametersBundle.getCollections().clear();
@@ -133,7 +152,8 @@ public class ForgetMutationController {
       }
 
       // Extract base filename for ZIP creation
-      String baseFileName = file.getOriginalFilename().split("\\.(?=[^\\.]+$)")[0];
+      String originalFilename = file.getOriginalFilename();
+      String baseFileName = originalFilename.split("\\.(?=[^\\.]+$)")[0];
       return zipService.createZipResponse(baseFileName, derivationTreeContent);
     } catch (IllegalArgumentException e) {
       log.error("Error generating forget mutations: " + e.getMessage(), e);

@@ -369,7 +369,7 @@ public class DerivationServiceImpl implements DerivationService {
   // ------------- Specified Depth or Infinite Derivations Logic -------------------------
 
       // Use a String key to avoid relying on Message.hashCode/equals if they’re complex.
-// If Message.equals/hashCode is strong, you can store Message itself instead.
+      // Alternatively, store Message itself if Message.equals/hashCode is strong.
       private String goalKey(Message m) {
             return (m == null) ? "null" : m.represent();
       }

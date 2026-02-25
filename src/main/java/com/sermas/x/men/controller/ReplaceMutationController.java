@@ -71,7 +71,6 @@ public class ReplaceMutationController {
     // Set tags based on the mutation set
     parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
 
-    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
     parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
     ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
     parametersBundle.getCollections().clear();
@@ -116,7 +115,6 @@ public class ReplaceMutationController {
     // Set tags based on the mutation set
     parametersBundle = tagSetter.setTags(parametersBundle, mutationSet);
 
-    // Assuming you have a method to convert MultipartFile to ArrayList<Rules>
     parametersBundle = fileLoadingService.fileLoader(rulesFile, parametersBundle);
     ArrayList<Rule> rules = parametersBundle.getCollections().get(0);
     parametersBundle.getCollections().clear();
