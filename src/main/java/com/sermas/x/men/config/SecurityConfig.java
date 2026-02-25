@@ -15,51 +15,86 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+/**
+ * Web security configuration for the application.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${app.cors.allowed-origins:}")
-    private String corsAllowedOrigins;
+  /**
+   * Comma-separated list of allowed CORS origins (from application properties).
+   */
+  @Value("${app.cors.allowed-origins:}")
+  private String corsAllowedOrigins;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> {})
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/actuator/health/**").permitAll()
-                .anyRequest().permitAll()
-            )
-            .addFilterBefore(new OriginRestrictionFilter(corsAllowedOrigins), UsernamePasswordAuthenticationFilter.class);
+  /**
+   * Configure the security filter chain.
+   *
+   * @param http the HttpSecurity to configure
+   * @return the configured SecurityFilterChain
+   * @throws Exception if configuration fails
+   */
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.csrf(csrf -> csrf.disable())
+        .cors(cors -> {})
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers("/", "/css/**", "/images/**", "/js/**", "/actuator/health/**")
+                    .permitAll()
+                    .anyRequest()
+                    .permitAll())
+        .addFilterBefore(
+            new OriginRestrictionFilter(corsAllowedOrigins),
+            UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+  }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        // Align with AppConfig
-        List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
-        config.setAllowedOrigins(origins);
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setAllowedHeaders(Arrays.asList(
-                "Content-Type", "Accept", "Origin", "Authorization",
-                "Skip-Send", "Skip-Receive", "Skip-Send-Receive", "Skip-Receive-Send",
-                "Skip-Receive-Send-Receive", "Add-Mutation", "Replace-Sub-Messages",
-                "Replace-Type", "True-Replace", "Forget-Mutation"
-        ));
-        config.setExposedHeaders(List.of("Content-Disposition"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+  /**
+   * Build a CorsConfigurationSource from configured origins.
+   *
+   * @return a CorsConfigurationSource for API endpoints
+   */
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    // Align with AppConfig
+    List<String> origins =
+        Arrays.stream(corsAllowedOrigins.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toList();
+    config.setAllowedOrigins(origins);
+    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    config.setAllowedHeaders(
+        Arrays.asList(
+            "Content-Type",
+            "Accept",
+            "Origin",
+            "Authorization",
+            "Skip-Send",
+            "Skip-Receive",
+            "Skip-Send-Receive",
+            "Skip-Receive-Send",
+            "Skip-Receive-Send-Receive",
+            "Add-Mutation",
+            "Replace-Sub-Messages",
+            "Replace-Type",
+            "True-Replace",
+            "Forget-Mutation",
+            "Neglect-Mutation",
+            "Haskell-Activate",
+            "Derivation-Type",
+            "Derivation-Depth"));
+    config.setExposedHeaders(List.of("Content-Disposition"));
+    config.setAllowCredentials(true);
+    config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/api/**", config);
+    return source;
+  }
 }
-
