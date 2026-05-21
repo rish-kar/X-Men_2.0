@@ -24,7 +24,7 @@ public class Builtins extends Component {
    */
   public Builtins(String name) {
     this.name = name;
-    this.group = new ArrayList();
+    this.group = new ArrayList<>();
   }
 
   /**

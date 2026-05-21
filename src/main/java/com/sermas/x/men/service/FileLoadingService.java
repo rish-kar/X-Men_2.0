@@ -21,7 +21,7 @@ public class FileLoadingService {
 
   @Autowired private MutationGeneratorService mutationGeneratorService;
 
-  private final ArrayList<Rule> theory = new ArrayList();
+  private final ArrayList<Rule> theory = new ArrayList<>();
 
   /**
    * Trigger skipping of send mutation.

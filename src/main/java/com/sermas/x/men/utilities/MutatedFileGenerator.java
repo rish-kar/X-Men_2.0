@@ -35,7 +35,7 @@ public class MutatedFileGenerator {
     deleteExistingMutatedFiles();
 
     String filename = parametersBundle.getFileName();
-    ArrayList<ArrayList> collections = parametersBundle.getCollections();
+    ArrayList<ArrayList<Rule>> collections = parametersBundle.getCollections();
     ArrayList<Function> functions = parametersBundle.getFunctions();
     ArrayList<Builtins> builtins = parametersBundle.getBuiltins();
 

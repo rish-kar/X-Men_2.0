@@ -106,6 +106,22 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
       }
     }
 
+    // Out fallback for native Tamarin In/Out-style rules
+    for (Fact fact : posts) {
+      if ("Out".equals(fact.getF_name())) {
+        List<Object> params = fact.getParameters();
+        if (params != null && !params.isEmpty()) {
+          Object payloadParam = params.get(params.size() - 1);
+          String paramStr = payloadToString(payloadParam).trim();
+          Message target = parseTargetParam(paramStr);
+          if (target != null) {
+            log.debug("Extracted target from Out: {}", target.represent());
+            return target;
+          }
+        }
+      }
+    }
+
     // Fallback: use the last postcondition's last parameter (original behavior)
     Fact lastFact = posts.get(posts.size() - 1);
     List<Object> params = lastFact.getParameters();
@@ -273,7 +289,7 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
     if (rule == null || RULES_TO_SKIP.contains(rule.getRule_name())) return Collections.emptySet();
     // Reuse logic: simulate parameters bundle containing only this rule
     ParametersBundle pb = new ParametersBundle();
-    ArrayList<ArrayList> col = new ArrayList<>();
+    ArrayList<ArrayList<Rule>> col = new ArrayList<>();
     ArrayList<Rule> single = new ArrayList<>();
     single.add(rule);
     col.add(single);

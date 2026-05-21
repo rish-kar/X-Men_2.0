@@ -15,6 +15,7 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  * protocol rules. The parser builds an abstract syntax tree from Tamarin specifications, supporting
  * the hierarchical structure of protocols, facts, terms, and expressions.
  */
+@SuppressWarnings({"deprecation", "unchecked"})
 public class TamarinParser extends Parser {
   protected static final DFA[] _decisionToDFA;
   protected static final PredictionContextCache _sharedContextCache;

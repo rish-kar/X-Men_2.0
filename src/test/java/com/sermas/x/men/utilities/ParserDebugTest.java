@@ -33,8 +33,8 @@ class ParserDebugTest {
     System.out.println("...");
     System.out.println("=== END RULES SECTION (first 500 chars) ===\n");
 
-    ANTLRInputStream antlrInputStream = new ANTLRInputStream(rulesContent);
-    TamarinLexer lexer = new TamarinLexer(antlrInputStream);
+    CharStream charStream = CharStreams.fromString(rulesContent);
+    TamarinLexer lexer = new TamarinLexer(charStream);
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     TamarinParser parser = new TamarinParser(tokenStream);
 
@@ -69,8 +69,8 @@ class ParserDebugTest {
     FileSplitterService.FileSections sections = fileSplitterService.splitFile(content);
     String rulesContent = sections.rules();
 
-    ANTLRInputStream antlrInputStream = new ANTLRInputStream(rulesContent);
-    TamarinLexer lexer = new TamarinLexer(antlrInputStream);
+    CharStream charStream = CharStreams.fromString(rulesContent);
+    TamarinLexer lexer = new TamarinLexer(charStream);
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     TamarinParser parser = new TamarinParser(tokenStream);
 

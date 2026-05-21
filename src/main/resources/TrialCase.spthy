@@ -90,10 +90,10 @@ rule B_1:
   ]
   --[ Receive('B',$Human,nH)
     , Send('B','nonce',nH)
-    , B_Running('B',$Human,nH,~nB)
-    ]->
     , Send('B','nonce',~nB)
+    , B_Running('B',$Human,nH,~nB)
     , To($Human)
+    ]->
   [ State('B','2',<$Human,nH,~nB>)
   , SndS('B',$Human,<'nonce','nonce'>,<nH,~nB>)
   ]

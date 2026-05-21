@@ -234,9 +234,10 @@ public class XMenInterfaceTest extends ApplicationTest {
       server.start(0); // Let OS assign a free port
       int serverPort = server.getPort();
 
-      // Configure the app to use the mock server's port
-      System.setProperty(
-          "API_FULL_URL", "http://localhost:" + serverPort + "/api/generateMutations");
+      // Configure the app to use the mock server's port. XMenInterface builds the URL as
+      // API_BASE_URL + API_GENERATE_MUTATIONS_ENDPOINT, so override the base URL here.
+      System.setProperty("API_BASE_URL", "http://localhost:" + serverPort);
+      System.setProperty("API_GENERATE_MUTATIONS_ENDPOINT", "/api/generateMutations");
 
       // Load the file internally from the resource folder
       File tempFile;
@@ -248,10 +249,23 @@ public class XMenInterfaceTest extends ApplicationTest {
         Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
 
-      // Update the 'selectedFile' field on the JavaFX Application Thread
+      // Wait for the main scene to be loaded and the Start button to be showing,
+      // rather than relying on a fixed sleep that can race the splash transition.
+      waitFor(
+          10,
+          TimeUnit.SECONDS,
+          () -> {
+            Button b = lookup("#buttonStart").tryQueryAs(Button.class).orElse(null);
+            if (b == null || b.getScene() == null) return false;
+            Window w = b.getScene().getWindow();
+            return w != null && w.isShowing();
+          });
+
+      // Update the 'selectedFile' field on the JavaFX Application Thread (after the
+      // main scene is up so we know we're modifying the active app instance).
       Field selectedFileField = XMenInterface.class.getDeclaredField("selectedFile");
       selectedFileField.setAccessible(true);
-      Platform.runLater(
+      interact(
           () -> {
             try {
               selectedFileField.set(app, tempFile);
@@ -259,24 +273,20 @@ public class XMenInterfaceTest extends ApplicationTest {
               throw new RuntimeException("Failed to update selectedFile", e);
             }
           });
-      WaitForAsyncUtils.waitForFxEvents();
 
-      // Wait for the main scene to load
-      WaitForAsyncUtils.waitForFxEvents();
-      sleep(6000);
-
-      // Ensure the CheckBox is present in the scene graph
-      CheckBox cbSkipS = lookup("#cbSkipS").query();
+      // Ensure the CheckBox is present and select it directly (avoid robot clicks
+      // which can silently no-op when the window isn't focused).
+      CheckBox cbSkipS = lookup("#cbSkipS").queryAs(CheckBox.class);
       assertNotNull(cbSkipS, "CheckBox with fx:id='cbSkipS' should be present in the scene graph");
-
-      // Select the checkbox via UI interaction
-      clickOn(cbSkipS);
+      interact(() -> cbSkipS.setSelected(true));
 
       // Enqueue a mock success response
       server.enqueue(new MockResponse().setResponseCode(200).setBody("Success"));
 
-      // Click the "Start Mutation" button
-      clickOn("#buttonStart");
+      // Fire the "Start Mutation" button action directly to bypass the TestFX robot.
+      Button startButton = lookup("#buttonStart").queryAs(Button.class);
+      interact(startButton::fire);
+      waitForFxEvents();
 
       // Wait for the request to complete and alert to appear
       RecordedRequest request = server.takeRequest(5, TimeUnit.SECONDS);
@@ -289,12 +299,22 @@ public class XMenInterfaceTest extends ApplicationTest {
           body.contains("filename=\"" + tempFile.getName() + "\""),
           "Multipart body should include uploaded file name");
 
-      // Check the success alert
-      WaitForAsyncUtils.waitForFxEvents();
-      DialogPane alertPane = lookup(".dialog-pane").query();
+      // Check the success alert (wait for it to appear since the HTTP callback is async).
+      waitFor(
+          5,
+          TimeUnit.SECONDS,
+          () -> {
+            DialogPane pane = lookup(".dialog-pane").tryQueryAs(DialogPane.class).orElse(null);
+            if (pane == null || pane.getScene() == null) return false;
+            Window w = pane.getScene().getWindow();
+            return w != null && w.isShowing();
+          });
+      DialogPane alertPane = lookup(".dialog-pane").queryAs(DialogPane.class);
       assertNotNull(alertPane, "Success alert not shown");
       assertTrue(alertPane.getContentText().contains("Mutation Generation Succeeded"));
-      clickOn("OK"); // Dismiss the alert
+      Button okButton = (Button) alertPane.lookupButton(ButtonType.OK);
+      interact(okButton::fire); // Dismiss the alert without using the robot
+      waitForFxEvents();
     } finally {
       server.shutdown(); // Cleanup
     }

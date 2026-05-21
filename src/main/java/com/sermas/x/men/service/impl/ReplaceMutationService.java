@@ -177,7 +177,7 @@ public class ReplaceMutationService {
 
         // Build a list of Values to send based on the current permutation
         ArrayList<Value> newContent =
-            (ArrayList<Value>) generateArrayofValuetoSend(permutation, parameters);
+            new ArrayList<>(generateArrayofValuetoSend(permutation, parameters));
 
         // Decide whether to clone the rule or fetch it from the cloned theory
         Rule clonedRule =
@@ -190,7 +190,7 @@ public class ReplaceMutationService {
 
         // Update the "Snd" post condition with the new sub message content
         Fact sendOut = clonedRule.getPostconditionFactByMatchingName("Snd");
-        ArrayList<Value> newContentClone = (ArrayList<Value>) newContent.clone();
+        ArrayList<Value> newContentClone = new ArrayList<>(newContent);
         if (sendOut != null) {
           buildMessageToSend(sendOut, newContent);
         }

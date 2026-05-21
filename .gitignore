@@ -39,3 +39,6 @@ myruntime/
 
 # Ignore all .exe files
 *.exe
+
+# Claude
+.claude/

@@ -27,6 +27,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class ForgetMutationStrategy implements MutationStrategy {
 
+  private Set<String> nonInternalActions = new HashSet<>(Set.of(
+      "Send", "Receive", "To", "H", "Fr", "Setup", "OnlyOnce", "Neq", "Roles",
+      "ChanSndS", "ChanRcvS", "Hfin", "Forget"));
+
+  public Set<String> getNonInternalActions() {
+    return Collections.unmodifiableSet(nonInternalActions);
+  }
+
+  public void setNonInternalActions(Set<String> newSet) {
+    this.nonInternalActions = new HashSet<>(newSet);
+  }
+
+  public void addWitnessActions(Collection<String> witnessNames) {
+    if (witnessNames != null) this.nonInternalActions.addAll(witnessNames);
+  }
+
   @Autowired private DerivationCheckService derivationCheckService;
   @Autowired private SetupKnowledgeExtractor setupKnowledgeExtractor;
   @Autowired private DerivationService derivationService;
@@ -36,8 +52,24 @@ public class ForgetMutationStrategy implements MutationStrategy {
   @Autowired private ReplacementComputer replacementComputer;
 
   // Default blocking mode - can be configured
-  private static final BlockingMode DEFAULT_BLOCKING_MODE = BlockingMode.CASE1_WEAK;
-  private static final int MAX_VARIANTS_PER_RULE = 10;
+  private BlockingMode blockingMode = BlockingMode.CASE1_WEAK;
+  private int maxVariantsPerRule = 10;
+
+  public int getMaxVariantsPerRule() {
+    return maxVariantsPerRule;
+  }
+
+  public void setMaxVariantsPerRule(int maxVariantsPerRule) {
+    this.maxVariantsPerRule = maxVariantsPerRule;
+  }
+
+  public BlockingMode getBlockingMode() {
+    return blockingMode;
+  }
+
+  public void setBlockingMode(BlockingMode blockingMode) {
+    this.blockingMode = blockingMode;
+  }
 
   /**
    * Applies the forget mutation strategy according to Algorithm 1.
@@ -76,34 +108,67 @@ public class ForgetMutationStrategy implements MutationStrategy {
       parametersBundle.setExistingSetupKnowledge(setup);
     }
 
-    // Get forget targets for this rule
-    Set<String> forgetSet = parametersBundle.getForgetMutationSet().get(rule.getRule_name());
-    if (forgetSet == null || forgetSet.isEmpty()) {
-      return parametersBundle;
-    }
-
     // Prepare knowledge bundle for extraction
     if (parametersBundle.getCollections() == null) {
       parametersBundle.setCollections(new ArrayList<>());
     }
-    ArrayList<ArrayList> tempCollections = new ArrayList<>();
+    ArrayList<ArrayList<Rule>> tempCollections = new ArrayList<>();
     tempCollections.add(rules);
     ParametersBundle knowledgeBundle = new ParametersBundle();
     knowledgeBundle.setCollections(tempCollections);
     knowledgeBundle.setForgetMutationSet(parametersBundle.getForgetMutationSet());
     knowledgeBundle.addExtraContent("currentRuleName", rule.getRule_name());
 
-    // Extract full knowledge K (without removing forgotten items - per Algorithm 1)
-    Set<Message> fullKnowledge = derivationCheckService.extractKnowledgeWithoutForgetRemoval(knowledgeBundle);
+    // Initialize or reuse transition-aware context
+    ForgetContext ctx = parametersBundle.getForgetContext();
+    if (ctx == null) {
+      Set<Message> fullKnowledge =
+          derivationCheckService.extractKnowledgeWithoutForgetRemoval(knowledgeBundle);
+      ctx = new ForgetContext(fullKnowledge, Collections.emptySet(), blockingMode, setup);
+      parametersBundle.setForgetContext(ctx);
+    } else if (ctx.getTypeMap().isEmpty()) {
+      ctx.setTypeMap(setup);
+    }
 
-    // Build ForgetContext with K and Forget set
-    ForgetContext ctx = buildForgetContext(fullKnowledge, forgetSet, setup);
+    // Update context for this transition
+    Set<String> forgetSet = parametersBundle.getForgetMutationSet().get(rule.getRule_name());
+    Message receivedMessage = extractReceivedMessage(rule);
+
+    if (forgetSet == null || forgetSet.isEmpty()) {
+      ctx.updateForTransition(receivedMessage, null);
+      parametersBundle.setForgetContext(ctx);
+      return parametersBundle;
+    }
+
+    List<Message> forgottenMessages = new ArrayList<>();
+    for (String forgotten : forgetSet) {
+      Message forgottenMessage = resolveForgetMessage(ctx.getKnowledge(), forgotten);
+      forgottenMessages.add(forgottenMessage);
+      ctx.updateForTransition(receivedMessage, forgottenMessage);
+    }
+    parametersBundle.setForgetContext(ctx);
 
     log.info("Algorithm 1 - Processing rule {} with {} forget targets",
              rule.getRule_name(), forgetSet.size());
     log.info("Knowledge K: {}", ctx.getKnowledge().stream().map(Message::represent).toList());
     log.info("Forget set: {}", ctx.getForgetSet().stream().map(Message::represent).toList());
     log.info("Blocking mode: {}", ctx.getBlockingMode());
+
+    Set<String> actionsToNeglect = new LinkedHashSet<>();
+    if (rule.isHuman()) {
+      for (Message forgottenMessage : forgottenMessages) {
+        List<Fact> internalActions =
+            isMessageUsedInInternalAction(rule, forgottenMessage, nonInternalActions);
+        if (!internalActions.isEmpty()) {
+          log.info(
+              "Forget triggers Neglect on rule {} - removing {} internal action(s) using forgotten message {}",
+              rule.getRule_name(), internalActions.size(), forgottenMessage.represent());
+          for (Fact action : internalActions) {
+            actionsToNeglect.add(factSignature(action));
+          }
+        }
+      }
+    }
 
     // Extract target message (m2 - the send message)
     Message target = derivationCheckService.extractTargetFromRule(rule);
@@ -117,23 +182,67 @@ public class ForgetMutationStrategy implements MutationStrategy {
     // Get ALL derivations for the target
     Set<Derivation> allDerivations = forgetDerivationChecker.getAllDerivations(target, ctx.getKnowledge());
 
-    // FIX 1: Per Algorithm 1, if Π is empty, we treat this as "no unblocked derivation and no variants"
-    // Therefore we MUST delete send + matching receive (not just remove Forget and return unchanged)
+    // Per Algorithm 1, if Π is empty the algorithm yields "skip the send". However, in
+    // ceremonies where the send payload contains user-defined functions (e.g. k(nH,nB))
+    // or principal names that are not present in the extracted K, the DY engine cannot
+    // reconstruct the target even though the agent is clearly able to send it. In that
+    // case we fall back to a textual substitution: if each forgotten message has at
+    // least one type-compatible replacement, we substitute it inside the send payload
+    // and continue the ceremony (this is exactly the variant branch of Algorithm 1,
+    // expressed at the textual level of the rule).
     if (allDerivations.isEmpty()) {
-      log.warn("No derivations found for target {} - per Algorithm 1, must delete send + matching receive", target.represent());
+      log.warn("No derivations found for target {} - falling back to textual substitution",
+               target.represent());
+
+      Map<String, String> textualSub = new LinkedHashMap<>();
+      for (Message forgottenMessage : forgottenMessages) {
+        Set<Message> reps = replacementComputer.computeReplacementSet(forgottenMessage, ctx);
+        if (reps.isEmpty()) {
+          textualSub.clear();
+          break; // a forgotten term has no replacement -> genuine skip
+        }
+        String fromName = canonicalize(forgottenMessage.represent());
+        String toName = canonicalize(reps.iterator().next().represent());
+        textualSub.put(fromName, toName);
+      }
+
       ArrayList<Rule> theoryClone = deepCloneTheory(rules);
       Rule startRule = findRuleByName(theoryClone, rule.getRule_name());
       if (startRule != null) {
-        // Remove send and matching receive per Algorithm 1
-        removeSendAndMatchingReceive(theoryClone, startRule, target);
+        if (!textualSub.isEmpty()) {
+          log.info("Applying textual substitution {} to rule {}",
+                   textualSub, startRule.getRule_name());
+          // Substitute in every action except the Forget itself (we drop Forget below).
+          // Witness actions like PasswordAttempt that reference the forgotten term
+          // should mirror what the human actually attempted, i.e. the replacement.
+          for (Fact action : startRule.getActions()) {
+            if (!"Forget".equals(action.getF_name())) {
+              applyStringSubstitutionToFact(action, textualSub);
+            }
+          }
+          // Substitute in non-State postconditions (Out, SndS). State is monotonic
+          // and must still contain both the original and the replacement.
+          for (Fact post : startRule.getPostconditions()) {
+            if (!"State".equals(post.getF_name())) {
+              applyStringSubstitutionToFact(post, textualSub);
+            }
+          }
+          startRule.setTypo(Type.MUTATED);
+        } else {
+          // No replacement available. Per Algorithm 1: skip the send, and
+          // conditionally trigger Neglect for any internal action that uses the
+          // forgotten term (line 7-8: "If m is used in a, trigger Neglect").
+          log.info("No replacements available - removing send and matching receive,"
+                   + " neglecting internal actions using the forgotten term");
+          removeSendAndMatchingReceive(theoryClone, startRule, target);
+          removeNeglectedActions(startRule, actionsToNeglect);
+          startRule.setTypo(Type.MUTATED);
+        }
 
         // Remove Forget actions
         for (String forgotten : forgetSet) {
           removeForgetMutation(startRule, canonicalize(forgotten));
         }
-
-        startRule.setRule_name(startRule.getRule_name() + "_M");
-        startRule.setTypo(Type.MUTATED);
       }
       parametersBundle.getCollections().add(theoryClone);
       return parametersBundle;
@@ -194,14 +303,21 @@ public class ForgetMutationStrategy implements MutationStrategy {
       List<Message> variants = replacementComputer.generateVariants(target, blockedToReplacements);
 
       for (Message variant : variants) {
-        if (accumulatedVariants.size() >= MAX_VARIANTS_PER_RULE) {
-          log.info("Reached maximum variants limit ({})", MAX_VARIANTS_PER_RULE);
+        if (accumulatedVariants.size() >= maxVariantsPerRule) {
+          parametersBundle.setVariantsTruncated(true);
+          log.warn("Reached maximum variants per rule ({}) for rule {} - truncating",
+              maxVariantsPerRule, rule.getRule_name());
           break;
         }
         accumulatedVariants.add(new VariantInfo(variant, blockedToReplacements));
       }
 
-      if (accumulatedVariants.size() >= MAX_VARIANTS_PER_RULE) {
+      if (accumulatedVariants.size() >= maxVariantsPerRule) {
+        if (!parametersBundle.isVariantsTruncated()) {
+          parametersBundle.setVariantsTruncated(true);
+          log.warn("Reached maximum variants per rule ({}) for rule {} - truncating",
+              maxVariantsPerRule, rule.getRule_name());
+        }
         break;
       }
     }
@@ -216,6 +332,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
         for (String forgotten : forgetSet) {
           removeForgetMutation(startRule, canonicalize(forgotten));
         }
+        removeNeglectedActions(startRule, actionsToNeglect);
       }
       parametersBundle.getCollections().add(theoryClone);
       return parametersBundle;
@@ -231,6 +348,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
         for (String forgotten : forgetSet) {
           removeForgetMutation(startRule, canonicalize(forgotten));
         }
+        removeNeglectedActions(startRule, actionsToNeglect);
         startRule.setRule_name(startRule.getRule_name() + "_M");
         startRule.setTypo(Type.MUTATED);
       }
@@ -262,6 +380,8 @@ public class ForgetMutationStrategy implements MutationStrategy {
       for (String forgotten : forgetSet) {
         removeForgetMutation(startRule, canonicalize(forgotten));
       }
+
+      removeNeglectedActions(startRule, actionsToNeglect);
 
       // Propagate changes to subsequent rules
       propagateMutationWithVariant(theoryClone, startRule, variantInfo.blockedToReplacements, setup);
@@ -305,7 +425,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
       }
     }
 
-    return new ForgetContext(knowledge, forgetMessages, DEFAULT_BLOCKING_MODE, typeMap);
+    return new ForgetContext(knowledge, forgetMessages, blockingMode, typeMap);
   }
 
   /**
@@ -337,16 +457,31 @@ public class ForgetMutationStrategy implements MutationStrategy {
     Map<String, String> stringSubstitution = buildSubstitutionFromVariant(
         originalTarget, variant, blockedToReplacements);
 
-    // Apply substitutions to postconditions (SndS facts)
+    // Always include the direct blocked -> chosen-replacement mappings, so that
+    // when the original send payload is stored as a single Value string
+    // (e.g. "senc(<$Human,pw1>,k(nH,nB))"), the canonical name of the blocked
+    // hypothesis can still be textually substituted inside it.
+    for (Map.Entry<Message, Set<Message>> entry : blockedToReplacements.entrySet()) {
+      if (entry.getValue() == null || entry.getValue().isEmpty()) continue;
+      Message blocked = entry.getKey();
+      Message replacement = entry.getValue().iterator().next();
+      String fromName = canonicalize(blocked.represent());
+      String toName = canonicalize(replacement.represent());
+      stringSubstitution.putIfAbsent(fromName, toName);
+    }
+
+    // Apply substitutions to postconditions (SndS and Out facts)
     for (Fact post : rule.getPostconditions()) {
-      if ("SndS".equals(post.getF_name())) {
+      String fname = post.getF_name();
+      if ("SndS".equals(fname) || "Out".equals(fname)) {
         applyStringSubstitutionToFact(post, stringSubstitution);
       }
     }
 
-    // Apply to actions (Send facts)
+    // Apply to actions (Send facts and internal actions that mention the forgotten term)
     for (Fact action : rule.getActions()) {
-      if ("Send".equals(action.getF_name())) {
+      String fname = action.getF_name();
+      if ("Send".equals(fname)) {
         applyStringSubstitutionToFact(action, stringSubstitution);
       }
     }
@@ -454,25 +589,36 @@ public class ForgetMutationStrategy implements MutationStrategy {
     for (Object param : fact.getParameters()) {
       if (param instanceof PSpecial ps) {
         for (Value v : ps.getGroup()) {
-          String vRepr = v.getName();
-          for (Map.Entry<String, String> sub : substitution.entrySet()) {
-            if (vRepr.equals(sub.getKey()) || vRepr.equals("~" + sub.getKey()) ||
-                canonicalize(vRepr).equals(canonicalize(sub.getKey()))) {
-              v.setName(sub.getValue());
-              break;
-            }
-          }
+          substituteValueName(v, substitution);
         }
       } else if (param instanceof Value v) {
-        String vRepr = v.getName();
-        for (Map.Entry<String, String> sub : substitution.entrySet()) {
-          if (vRepr.equals(sub.getKey()) || vRepr.equals("~" + sub.getKey()) ||
-              canonicalize(vRepr).equals(canonicalize(sub.getKey()))) {
-            v.setName(sub.getValue());
-            break;
-          }
-        }
+        substituteValueName(v, substitution);
       }
+    }
+  }
+
+  /**
+   * Rewrites a Value's name by substituting the canonical form of each substitution key
+   * with its replacement, using a word-boundary regex so occurrences inside complex
+   * payloads such as "senc(<$Human,pw1>,k(nH,nB))" are rewritten without affecting
+   * unrelated tokens (e.g. "pw10").
+   */
+  private void substituteValueName(Value v, Map<String, String> substitution) {
+    if (v == null || v.getName() == null) return;
+    String original = v.getName();
+    String result = original;
+    for (Map.Entry<String, String> sub : substitution.entrySet()) {
+      String from = canonicalize(sub.getKey());
+      String to = canonicalize(sub.getValue());
+      if (from == null || from.isEmpty() || from.equals(to)) continue;
+      String quoted = java.util.regex.Pattern.quote(from);
+      // Treat $, ~ and alphanumerics/underscore as word characters so that
+      // tokens like "$Human", "~pw1" and "pw1" are matched as whole units.
+      String regex = "(?<![A-Za-z0-9_$~])" + quoted + "(?![A-Za-z0-9_$])";
+      result = result.replaceAll(regex, java.util.regex.Matcher.quoteReplacement(to));
+    }
+    if (!result.equals(original)) {
+      v.setName(result);
     }
   }
 
@@ -490,6 +636,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
   private void removeSendAndMatchingReceive(ArrayList<Rule> theory, Rule currentRule, Message targetMessage) {
     // Collect send message patterns to match (with full detail for precise matching)
     Set<SendPattern> sendPatterns = new LinkedHashSet<>();
+    Set<String> sentPayloadKeys = new LinkedHashSet<>();
 
     // Remove SndS postconditions and collect their full patterns
     currentRule.getPostconditions().removeIf(f -> {
@@ -497,9 +644,26 @@ public class ForgetMutationStrategy implements MutationStrategy {
         SendPattern pattern = extractFullSendPattern(f);
         if (pattern != null) {
           sendPatterns.add(pattern);
+          if (pattern.values != null) sentPayloadKeys.add(canonicalize(pattern.values));
           log.info("Removing SndS: {}", pattern);
         }
         return true;
+      }
+      return false;
+    });
+
+    // Remove Out postconditions whose payload matches the target (In/Out style rules)
+    currentRule.getPostconditions().removeIf(f -> {
+      if ("Out".equals(f.getF_name())) {
+        String payload = extractOutPayload(f);
+        if (payload != null && targetMessage != null) {
+          String targetStr = canonicalize(targetMessage.represent());
+          if (canonicalize(payload).contains(targetStr)) {
+            log.info("Removing Out matching target: {}", payload);
+            sentPayloadKeys.add(canonicalize(payload));
+            return true;
+          }
+        }
       }
       return false;
     });
@@ -520,8 +684,8 @@ public class ForgetMutationStrategy implements MutationStrategy {
       return false;
     });
 
-    if (sendPatterns.isEmpty()) {
-      log.warn("No send patterns extracted - nothing to match for receive removal");
+    if (sendPatterns.isEmpty() && sentPayloadKeys.isEmpty()) {
+      log.warn("No send patterns or Out payloads extracted - nothing to match for receive removal");
       return;
     }
 
@@ -558,6 +722,24 @@ public class ForgetMutationStrategy implements MutationStrategy {
         return false;
       });
 
+      // Remove ONLY matching In preconditions (In/Out style rules)
+      removedAnything |= nextRule.getPreconditions().removeIf(f -> {
+        if ("In".equals(f.getF_name())) {
+          List<Object> params = f.getParameters();
+          if (params != null && !params.isEmpty()) {
+            String payload = String.valueOf(params.get(params.size() - 1));
+            String key = canonicalize(payload);
+            for (String sentKey : sentPayloadKeys) {
+              if (sentKey != null && (sentKey.contains(key) || key.contains(sentKey))) {
+                log.info("Removing matching In in rule {}: {}", nextRule.getRule_name(), payload);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      });
+
       // Remove ONLY the matching Receive actions (based on payload, not all Receive actions)
       removedAnything |= nextRule.getActions().removeIf(f -> {
         if ("Receive".equals(f.getF_name())) {
@@ -582,6 +764,11 @@ public class ForgetMutationStrategy implements MutationStrategy {
         nextRule.setTypo(Type.MUTATED);
       }
     }
+  }
+
+  private String extractOutPayload(Fact f) {
+    if (f == null || f.getParameters() == null || f.getParameters().isEmpty()) return "";
+    return String.valueOf(f.getParameters().get(f.getParameters().size() - 1));
   }
 
   /**
@@ -722,11 +909,6 @@ public class ForgetMutationStrategy implements MutationStrategy {
       for (Map.Entry<String, String> sub : substitution.entrySet()) {
         replaceValue(r, sub.getKey(), sub.getValue(), true, true, true);
       }
-
-      // Adjust access decisions if needed
-      for (String replacement : substitution.values()) {
-        adjustAccessDecision(theory, i, r, replacement, setup);
-      }
     }
   }
 
@@ -784,119 +966,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
       }
 
       replaceValue(r, forgotten, replacement, true, true, true);
-      adjustAccessDecision(theory, i, r, replacement, setup);
     }
-  }
-
-  private void adjustAccessDecision(
-      ArrayList<Rule> theory,
-      int currentIndex,
-      Rule rule,
-      String replacement,
-      Map<String, String> setup) {
-    try {
-      String type = setup.get(replacement);
-      if (!"password".equalsIgnoreCase(type)) return;
-
-      boolean receivedReplacement =
-          rule.getPreconditions().stream()
-              .filter(f -> "RcvS".equals(f.getF_name()))
-              .flatMap(f -> f.getParameters().stream())
-              .filter(p -> p instanceof PSpecial)
-              .map(p -> (PSpecial) p)
-              .flatMap(ps -> ps.getGroup().stream())
-              .anyMatch(v -> replacement.equals(v.getName()));
-
-      if (!receivedReplacement) return;
-
-      for (Fact act : rule.getActions()) {
-        if (!"Send".equals(act.getF_name()) || act.getParameters().size() < 3) continue;
-        Object a1 = act.getParameters().get(1), a2 = act.getParameters().get(2);
-        if (a1 instanceof Value va1
-            && "'access'".equals(va1.getName())
-            && a2 instanceof Value va2
-            && "'Denied'".equals(va2.getName())) {
-          va2.setName("'Granted'");
-        }
-      }
-
-      for (Fact post : rule.getPostconditions()) {
-        if (!"SndS".equals(post.getF_name())) continue;
-        Object values = post.getParameters().get(2);
-        if (values instanceof PSpecial vp) {
-          for (Value v : vp.getGroup()) {
-            String n = normalizeAlpha(v.getName());
-            if ("denied".equalsIgnoreCase(n)) {
-              v.setName("'Granted'");
-            }
-          }
-        } else if (values instanceof Value v) {
-          String n = normalizeAlpha(v.getName());
-          if ("denied".equalsIgnoreCase(n)) {
-            v.setName("'Granted'");
-          }
-        }
-      }
-
-      if (currentIndex + 1 < theory.size()) {
-        Rule nextRule = theory.get(currentIndex + 1);
-        for (Fact pre : nextRule.getPreconditions()) {
-          if (!"RcvS".equals(pre.getF_name())) continue;
-          for (int paramIndex = 0; paramIndex < pre.getParameters().size(); paramIndex++) {
-            Object param = pre.getParameters().get(paramIndex);
-            if (param instanceof PSpecial ps) {
-              boolean hasAccess =
-                  ps.getGroup().stream().anyMatch(v -> "'access'".equals(v.getName()));
-              if (hasAccess) {
-                if (paramIndex + 1 < pre.getParameters().size()) {
-                  Object valuesParam = pre.getParameters().get(paramIndex + 1);
-                  if (valuesParam instanceof PSpecial vp) {
-                    vp.getGroup().stream()
-                        .filter(v -> "'Denied'".equals(v.getName()))
-                        .forEach(v -> v.setName("'Granted'"));
-                  }
-                }
-              } else {
-                ps.getGroup().stream()
-                    .filter(v -> "'Denied'".equals(v.getName()))
-                    .forEach(v -> v.setName("'Granted'"));
-              }
-            }
-          }
-        }
-
-        for (Fact act : nextRule.getActions()) {
-          if ("Receive".equals(act.getF_name()) || "Commit".equals(act.getF_name())) {
-            for (Object param : act.getParameters()) {
-              if (param instanceof Value v && "'Denied'".equals(v.getName())) {
-                v.setName("'Granted'");
-              }
-            }
-          }
-        }
-
-        for (Fact post : nextRule.getPostconditions()) {
-          if ("State".equals(post.getF_name()) && post.getParameters().size() >= 3) {
-            Object stateData = post.getParameters().get(2);
-            if (stateData instanceof PSpecial ps) {
-              ps.getGroup().stream()
-                  .filter(v -> "'Denied'".equals(v.getName()))
-                  .forEach(v -> v.setName("'Granted'"));
-            }
-          }
-        }
-      }
-
-    } catch (Exception e) {
-      log.warn("adjustAccessDecision failed: {}", e.getMessage());
-    }
-  }
-
-  private String normalizeAlpha(String s) {
-    if (s == null) return null;
-    String t =
-        s.replace("&apos;", "").replace("&quot;", "").replace("apos", "").replace("quot", "");
-    return t.replaceAll("[^A-Za-z]", "");
   }
 
   private void removeForgetMutation(Rule rule, String forgotten) {
@@ -905,12 +975,71 @@ public class ForgetMutationStrategy implements MutationStrategy {
 
   private boolean containsParam(Fact fact, String name) {
     for (Object p : fact.getParameters()) {
-      if (p instanceof Value v && canonicalize(v.getName()).equals(name)) return true;
-      if (p instanceof PSpecial ps) {
-        for (Value v : ps.getGroup()) if (canonicalize(v.getName()).equals(name)) return true;
-      }
+      if (paramContainsName(p, name)) return true;
     }
     return false;
+  }
+
+  private boolean paramContainsName(Object param, String name) {
+    if (param instanceof Value v) {
+      return canonicalize(v.getName()).equals(name);
+    }
+    if (param instanceof PSpecial ps) {
+      for (Value v : ps.getGroup()) {
+        if (canonicalize(v.getName()).equals(name)) return true;
+      }
+      return canonicalize(ps.toString()).contains(name);
+    }
+    if (param instanceof FSpecial fs) {
+      for (Value v : fs.getGroup()) {
+        if (canonicalize(v.getName()).equals(name)) return true;
+      }
+      return canonicalize(fs.toString()).contains(name);
+    }
+    if (param instanceof Nary_app na) {
+      for (Value v : na.getGroup()) {
+        if (canonicalize(v.getName()).equals(name)) return true;
+      }
+      return canonicalize(na.toString()).contains(name);
+    }
+    if (param != null) {
+      return canonicalize(param.toString()).contains(name);
+    }
+    return false;
+  }
+
+  private List<Fact> isMessageUsedInInternalAction(
+      Rule rule, Message forgotten, Set<String> nonInternalActionNames) {
+    List<Fact> matches = new ArrayList<>();
+    if (rule == null || forgotten == null || rule.getActions() == null) {
+      return matches;
+    }
+    String forgottenName = canonicalize(forgotten.represent());
+    for (Fact action : rule.getActions()) {
+      if (action == null || nonInternalActionNames.contains(action.getF_name())) {
+        continue;
+      }
+      if (containsParam(action, forgottenName)) {
+        matches.add(action);
+      }
+    }
+    return matches;
+  }
+
+  private void removeNeglectedActions(Rule rule, Set<String> actionSignatures) {
+    if (rule == null || actionSignatures == null || actionSignatures.isEmpty()) {
+      return;
+    }
+    rule.getActions().removeIf(action -> actionSignatures.contains(factSignature(action)));
+  }
+
+  private String factSignature(Fact fact) {
+    if (fact == null) return "";
+    StringBuilder signature = new StringBuilder(fact.getF_name()).append("|");
+    for (Object param : fact.getParameters()) {
+      signature.append(String.valueOf(param)).append(",");
+    }
+    return signature.toString();
   }
 
   private void replaceValue(
@@ -975,4 +1104,175 @@ public class ForgetMutationStrategy implements MutationStrategy {
         .findFirst()
         .orElse(forgotten + "_rep");
   }
+
+  private Message resolveForgetMessage(Set<Message> knowledge, String forgottenStr) {
+    String canonical = canonicalize(forgottenStr);
+    Message found = findMessageByRepresentation(knowledge, canonical);
+    if (found != null) {
+      return found;
+    }
+    return new Atom(canonical);
+  }
+
+  private Message extractReceivedMessage(Rule rule) {
+    if (rule == null || rule.getPreconditions() == null) {
+      return null;
+    }
+    for (Fact fact : rule.getPreconditions()) {
+      if ("RcvS".equals(fact.getF_name())) {
+        List<Object> params = fact.getParameters();
+        if (params != null && params.size() >= 4) {
+          Object valuesParam = params.get(params.size() - 1);
+          String paramStr = payloadToString(valuesParam).trim();
+          Message received = parseTargetParam(paramStr);
+          if (received != null) {
+            log.debug("Extracted received message from RcvS: {}", received.represent());
+            return received;
+          }
+        }
+      }
+    }
+    for (Fact pre : rule.getPreconditions()) {
+      if ("In".equals(pre.getF_name())) {
+        List<Object> params = pre.getParameters();
+        if (params != null && !params.isEmpty()) {
+          Object payloadParam = params.get(params.size() - 1);
+          String paramStr = String.valueOf(payloadParam).trim();
+          try {
+            Message m = parseStringToMessage(paramStr);
+            if (m != null) {
+              log.debug("Extracted received message from In: {}", m.represent());
+              return m;
+            }
+          } catch (Throwable t) {
+            // fall through to Atom fallback
+          }
+          return new Atom(paramStr);
+        }
+      }
+    }
+    return null;
+  }
+
+  private String payloadToString(Object obj) {
+    if (obj instanceof Value v) {
+      return v.getName();
+    }
+    return String.valueOf(obj);
+  }
+
+  private Message parseTargetParam(String param) {
+    String trimmed = param.trim();
+    if (trimmed.startsWith("<") && trimmed.endsWith(">")) {
+      String inner = trimmed.substring(1, trimmed.length() - 1);
+      List<String> parts = splitTopLevelCommas(inner);
+      return buildNestedPair(parts);
+    }
+    return parseStringToMessage(trimmed);
+  }
+
+  private Message buildNestedPair(List<String> elements) {
+    if (elements.isEmpty()) return null;
+    if (elements.size() == 1) return parseStringToMessage(elements.get(0).trim());
+    Message first = parseStringToMessage(elements.get(0).trim());
+    Message rest = buildNestedPair(elements.subList(1, elements.size()));
+    return new Pair(first, rest);
+  }
+
+  private Message parseStringToMessage(String raw) {
+    String str = raw.trim();
+
+    if (str.startsWith("<") && str.endsWith(">")) {
+      String inner = str.substring(1, str.length() - 1).trim();
+      if (inner.isEmpty()) return new Atom(str);
+      List<String> parts = splitTopLevelCommas(inner);
+      return buildNestedPair(parts);
+    }
+
+    if (str.startsWith("{") && str.contains("}_")) return parseEncryption(str);
+    if (str.startsWith("(") && str.endsWith(")")) return parsePair(str);
+    if (str.contains("(") && str.endsWith(")")) return parseFunction(str);
+    return new Atom(str);
+  }
+
+  private Encrypt parseEncryption(String str) {
+    String s = str.trim();
+    if (!s.startsWith("{") || !s.endsWith("}")) {
+      return new Encrypt(new Atom(str), new Atom("UNKNOWN_KEY"));
+    }
+    int sep = s.indexOf("}_");
+    if (sep < 0) {
+      return new Encrypt(new Atom(str), new Atom("UNKNOWN_KEY"));
+    }
+    String msgPart = s.substring(1, sep).trim();
+    int keyStart = sep + 2;
+    if (keyStart >= s.length() || s.charAt(keyStart) != '{') {
+      return new Encrypt(new Atom(str), new Atom("UNKNOWN_KEY"));
+    }
+    int depth = 0, i = keyStart;
+    for (; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (c == '{') depth++;
+      else if (c == '}') {
+        depth--;
+        if (depth == 0) {
+          i++;
+          break;
+        }
+      }
+    }
+    String keyPart = s.substring(keyStart + 1, i - 1).trim();
+    Message msg = parseStringToMessage(msgPart);
+    Message key = parseStringToMessage(keyPart);
+    return new Encrypt(msg, key);
+  }
+
+  private Message parsePair(String str) {
+    String inner = str.substring(1, str.length() - 1).trim();
+    int commaPos = findTopLevelComma(inner);
+    if (commaPos < 0) return parseStringToMessage(inner);
+    String left = inner.substring(0, commaPos).trim();
+    String right = inner.substring(commaPos + 1).trim();
+    return new Pair(parseStringToMessage(left), parseStringToMessage(right));
+  }
+
+  private Message parseFunction(String str) {
+    int idx = str.indexOf('(');
+    String name = str.substring(0, idx).trim();
+    String inside = str.substring(idx + 1, str.length() - 1).trim();
+    if (inside.isEmpty()) return new Atom(name);
+    List<String> parts = splitTopLevelCommas(inside);
+    List<Message> args = new ArrayList<>();
+    for (String p : parts) args.add(parseStringToMessage(p));
+    return new PredictiveFunction(name, args);
+  }
+
+  private int findTopLevelComma(String s) {
+    int depth = 0;
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (c == '(' || c == '<') depth++;
+      else if (c == ')' || c == '>') depth--;
+      else if (c == ',' && depth == 0) return i;
+    }
+    return -1;
+  }
+
+  private List<String> splitTopLevelCommas(String s) {
+    List<String> parts = new ArrayList<>();
+    int depth = 0;
+    int last = 0;
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (c == '(' || c == '<') depth++;
+      else if (c == ')' || c == '>') depth--;
+      else if (c == ',' && depth == 0) {
+        parts.add(s.substring(last, i).trim());
+        last = i + 1;
+      }
+    }
+    parts.add(s.substring(last).trim());
+    return parts;
+  }
+
 }

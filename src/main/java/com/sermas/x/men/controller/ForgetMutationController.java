@@ -13,17 +13,24 @@ import com.sermas.x.men.service.HaskellDerivationFetcher;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.service.ZipService;
 import com.sermas.x.men.service.impl.DerivationModeContext;
+import com.sermas.x.men.service.impl.ForgetMutationStrategy;
+import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
 import com.sermas.x.men.utilities.ForgetMutationParser;
 import com.sermas.x.men.utilities.SetupKnowledgeExtractor;
 import com.sermas.x.men.utilities.TagSetter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -48,6 +55,7 @@ public class ForgetMutationController {
   @Autowired private ZipService zipService;
   @Autowired private HaskellDerivationFetcher haskellDerivationFetcher;
   @Autowired private DerivationTreeCaptureService derivationTreeCaptureService;
+  @Autowired private ForgetMutationStrategy forgetMutationStrategy;
 
   /**
    * Trigger of forget mutation.
@@ -61,12 +69,51 @@ public class ForgetMutationController {
       @RequestParam("file") MultipartFile file,
       @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate,
       @RequestHeader(value = "Derivation-Type", required = false) String derivationType,
-      @RequestHeader(value = "Derivation-Depth", required = false) Integer derivationDepth)
+      @RequestHeader(value = "Derivation-Depth", required = false) Integer derivationDepth,
+      @RequestHeader(value = "Max-Variants-Per-Rule", required = false) Integer maxVariantsPerRule,
+      @RequestHeader(value = "Blocking-Mode", required = false) String blockingModeHeader,
+      @RequestHeader(value = "Witness-Actions", required = false) String witnessActionsHeader)
       throws Exception {
     boolean haskellWasEnabled = false;
     String derivationTreeContent = null;
+    int originalMaxVariants = forgetMutationStrategy.getMaxVariantsPerRule();
+    BlockingMode originalBlockingMode = forgetMutationStrategy.getBlockingMode();
+    Set<String> originalNonInternal = new HashSet<>(forgetMutationStrategy.getNonInternalActions());
 
     try {
+      if (maxVariantsPerRule != null) {
+        if (maxVariantsPerRule <= 0 || maxVariantsPerRule > 1000) {
+          return ResponseEntity.status(400)
+              .body("Max-Variants-Per-Rule must be between 1 and 1000");
+        }
+        forgetMutationStrategy.setMaxVariantsPerRule(maxVariantsPerRule);
+      }
+
+      if (blockingModeHeader != null) {
+        try {
+          BlockingMode parsedMode = parseBlockingMode(blockingModeHeader);
+          if (parsedMode != null) {
+            forgetMutationStrategy.setBlockingMode(parsedMode);
+          }
+        } catch (IllegalArgumentException e) {
+          return ResponseEntity.status(400).body(e.getMessage());
+        }
+      }
+
+      if (witnessActionsHeader != null && !witnessActionsHeader.trim().isEmpty()) {
+        Set<String> witnesses = Arrays.stream(witnessActionsHeader.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.toSet());
+        for (String name : witnesses) {
+          if (!IDENTIFIER_PATTERN.matcher(name).matches()) {
+            return ResponseEntity.status(400)
+                .body("Witness-Actions entries must be identifier-like (letters, digits, underscore)");
+          }
+        }
+        forgetMutationStrategy.addWitnessActions(witnesses);
+      }
+
       // Start capturing derivation tree output
       derivationTreeCaptureService.startCapture();
 
@@ -142,6 +189,7 @@ public class ForgetMutationController {
 
       parametersBundle.getCollections().clear();
       parametersBundle.setFileName(file.getOriginalFilename());
+      parametersBundle.setVariantsTruncated(false);
 
       mutationGeneratorService.generateMutation(originalRules, mutationSet, parametersBundle);
 
@@ -154,7 +202,14 @@ public class ForgetMutationController {
       // Extract base filename for ZIP creation
       String originalFilename = file.getOriginalFilename();
       String baseFileName = originalFilename.split("\\.(?=[^\\.]+$)")[0];
-      return zipService.createZipResponse(baseFileName, derivationTreeContent);
+      ResponseEntity<?> response = zipService.createZipResponse(baseFileName, derivationTreeContent);
+      if (parametersBundle.isVariantsTruncated()) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.putAll(response.getHeaders());
+        headers.add("X-Variants-Truncated", "true");
+        return ResponseEntity.status(response.getStatusCode()).headers(headers).body(response.getBody());
+      }
+      return response;
     } catch (IllegalArgumentException e) {
       log.error("Error generating forget mutations: " + e.getMessage(), e);
       return ResponseEntity.status(400).body(e.getMessage());
@@ -162,6 +217,9 @@ public class ForgetMutationController {
       log.error("Error generating forget mutations: " + e.getMessage(), e);
       return ResponseEntity.status(500).body(e.getMessage());
     } finally {
+      forgetMutationStrategy.setMaxVariantsPerRule(originalMaxVariants);
+      forgetMutationStrategy.setBlockingMode(originalBlockingMode);
+      forgetMutationStrategy.setNonInternalActions(originalNonInternal);
       if (haskellWasEnabled) {
         com.sermas.x.men.service.impl.HybridDerivationService.disableHaskellDerivation();
         DerivationModeContext.disableHaskell();
@@ -169,6 +227,35 @@ public class ForgetMutationController {
       }
       // Clear any remaining capture state
       derivationTreeCaptureService.clearCapture();
+    }
+  }
+
+  private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("\\w+");
+
+  private static BlockingMode parseBlockingMode(String raw) {
+    if (raw == null) {
+      return null;
+    }
+    String normalized = raw.trim().toUpperCase();
+    switch (normalized) {
+      case "1":
+      case "CASE1":
+      case "CASE1_WEAK":
+      case "WEAK":
+        return BlockingMode.CASE1_WEAK;
+      case "2":
+      case "CASE2":
+      case "CASE2_PAIRING":
+      case "PAIRING":
+        return BlockingMode.CASE2_PAIRING;
+      case "3":
+      case "CASE3":
+      case "CASE3_FULL_DY":
+      case "FULL_DY":
+      case "FULL":
+        return BlockingMode.CASE3_FULL_DY;
+      default:
+        throw new IllegalArgumentException("Unknown Blocking-Mode: " + raw);
     }
   }
 }

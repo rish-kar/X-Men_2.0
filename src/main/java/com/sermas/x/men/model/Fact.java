@@ -48,8 +48,8 @@ public class Fact implements Cloneable, Comparable {
      *
      * @param x An ArrayList containing the new parameters to set.
      */
-    public void setArrayListParameters(ArrayList x) {
-        ArrayList v = new ArrayList();
+    public void setArrayListParameters(ArrayList<Object> x) {
+        ArrayList<Object> v = new ArrayList<>();
         v.addAll(x);
         this.parametes.clear();
         this.parametes.addAll(v);
@@ -136,8 +136,8 @@ public class Fact implements Cloneable, Comparable {
      * @return A new ArrayList containing cloned items.
      */
     private static ArrayList<Object> cloneList(ArrayList<Object> list) {
-        ArrayList<Object> clone = new ArrayList(list.size());
-        Iterator var2 = list.iterator();
+        ArrayList<Object> clone = new ArrayList<>(list.size());
+        Iterator<Object> var2 = list.iterator();
 
         while (var2.hasNext()) {
             Object item = var2.next();
@@ -160,7 +160,7 @@ public class Fact implements Cloneable, Comparable {
      * @return The Fact object if found, otherwise null.
      */
     public Fact findFactUsingValue(Value v) {
-        Iterator var2 = this.parametes.iterator();
+        Iterator<Object> var2 = this.parametes.iterator();
 
         while (var2.hasNext()) {
             Object x = var2.next();
@@ -183,7 +183,7 @@ public class Fact implements Cloneable, Comparable {
      * @return The Value object if found, otherwise null.
      */
     public Value findValue(Value v) {
-        Iterator var2 = this.parametes.iterator();
+        Iterator<Object> var2 = this.parametes.iterator();
 
         while (var2.hasNext()) {
             Object x = var2.next();
@@ -215,7 +215,7 @@ public class Fact implements Cloneable, Comparable {
     /** Checks if the fact has been removed. */
     public void setRemoved(boolean isRemoved) {
         this.isRemoved = isRemoved;
-        Iterator var2 = this.parametes.iterator();
+        Iterator<Object> var2 = this.parametes.iterator();
 
         while (true) {
             while (var2.hasNext()) {
@@ -223,10 +223,10 @@ public class Fact implements Cloneable, Comparable {
                 if (x instanceof Value) {
                     ((Value) x).setRemoved(true);
                 } else {
-                    Iterator var4 = ((PSpecial) x).getGroup().iterator();
+                    Iterator<Value> var4 = ((PSpecial) x).getGroup().iterator();
 
                     while (var4.hasNext()) {
-                        Value xx = (Value) var4.next();
+                        Value xx = var4.next();
                         xx.setRemoved(true);
                     }
                 }

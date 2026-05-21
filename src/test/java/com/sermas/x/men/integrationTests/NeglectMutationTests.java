@@ -123,47 +123,51 @@ public class NeglectMutationTests {
   }
 
   @Test
-  @DisplayName("Neglect Multi - empty file returns 500")
+  @DisplayName("Neglect Multi - empty file returns 204 (no content)")
   public void testNeglectMultiEndpoint_EmptyFile_returns500() throws Exception {
     MockMultipartFile empty =
         new MockMultipartFile("file", "CoachService.spthy", MediaType.TEXT_PLAIN_VALUE, new byte[0]);
 
+    // FileSplitterService appends "\nend\n", parser succeeds with no rules, no mutations
+    // generated -> ZipService returns 204 No Content
     mockMvc
         .perform(multipart("/api/generateMutations").file(empty).header("Neglect-Mutation", "true"))
-        .andExpect(status().isInternalServerError()); // 500
+        .andExpect(status().isNoContent());
   }
 
   @Test
-  @DisplayName("Neglect Single - empty file returns 500")
+  @DisplayName("Neglect Single - empty file returns 204 (no content)")
   public void testNeglectSingleEndpoint_EmptyFile_returns500() throws Exception {
     MockMultipartFile empty =
         new MockMultipartFile("file", "CoachService.spthy", MediaType.TEXT_PLAIN_VALUE, new byte[0]);
 
-    mockMvc.perform(multipart("/api/neglect/mutations").file(empty)).andExpect(status().isInternalServerError());
+    mockMvc.perform(multipart("/api/neglect/mutations").file(empty)).andExpect(status().isNoContent());
   }
 
   @Test
-  @DisplayName("Neglect Multi - no RULES markers returns 500")
+  @DisplayName("Neglect Multi - no RULES markers returns 204 (no content)")
   public void testNeglectMultiEndpoint_NoRulesMarkers_returns500() throws Exception {
     String noRules = "/****MODEL****/ theory X begin\n builtins: signing\n rule setup: [ Fr(~x) ] --> [ ]\n /****ENDOFMODEL****/";
     MockMultipartFile bad =
         new MockMultipartFile("file", "CoachService.spthy", MediaType.TEXT_PLAIN_VALUE, noRules.getBytes(StandardCharsets.UTF_8));
 
+    // Without RULES markers, splitter treats whole content as rules; parser yields no usable
+    // rules and generator produces nothing -> 204 No Content
     mockMvc
         .perform(multipart("/api/generateMutations").file(bad).header("Neglect-Mutation", "true"))
-        .andExpect(status().isInternalServerError());
+        .andExpect(status().isNoContent());
   }
 
   @Test
-  @DisplayName("Neglect Single - malformed rules returns 204 (no content)")
+  @DisplayName("Neglect Single - malformed rules returns 500")
   public void testNeglectSingleEndpoint_MalformedRules_returns500() throws Exception {
     // Include RULES markers but broken content inside
     String malformed = "/****RULES****/\n rule bad: [ X ] --> [ Y\n /****ENDOFRULES****/"; // missing closing bracket
     MockMultipartFile bad =
         new MockMultipartFile("file", "CoachService.spthy", MediaType.TEXT_PLAIN_VALUE, malformed.getBytes(StandardCharsets.UTF_8));
 
-    // Current behavior: parser logs errors, generator produces no files -> 204 No Content
-    mockMvc.perform(multipart("/api/neglect/mutations").file(bad)).andExpect(status().isNoContent());
+    // Parser throws on syntax errors above threshold -> 500 Internal Server Error
+    mockMvc.perform(multipart("/api/neglect/mutations").file(bad)).andExpect(status().isInternalServerError());
   }
 
   private void assertAtLeastOneGeneratedMatchesAnySample() throws Exception {

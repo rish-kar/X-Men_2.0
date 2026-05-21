@@ -31,6 +31,7 @@ public class HaskellDerivationController {
    * @return Derivation tree analysis result
    */
   @PostMapping(value = "/derive", produces = MediaType.TEXT_PLAIN_VALUE)
+  @SuppressWarnings("deprecation") // calls deriveAnalysis(String) intentionally; migration to deriveAnalysisFromRules tracked separately
   public ResponseEntity<String> deriveAnalysis(@RequestParam("file") MultipartFile file) {
     try {
       // Validate file

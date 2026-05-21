@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
+import com.sermas.x.men.service.impl.ForgetMutationStrategy;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -30,6 +33,7 @@ import org.springframework.web.context.WebApplicationContext;
 public class ForgetMutationStrategyIntegrationTest {
 
   @Autowired private WebApplicationContext webApplicationContext;
+  @Autowired private ForgetMutationStrategy forgetMutationStrategy;
   private MockMvc mockMvc;
 
   @BeforeEach
@@ -117,6 +121,157 @@ public class ForgetMutationStrategyIntegrationTest {
     assertThat(generatedContent).contains("/****ENDOFMODEL****/");
 
     log.info("Single endpoint forget mutation test passed");
+  }
+
+  @Test
+  @DisplayName("Max-Variants-Per-Rule header accepted")
+  public void testMaxVariantsPerRuleHeaderAccepted() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    mockMvc
+        .perform(
+            multipart("/api/forget/mutations")
+                .file(file)
+                .header("Max-Variants-Per-Rule", "3"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("Max-Variants-Per-Rule header rejects zero")
+  public void testMaxVariantsPerRuleHeaderZeroRejected() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    mockMvc
+        .perform(
+            multipart("/api/forget/mutations")
+                .file(file)
+                .header("Max-Variants-Per-Rule", "0"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("Max-Variants-Per-Rule header rejects overly large values")
+  public void testMaxVariantsPerRuleHeaderTooLargeRejected() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    mockMvc
+        .perform(
+            multipart("/api/forget/mutations")
+                .file(file)
+                .header("Max-Variants-Per-Rule", "99999"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("Default max variants per rule behavior remains valid")
+  public void testMaxVariantsPerRuleDefault() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    mockMvc
+        .perform(multipart("/api/forget/mutations").file(file))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("Blocking-Mode header CASE2_PAIRING succeeds")
+  public void testBlockingModeCase2Pairing() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    mockMvc
+        .perform(
+            multipart("/api/forget/mutations")
+                .file(file)
+                .header("Blocking-Mode", "CASE2_PAIRING"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("Blocking-Mode header 3 succeeds")
+  public void testBlockingModeCase3Numeric() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    mockMvc
+        .perform(
+            multipart("/api/forget/mutations")
+                .file(file)
+                .header("Blocking-Mode", "3"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("Blocking-Mode header BANANA returns 400")
+  public void testBlockingModeInvalid() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    MvcResult result = mockMvc
+        .perform(
+            multipart("/api/forget/mutations")
+                .file(file)
+                .header("Blocking-Mode", "BANANA"))
+        .andExpect(status().isBadRequest())
+        .andReturn();
+
+    assertThat(result.getResponse().getContentAsString())
+        .contains("Unknown Blocking-Mode");
+  }
+
+  @Test
+  @DisplayName("Blocking-Mode restores to default after request")
+  public void testBlockingModeRestoration() throws Exception {
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(Paths.get("src/test/resources/Forget_Bank_Input.spthy")));
+
+    mockMvc
+        .perform(
+            multipart("/api/forget/mutations")
+                .file(file)
+                .header("Blocking-Mode", "CASE3_FULL_DY"))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(multipart("/api/forget/mutations").file(file))
+        .andExpect(status().isOk());
+
+    assertThat(forgetMutationStrategy.getBlockingMode()).isEqualTo(BlockingMode.CASE1_WEAK);
   }
 
   @Test
@@ -282,6 +437,53 @@ public class ForgetMutationStrategyIntegrationTest {
     assertThat(Arrays.asList(200, 204)).contains(status);
 
     log.info("API headers test passed (status={})", status);
+  }
+
+  @Test
+  @DisplayName("Bank_revised.spthy In/Out format smoke test")
+  public void testBankInOutFormatSmoke() throws Exception {
+    Path inputPath = Paths.get("src/test/resources/Bank_revised.spthy");
+    if (!Files.exists(inputPath)) {
+      log.warn("Bank_revised.spthy not present; skipping In/Out smoke test");
+      return;
+    }
+
+    MockMultipartFile file =
+        new MockMultipartFile(
+            "file",
+            "Bank_revised.spthy",
+            MediaType.TEXT_PLAIN_VALUE,
+            Files.readAllBytes(inputPath));
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                multipart("/api/forget/mutations")
+                    .file(file)
+                    .header(
+                        "Witness-Actions",
+                        "PasswordAttempt,U_LoginRequest,LoginOK,LoginSuccess,LoginFailed,Commit,B_Running,RevLtk,HFin,Challenge"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    assertThat(result.getResponse().getContentAsByteArray().length).isGreaterThan(0);
+  }
+
+  @Test
+  @DisplayName("Paper lemmas and action facts present in Forget_Bank_Input.spthy")
+  public void testPaperLemmasPresentInSpec() throws Exception {
+    String spec =
+        Files.readString(
+            Paths.get("src/test/resources/Forget_Bank_Input.spthy"), StandardCharsets.UTF_8);
+
+    assertThat(spec).contains("lemma Human_intends_Bank2_if_Bank2_OK");
+    assertThat(spec).contains("lemma Password2_confidential");
+    assertThat(spec).contains("U_LoginRequest($User, $Bank2,");
+    assertThat(spec).contains("PasswordAttempt($User, $Bank2,");
+    assertThat(spec).contains("LoginOK($Bank2, $User,");
+    assertThat(spec).doesNotContain("lemma Challenge_Injective");
+    assertThat(spec).doesNotContain("lemma Complete_Verification");
+    assertThat(spec).doesNotContain("lemma functional");
   }
 
   @SuppressWarnings("unused")

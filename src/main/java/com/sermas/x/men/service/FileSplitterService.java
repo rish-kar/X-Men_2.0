@@ -20,6 +20,14 @@ public class FileSplitterService {
    * @return A FileSections object containing the preamble, rules, and postamble
    */
   public FileSections splitFile(String content) {
+    if (!hasAnyMarker(content)) {
+      String rulesStr = content;
+      if (!rulesStr.trim().endsWith("end")) {
+        rulesStr = rulesStr + "\nend\n";
+      }
+      return new FileSections("", rulesStr, "");
+    }
+
     List<String> preamble = new ArrayList<>();
     List<String> rules = new ArrayList<>();
     List<String> postamble = new ArrayList<>();
@@ -49,6 +57,16 @@ public class FileSplitterService {
 
     return new FileSections(
         String.join("\n", preamble), rulesStr, String.join("\n", postamble));
+  }
+
+  private static boolean hasAnyMarker(String content) {
+    for (String line : content.split("\n")) {
+      String trimmed = line.trim();
+      if (trimmed.equals(MARKERS[0]) || trimmed.equals(MARKERS[1])) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

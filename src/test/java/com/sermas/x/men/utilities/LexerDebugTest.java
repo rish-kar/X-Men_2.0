@@ -1,7 +1,8 @@
 package com.sermas.x.men.utilities;
 
 import com.sermas.x.men.model.TamarinLexer;
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
 import org.junit.jupiter.api.Test;
 
@@ -19,8 +20,8 @@ class LexerDebugTest {
   void debugLexerTokens() throws Exception {
     Path spthyPath = Paths.get("src/test/resources/Forget_Bank_Input.spthy");
     try (InputStream inputStream = Files.newInputStream(spthyPath)) {
-      ANTLRInputStream antlrInputStream = new ANTLRInputStream(inputStream);
-      TamarinLexer lexer = new TamarinLexer(antlrInputStream);
+      CharStream charStream = CharStreams.fromStream(inputStream);
+      TamarinLexer lexer = new TamarinLexer(charStream);
 
       System.out.println("=== ALL TOKENS FROM TrialCase.spthy ===");
       Token token;

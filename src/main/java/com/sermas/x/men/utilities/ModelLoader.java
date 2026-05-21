@@ -6,7 +6,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,11 +115,11 @@ public class ModelLoader {
 
     try (InputStream inputStream = spthyFile.getInputStream()) {
       // Create a CharStream that reads from the input stream
-      ANTLRInputStream antlrInputStream = new ANTLRInputStream(inputStream);
-      log.debug("Created ANTLRInputStream");
+      CharStream charStream = CharStreams.fromStream(inputStream);
+      log.debug("Created CharStream");
 
       // Create a lexer that feeds off of input CharStream
-      TamarinLexer tamarinLexer = new TamarinLexer(antlrInputStream);
+      TamarinLexer tamarinLexer = new TamarinLexer(charStream);
       log.debug("Created TamarinLexer");
 
       // Create a buffer of tokens pulled from the lexer
@@ -147,6 +148,7 @@ public class ModelLoader {
       }
 
       TamVisitor tamVisitor = new TamVisitor();
+      @SuppressWarnings("unchecked")
       ArrayList<Rule> ruleList = (ArrayList<Rule>) tamVisitor.visit(parseTree);
       componentList.addAll(ruleList);
       log.debug("Visited parse tree and added rules to componentList");

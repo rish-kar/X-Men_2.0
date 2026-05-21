@@ -1,5 +1,6 @@
 package com.sermas.x.men.model;
 
+import com.sermas.x.men.service.forget.ForgetContext;
 import java.util.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +18,7 @@ public class ParametersBundle {
 
   String fileName;
   ArrayList<Rule> theory;
-  ArrayList<ArrayList> collections;
+  ArrayList<ArrayList<Rule>> collections;
   ArrayList<Function> functions;
   ArrayList<Builtins> builtins;
   ArrayList<Value> roles;
@@ -25,6 +26,12 @@ public class ParametersBundle {
   Flags flags;
   Map<String, String> existingSetupKnowledge = new HashMap<>();
   Map<String, LinkedHashSet<String>> forgetMutationSet = new HashMap<>();
+
+  // Transition-aware forget context for a single mutation run (non-serialized).
+  transient ForgetContext forgetContext;
+
+  // Indicates whether variants were truncated due to per-rule cap.
+  boolean variantsTruncated = false;
 
   // Special parameters to handle the derivation tree logic
   String derivationType;

@@ -61,6 +61,9 @@ public class ForgetContext {
      * @param m the message being forgotten (null if no forget at this transition)
      */
     public void updateForTransition(Message m1, Message m) {
+        if (m1 == null && m == null) {
+            return;
+        }
         if (m != null && m.equals(m1)) {
             // Forget the just-received message: don't add m1 to K, remove from Forget
             forgetSet.remove(m1);
@@ -135,7 +138,18 @@ public class ForgetContext {
      */
     public String getTypeOf(Message msg) {
         if (msg == null) return null;
-        return typeMap.get(msg.represent());
+        String repr = msg.represent();
+        String t = typeMap.get(repr);
+        if (t != null) return t;
+        // typeMap keys may carry a Tamarin fresh-variable tilde prefix (e.g. "~pw1")
+        if (repr.startsWith("~")) {
+            t = typeMap.get(repr.substring(1));
+            if (t != null) return t;
+        } else {
+            t = typeMap.get("~" + repr);
+            if (t != null) return t;
+        }
+        return null;
     }
 
     @Override

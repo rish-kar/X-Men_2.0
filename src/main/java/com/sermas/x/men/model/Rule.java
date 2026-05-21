@@ -40,10 +40,10 @@ public class Rule extends Component implements Cloneable {
         this.id = count.incrementAndGet();
         this.rule_name = rule_name;
         this.hasMutation = false;
-        this.variables = new ArrayList();
-        this.preconditions = new ArrayList();
-        this.postconditions = new ArrayList();
-        this.actions = new ArrayList();
+        this.variables = new ArrayList<>();
+        this.preconditions = new ArrayList<>();
+        this.postconditions = new ArrayList<>();
+        this.actions = new ArrayList<>();
     }
 
     /**
@@ -220,11 +220,11 @@ public class Rule extends Component implements Cloneable {
      * @return a new ArrayList containing cloned Variable objects
      */
     private ArrayList<Variable> cloneListVariable(ArrayList<Variable> array) {
-        ArrayList<Variable> clone = new ArrayList();
-        Iterator var3 = this.variables.iterator();
+        ArrayList<Variable> clone = new ArrayList<>();
+        Iterator<Variable> var3 = this.variables.iterator();
 
         while (var3.hasNext()) {
-            Variable v = (Variable) var3.next();
+            Variable v = var3.next();
             clone.add(v.clone());
         }
 
@@ -240,10 +240,10 @@ public class Rule extends Component implements Cloneable {
      */
     private void letArrangement(
             ArrayList<Variable> list, ArrayList<Fact> clone1, ArrayList<Fact> clone2) {
-        Iterator var4 = list.iterator();
+        Iterator<Variable> var4 = list.iterator();
 
         while (var4.hasNext()) {
-            Variable var = (Variable) var4.next();
+            Variable var = var4.next();
             Fact rcv = this.getPreconditionFactByMatchingName(clone1, "Rcv");
             if (rcv != null && rcv.getParameter(2) instanceof Value val) {
                 if (val.getName().equals(var.getName())) {
@@ -271,7 +271,7 @@ public class Rule extends Component implements Cloneable {
         for (int j = 0; j < list.size(); ++j) {
             Variable v = list.get(j);
             Special s = v.getValues();
-            ArrayList obj;
+            ArrayList<Value> obj;
             int k;
             Object o;
             String variableName;
@@ -324,18 +324,16 @@ public class Rule extends Component implements Cloneable {
             Rule p = (Rule) super.clone();
             ArrayList<Fact> clone1 = cloneList(this.preconditions);
             ArrayList<Fact> clone2 = cloneList(this.postconditions);
-            ArrayList clone3;
             if (this.hasVariables()) {
-                clone3 = this.cloneListVariable(this.variables);
-                p.arrangeLets(clone3);
-                p.letArrangement(clone3, clone1, clone2);
-                p.variables = clone3;
+                ArrayList<Variable> variableClone = this.cloneListVariable(this.variables);
+                p.arrangeLets(variableClone);
+                p.letArrangement(variableClone, clone1, clone2);
+                p.variables = variableClone;
             }
 
             p.preconditions = clone1;
             p.postconditions = clone2;
-            clone3 = cloneList(this.actions);
-            p.actions = clone3;
+            p.actions = cloneList(this.actions);
             return p;
         } catch (CloneNotSupportedException var5) {
             CloneNotSupportedException ex = var5;
@@ -351,7 +349,7 @@ public class Rule extends Component implements Cloneable {
      * @return the first Fact that matches the name, or null if no match is found
      */
     public Fact getPreconditionFactByMatchingName(ArrayList<Fact> array, String s) {
-        Iterator var3 = array.iterator();
+        Iterator<Fact> var3 = array.iterator();
 
         Fact x;
         do {
@@ -359,7 +357,7 @@ public class Rule extends Component implements Cloneable {
                 return null;
             }
 
-            x = (Fact) var3.next();
+            x = var3.next();
         } while (!x.getF_name().startsWith(s));
 
         return x;
@@ -372,7 +370,7 @@ public class Rule extends Component implements Cloneable {
      * @return the first Fact that matches the name, or null if no match is found
      */
     public Fact getPreconditionFactByMatchingName(String s) {
-        Iterator var2 = this.preconditions.iterator();
+        Iterator<Fact> var2 = this.preconditions.iterator();
 
         Fact x;
         do {
@@ -380,7 +378,7 @@ public class Rule extends Component implements Cloneable {
                 return null;
             }
 
-            x = (Fact) var2.next();
+            x = var2.next();
         } while (!x.getF_name().startsWith(s));
 
         return x;
@@ -393,7 +391,7 @@ public class Rule extends Component implements Cloneable {
      * @return the first Fact that matches the name, or null if no match is found
      */
     public Fact getActionFactByMatchingName(String s) {
-        Iterator var2 = this.actions.iterator();
+        Iterator<Fact> var2 = this.actions.iterator();
 
         Fact x;
         do {
@@ -401,7 +399,7 @@ public class Rule extends Component implements Cloneable {
                 return null;
             }
 
-            x = (Fact) var2.next();
+            x = var2.next();
         } while (!x.getF_name().startsWith(s));
 
         return x;
@@ -415,7 +413,7 @@ public class Rule extends Component implements Cloneable {
      * @return the first Fact that matches the name, or null if no match is found
      */
     public Fact getPostconditionFactByMatchingName(ArrayList<Fact> array, String s) {
-        Iterator var3 = array.iterator();
+        Iterator<Fact> var3 = array.iterator();
 
         Fact x;
         do {
@@ -423,7 +421,7 @@ public class Rule extends Component implements Cloneable {
                 return null;
             }
 
-            x = (Fact) var3.next();
+            x = var3.next();
         } while (!x.getF_name().startsWith(s));
 
         return x;
@@ -436,7 +434,7 @@ public class Rule extends Component implements Cloneable {
      * @return the first Fact that matches the name, or null if no match is found
      */
     public Fact getPostconditionFactByMatchingName(String s) {
-        Iterator var2 = this.postconditions.iterator();
+        Iterator<Fact> var2 = this.postconditions.iterator();
 
         Fact x;
         do {
@@ -444,7 +442,7 @@ public class Rule extends Component implements Cloneable {
                 return null;
             }
 
-            x = (Fact) var2.next();
+            x = var2.next();
         } while (!x.getF_name().startsWith(s));
 
         return x;
@@ -461,7 +459,7 @@ public class Rule extends Component implements Cloneable {
      */
     public Fact getPostconditionFactByMatchingNames(
             String stateName, String agentName, String state) {
-        Iterator var4 = this.postconditions.iterator();
+        Iterator<Fact> var4 = this.postconditions.iterator();
 
         Fact x;
         do {
@@ -469,7 +467,7 @@ public class Rule extends Component implements Cloneable {
                 return null;
             }
 
-            x = (Fact) var4.next();
+            x = var4.next();
         } while (!x.getF_name().startsWith(stateName)
                 || !((Value) x.getParameter(0))
                 .getName()
@@ -487,11 +485,11 @@ public class Rule extends Component implements Cloneable {
      * @return a new ArrayList containing cloned Fact objects
      */
     private static ArrayList<Fact> cloneList(ArrayList<Fact> list) {
-        ArrayList<Fact> clone = new ArrayList(list.size());
-        Iterator var2 = list.iterator();
+        ArrayList<Fact> clone = new ArrayList<>(list.size());
+        Iterator<Fact> var2 = list.iterator();
 
         while (var2.hasNext()) {
-            Fact item = (Fact) var2.next();
+            Fact item = var2.next();
             clone.add(item.clone());
         }
 
