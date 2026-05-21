@@ -1,15 +1,16 @@
 package com.sermas.x.men;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.sermas.x.men.user_interface.XMenInterface;
-import java.awt.*;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.boot.SpringApplication;
+
+import java.awt.*;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Covers every branch of com.sermas.x.men.Application without ever opening a JavaFX window.

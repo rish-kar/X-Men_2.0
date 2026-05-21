@@ -6,14 +6,15 @@ import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.model.Type;
 import com.sermas.x.men.service.MutationStrategy;
 import com.sermas.x.men.utilities.UtilityFunctions;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * NeglectMutationStrategy implements the "neglect" mutation as provided: for a rule, it keeps the

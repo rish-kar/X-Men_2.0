@@ -1,6 +1,10 @@
 package com.sermas.x.men.service.derivation;
 
-import com.sermas.x.men.model.*;
+import com.sermas.x.men.model.Atom;
+import com.sermas.x.men.model.Derivation;
+import com.sermas.x.men.model.Message;
+import com.sermas.x.men.model.Pair;
+
 import java.util.*;
 
 /**

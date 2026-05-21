@@ -1,9 +1,10 @@
 package com.sermas.x.men.model;
 
-import java.util.ArrayList;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
 
 /**
  * Special class represents a special type of collection that holds a group of Value objects. It

@@ -4,9 +4,10 @@ import com.sermas.x.men.model.*;
 import com.sermas.x.men.service.DerivationService;
 import com.sermas.x.men.service.derivation.DerivationConfig;
 import com.sermas.x.men.service.derivation.DerivationTreePrinter;
+import org.springframework.stereotype.Service;
+
 import java.util.*;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Service;
 
 /**
  * DerivationServiceImpl class implements the DerivationService interface. This service provides

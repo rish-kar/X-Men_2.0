@@ -1,12 +1,16 @@
 package com.sermas.x.men.service.forget;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.sermas.x.men.model.*;
-import java.util.*;
+import com.sermas.x.men.model.Atom;
+import com.sermas.x.men.model.Message;
+import com.sermas.x.men.model.Pair;
+import com.sermas.x.men.model.PredictiveFunction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for ReplacementComputer ensuring Algorithm 1 compliance:

@@ -1,41 +1,36 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.DerivationType;
-import com.sermas.x.men.model.Flags;
-import com.sermas.x.men.model.InMemoryMultipartFile;
-import com.sermas.x.men.model.Mutations;
-import com.sermas.x.men.model.ParametersBundle;
-import com.sermas.x.men.model.Rule;
-import com.sermas.x.men.service.DerivationTreeCaptureService;
-import com.sermas.x.men.service.FileLoadingService;
-import com.sermas.x.men.service.FileSplitterService;
-import com.sermas.x.men.service.HaskellDerivationFetcher;
-import com.sermas.x.men.service.MutationGeneratorService;
-import com.sermas.x.men.service.ZipService;
+import com.sermas.x.men.model.*;
+import com.sermas.x.men.service.*;
 import com.sermas.x.men.service.impl.DerivationModeContext;
 import com.sermas.x.men.utilities.ForgetMutationParser;
 import com.sermas.x.men.utilities.SetupKnowledgeExtractor;
 import com.sermas.x.men.utilities.TagSetter;
 import com.sermas.x.men.utilities.UtilityFunctions;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 /** Controller for mutation generation. */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Mutations")
 @Slf4j
 public class MutationController {
 
@@ -74,23 +69,55 @@ public class MutationController {
    * @return ResponseEntity indicating success or failure
    * @throws Exception if an error occurs during processing
    */
+  @Operation(
+      summary = "Generate mutations from a SPTHY file",
+      description =
+          "Generates a zipped bundle of mutation variants based on header flags. "
+              + "Use headers to select skip, replace, forget, or neglect mutations. "
+              + "Optionally enable Haskell derivation and set derivation type/depth.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/generateMutations")
   public ResponseEntity<?> generateMutations(
+      @Parameter(description = "Enable skip send mutation")
       @RequestHeader(value = "Skip-Send", required = false) Boolean skipSend,
+      @Parameter(description = "Enable skip receive mutation")
       @RequestHeader(value = "Skip-Receive", required = false) Boolean skipReceive,
+      @Parameter(description = "Enable skip send-receive mutation")
       @RequestHeader(value = "Skip-Send-Receive", required = false) Boolean skipSendReceive,
+      @Parameter(description = "Enable skip receive-send mutation")
       @RequestHeader(value = "Skip-Receive-Send", required = false) Boolean skipReceiveSend,
+      @Parameter(description = "Enable skip receive-send-receive mutation")
       @RequestHeader(value = "Skip-Receive-Send-Receive", required = false)
           Boolean skipReceiveSendReceive,
+      @Parameter(description = "Enable add mutation")
       @RequestHeader(value = "Add-Mutation", required = false) Boolean addMutation,
+      @Parameter(description = "Enable replace sub-messages mutation")
       @RequestHeader(value = "Replace-Sub-Messages", required = false) Boolean replaceSubMessages,
+      @Parameter(description = "Enable replace type mutation")
       @RequestHeader(value = "Replace-Type", required = false) Boolean replaceType,
+      @Parameter(description = "Enable true replacement (random replacement from setup knowledge)")
       @RequestHeader(value = "True-Replace", required = false) Boolean trueReplace,
+      @Parameter(description = "Enable forget mutation")
       @RequestHeader(value = "Forget-Mutation", required = false) Boolean forgetMutation,
+      @Parameter(description = "Enable neglect mutation")
       @RequestHeader(value = "Neglect-Mutation", required = false) Boolean neglectMutation,
+      @Parameter(description = "Enable Haskell derivation for forget mutations if available")
       @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate,
+      @Parameter(description = "Derivation type (e.g., DEPTH_SPECIFIED)")
       @RequestHeader(value = "Derivation-Type", required = false) String derivationType,
+      @Parameter(description = "Derivation depth when derivation type requires it")
       @RequestHeader(value = "Derivation-Depth", required = false) Integer derivationDepth,
+      @Parameter(description = "SPTHY input file", required = true)
       @RequestParam("file") MultipartFile file)
       throws Exception {
 

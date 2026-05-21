@@ -1,12 +1,17 @@
 package com.sermas.x.men.service.forget;
 
-import com.sermas.x.men.model.*;
+import com.sermas.x.men.model.Atom;
+import com.sermas.x.men.model.Derivation;
+import com.sermas.x.men.model.Message;
+import com.sermas.x.men.model.Pair;
 import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 

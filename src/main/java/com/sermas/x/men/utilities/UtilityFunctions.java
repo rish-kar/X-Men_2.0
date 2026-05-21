@@ -1,13 +1,14 @@
 package com.sermas.x.men.utilities;
 
 import com.sermas.x.men.model.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /** UtilityFunctions class provides various utility methods for manipulating and processing. */
 @Component

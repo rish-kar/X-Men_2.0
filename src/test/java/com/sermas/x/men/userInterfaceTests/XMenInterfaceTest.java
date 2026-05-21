@@ -1,18 +1,6 @@
 package com.sermas.x.men.userInterfaceTests;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.testfx.util.WaitForAsyncUtils.waitFor;
-import static org.testfx.util.WaitForAsyncUtils.waitForFxEvents;
-
 import com.sermas.x.men.user_interface.XMenInterface;
-import java.io.File;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -29,6 +17,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
+
+import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.testfx.util.WaitForAsyncUtils.waitFor;
+import static org.testfx.util.WaitForAsyncUtils.waitForFxEvents;
 
 /**
  * Test cases for XMenInterface.

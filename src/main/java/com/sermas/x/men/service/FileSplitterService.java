@@ -1,8 +1,9 @@
 package com.sermas.x.men.service;
 
+import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.stereotype.Service;
 
 /**
  * FileSplitterService class. This service is responsible for splitting a file content into three

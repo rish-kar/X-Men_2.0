@@ -1,24 +1,28 @@
 package com.sermas.x.men.controller;
 
 import com.sermas.x.men.service.HaskellDerivationFetcher;
-import java.nio.charset.StandardCharsets;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Controller for derivation tree analysis using external Haskell microservice.
  */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Derivation")
 @Slf4j
 public class HaskellDerivationController {
 
@@ -30,9 +34,24 @@ public class HaskellDerivationController {
    * @param file The SPTHY file to analyze
    * @return Derivation tree analysis result
    */
+  @Operation(
+      summary = "Analyze derivation tree",
+      description =
+          "Sends the SPTHY file to the Haskell derivation service and returns the tree output.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Derivation tree output",
+        content = @Content(mediaType = "text/plain")),
+    @ApiResponse(responseCode = "400", description = "Invalid file or input"),
+    @ApiResponse(responseCode = "503", description = "Derivation service unavailable"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping(value = "/derive", produces = MediaType.TEXT_PLAIN_VALUE)
   @SuppressWarnings("deprecation") // calls deriveAnalysis(String) intentionally; migration to deriveAnalysisFromRules tracked separately
-  public ResponseEntity<String> deriveAnalysis(@RequestParam("file") MultipartFile file) {
+  public ResponseEntity<String> deriveAnalysis(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file) {
     try {
       // Validate file
       if (file == null || file.isEmpty()) {
@@ -78,6 +97,11 @@ public class HaskellDerivationController {
    *
    * @return Service status of Haskell Service
    */
+  @Operation(summary = "Check derivation service health")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Derivation service is available"),
+    @ApiResponse(responseCode = "503", description = "Derivation service is unavailable")
+  })
   @GetMapping("/derive/health")
   public ResponseEntity<String> checkDerivationServiceHealth() {
     boolean available = haskellDerivationFetcher.isServiceAvailable();

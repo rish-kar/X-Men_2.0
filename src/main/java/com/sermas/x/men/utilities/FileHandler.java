@@ -1,11 +1,12 @@
 package com.sermas.x.men.utilities;
 
 import com.sermas.x.men.model.*;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * FileHandler class. This class is responsible for handling the arrangement of rules and variables,

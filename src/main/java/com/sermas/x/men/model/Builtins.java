@@ -1,10 +1,11 @@
 package com.sermas.x.men.model;
 
-import java.util.ArrayList;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
 
 /**
  * Represents a collection of built-in values. This class extends the Component class and provides

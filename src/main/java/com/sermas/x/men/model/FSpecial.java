@@ -1,9 +1,10 @@
 package com.sermas.x.men.model;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * FSpecial class represents a special type of object that contains a name, a group of values, and a

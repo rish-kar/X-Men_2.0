@@ -1,10 +1,11 @@
 package com.sermas.x.men.service.forget;
 
 import com.sermas.x.men.model.*;
-import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.*;
 
 /**
  * ReplacementComputer implements Algorithm 1's replacement logic:

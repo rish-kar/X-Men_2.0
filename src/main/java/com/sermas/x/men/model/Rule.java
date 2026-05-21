@@ -1,13 +1,14 @@
 package com.sermas.x.men.model;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
 
 /**
  * Rule class represents a rule in the system, containing various properties such as rule name,

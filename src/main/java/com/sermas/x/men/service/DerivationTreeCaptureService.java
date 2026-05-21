@@ -1,9 +1,10 @@
 package com.sermas.x.men.service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 /**
  * Service to capture derivation tree output that is normally printed to System.out.

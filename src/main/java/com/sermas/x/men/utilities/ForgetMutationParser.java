@@ -1,19 +1,14 @@
 package com.sermas.x.men.utilities;
 
-import com.sermas.x.men.model.Fact;
-import com.sermas.x.men.model.FSpecial;
-import com.sermas.x.men.model.Nary_app;
-import com.sermas.x.men.model.PSpecial;
-import com.sermas.x.men.model.ParametersBundle;
-import com.sermas.x.men.model.Rule;
-import com.sermas.x.men.model.Value;
+import com.sermas.x.men.model.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * ForgetMutationParser class is responsible for parsing rules to extract Forget facts. It processes

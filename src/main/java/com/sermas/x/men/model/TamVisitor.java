@@ -1,8 +1,9 @@
 package com.sermas.x.men.model;
 
-import java.util.ArrayList;
-import lombok.*;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
 
 /** This class is a visitor for a parse tree. Extends the TamarinBaseVisitor class. */
 @NoArgsConstructor

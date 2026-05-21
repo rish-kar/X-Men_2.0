@@ -8,9 +8,13 @@ import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.service.ZipService;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +24,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+
 /** Controller for skipping mutation. */
 @RestController
 @RequestMapping("/api/skip")
+@Tag(name = "Skip Mutations")
 public class SkipMutationController {
 
   @Autowired private FileLoadingService fileLoadingService;
@@ -41,8 +50,24 @@ public class SkipMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate skip send mutations",
+      description = "Creates skip send mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/sendMutations")
-  public ResponseEntity<?> skipSendMutation(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> skipSendMutation(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     ParametersBundle parametersBundle = new ParametersBundle();
@@ -79,8 +104,24 @@ public class SkipMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate skip receive mutations",
+      description = "Creates skip receive mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/receiveMutations")
-  public ResponseEntity<?> skipReceiveMutation(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> skipReceiveMutation(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     ParametersBundle parametersBundle = new ParametersBundle();
@@ -116,8 +157,24 @@ public class SkipMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate skip send-receive mutations",
+      description = "Creates skip send-receive mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/sendReceiveMutations")
-  public ResponseEntity<?> skipSendReceiveMutation(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> skipSendReceiveMutation(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     ParametersBundle parametersBundle = new ParametersBundle();
@@ -153,8 +210,24 @@ public class SkipMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate skip receive-send mutations",
+      description = "Creates skip receive-send mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/receiveSendMutations")
-  public ResponseEntity<?> skipReceiveSendMutation(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> skipReceiveSendMutation(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     ParametersBundle parametersBundle = new ParametersBundle();
@@ -190,8 +263,24 @@ public class SkipMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate skip receive-send-receive mutations",
+      description = "Creates skip receive-send-receive mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/receiveSendReceiveMutations")
-  public ResponseEntity<?> skipReceiveSendReceiveMutation(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> skipReceiveSendReceiveMutation(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     ParametersBundle parametersBundle = new ParametersBundle();

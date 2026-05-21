@@ -1,13 +1,14 @@
 package com.sermas.x.men.service.forget;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.sermas.x.men.model.Atom;
 import com.sermas.x.men.model.Message;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("ForgetContext transition behavior")
 class ForgetContextTransitionTest {

@@ -1,6 +1,9 @@
 package com.sermas.x.men.service.derivation;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * DerivationConfig defines which function symbols are allowed for projection/decomposition

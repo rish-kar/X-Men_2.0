@@ -2,13 +2,14 @@ package com.sermas.x.men.service.impl;
 
 import com.sermas.x.men.model.*;
 import com.sermas.x.men.utilities.UtilityFunctions;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * ReplaceMutationService class. This service handles the replacement of mutations in rules and

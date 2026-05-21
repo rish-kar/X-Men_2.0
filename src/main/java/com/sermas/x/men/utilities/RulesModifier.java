@@ -1,10 +1,11 @@
 package com.sermas.x.men.utilities;
 
 import com.sermas.x.men.model.*;
-import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 
 /**
  * RulesModifier class. This class is responsible for modifying rules based on certain conditions.

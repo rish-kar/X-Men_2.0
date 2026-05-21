@@ -1,47 +1,37 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.DerivationType;
-import com.sermas.x.men.model.Flags;
-import com.sermas.x.men.model.InMemoryMultipartFile;
-import com.sermas.x.men.model.Mutations;
-import com.sermas.x.men.model.ParametersBundle;
-import com.sermas.x.men.model.Rule;
-import com.sermas.x.men.service.DerivationTreeCaptureService;
-import com.sermas.x.men.service.FileLoadingService;
-import com.sermas.x.men.service.FileSplitterService;
-import com.sermas.x.men.service.HaskellDerivationFetcher;
-import com.sermas.x.men.service.MutationGeneratorService;
-import com.sermas.x.men.service.ZipService;
+import com.sermas.x.men.model.*;
+import com.sermas.x.men.service.*;
+import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
 import com.sermas.x.men.service.impl.DerivationModeContext;
 import com.sermas.x.men.service.impl.ForgetMutationStrategy;
-import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
 import com.sermas.x.men.utilities.ForgetMutationParser;
 import com.sermas.x.men.utilities.SetupKnowledgeExtractor;
 import com.sermas.x.men.utilities.TagSetter;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /** Controller for forget mutation. */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Forget Mutations")
 @Slf4j
 public class ForgetMutationController {
 
@@ -64,14 +54,38 @@ public class ForgetMutationController {
    * @param haskellActivate Optional header to activate Haskell derivation service
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate forget mutations",
+      description =
+          "Creates forget mutation variants and optionally captures derivation trees. "
+              + "Headers can tune derivation mode, maximum variants, blocking mode, "
+              + "and witness actions.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle (optionally with derivation tree)",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/forget/mutations")
   public ResponseEntity<?> forgetMutations(
+      @Parameter(description = "SPTHY input file", required = true)
       @RequestParam("file") MultipartFile file,
+      @Parameter(description = "Enable Haskell derivation if available")
       @RequestHeader(value = "Haskell-Activate", required = false) Boolean haskellActivate,
+      @Parameter(description = "Derivation type (e.g., DEPTH_SPECIFIED)")
       @RequestHeader(value = "Derivation-Type", required = false) String derivationType,
+      @Parameter(description = "Derivation depth when derivation type requires it")
       @RequestHeader(value = "Derivation-Depth", required = false) Integer derivationDepth,
+      @Parameter(description = "Max variants per rule (1-1000)")
       @RequestHeader(value = "Max-Variants-Per-Rule", required = false) Integer maxVariantsPerRule,
+      @Parameter(description = "Blocking mode: CASE1/CASE2/CASE3 or aliases")
       @RequestHeader(value = "Blocking-Mode", required = false) String blockingModeHeader,
+      @Parameter(description = "Comma-separated witness action names")
       @RequestHeader(value = "Witness-Actions", required = false) String witnessActionsHeader)
       throws Exception {
     boolean haskellWasEnabled = false;

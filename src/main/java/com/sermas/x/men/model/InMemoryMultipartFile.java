@@ -1,13 +1,14 @@
 package com.sermas.x.men.model;
 
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * InMemoryMultipartFile is an implementation of the MultipartFile interface that allows handling

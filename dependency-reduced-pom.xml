@@ -198,10 +198,6 @@
           <groupId>com.jayway.jsonpath</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>jakarta.xml.bind-api</artifactId>
-          <groupId>jakarta.xml.bind</groupId>
-        </exclusion>
-        <exclusion>
           <artifactId>json-smart</artifactId>
           <groupId>net.minidev</groupId>
         </exclusion>
@@ -321,8 +317,15 @@
       <version>3.3.5</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.6.0</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <properties>
     <java.version>21</java.version>
+    <springdoc.version>2.6.0</springdoc.version>
   </properties>
 </project>

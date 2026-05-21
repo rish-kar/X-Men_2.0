@@ -9,11 +9,13 @@ import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.service.ZipService;
 import com.sermas.x.men.utilities.TagSetter;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +25,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
+
 /** Controller for replace mutations. */
 @RestController
 @RequestMapping("/api/replace")
+@Tag(name = "Replace Mutations")
 public class ReplaceMutationController {
 
   @Autowired private FileLoadingService fileLoadingService;
@@ -46,8 +55,24 @@ public class ReplaceMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate replace sub-messages mutations",
+      description = "Creates replace sub-messages mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/subMessagesMutations")
-  public ResponseEntity<?> replaceSubMessagesMutations(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> replaceSubMessagesMutations(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);
@@ -90,8 +115,24 @@ public class ReplaceMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate replace type mutations",
+      description = "Creates replace type mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/typeMutations")
-  public ResponseEntity<?> replaceTypeMutations(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> replaceTypeMutations(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     Set<Mutations> mutationSet = EnumSet.noneOf(Mutations.class);

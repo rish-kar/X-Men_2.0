@@ -32,12 +32,21 @@
 @SET __MVNW_ERROR__=
 @SET __MVNW_PSMODULEP_SAVE=%PSModulePath%
 @SET PSModulePath=
-@FOR /F "usebackq tokens=1* delims==" %%A IN (`powershell -noprofile "& {$scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; icm -ScriptBlock ([Scriptblock]::Create((Get-Content -Raw '%~f0'))) -NoNewScope}"`) DO @(
+@REM Escape apostrophes in the script path so PowerShell's single-quoted strings
+@REM don't break when the path contains one (e.g. "King's College London").
+@REM In PowerShell, a literal ' inside '...' is written as '' (two apostrophes).
+@SET "__MVNW_DP0__=%~dp0"
+@SET "__MVNW_F0__=%~f0"
+@SET "__MVNW_DP0__=%__MVNW_DP0__:'=''%"
+@SET "__MVNW_F0__=%__MVNW_F0__:'=''%"
+@FOR /F "usebackq tokens=1* delims==" %%A IN (`powershell -noprofile "& {$scriptDir='%__MVNW_DP0__%'; $script='%__MVNW_ARG0_NAME__%'; icm -ScriptBlock ([Scriptblock]::Create((Get-Content -Raw '%__MVNW_F0__%'))) -NoNewScope}"`) DO @(
   IF "%%A"=="MVN_CMD" (set __MVNW_CMD__=%%B) ELSE IF "%%B"=="" (echo %%A) ELSE (echo %%A=%%B)
 )
 @SET PSModulePath=%__MVNW_PSMODULEP_SAVE%
 @SET __MVNW_PSMODULEP_SAVE=
 @SET __MVNW_ARG0_NAME__=
+@SET __MVNW_DP0__=
+@SET __MVNW_F0__=
 @SET MVNW_USERNAME=
 @SET MVNW_PASSWORD=
 @IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*)

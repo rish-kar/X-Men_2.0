@@ -3,8 +3,9 @@ package com.sermas.x.men.utilities;
 import com.sermas.x.men.model.Flags;
 import com.sermas.x.men.model.Mutations;
 import com.sermas.x.men.model.ParametersBundle;
-import java.util.Set;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 /**
  * Set the tags for the parameters bundle for Add and Replace Mutations.

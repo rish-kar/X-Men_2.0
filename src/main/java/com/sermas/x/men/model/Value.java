@@ -1,7 +1,11 @@
 package com.sermas.x.men.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
 import java.util.Objects;
-import lombok.*;
 
 /** Value entity representing a value in the system. */
 @Getter

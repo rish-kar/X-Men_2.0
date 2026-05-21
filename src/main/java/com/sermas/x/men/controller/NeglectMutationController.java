@@ -1,19 +1,18 @@
 package com.sermas.x.men.controller;
 
-import com.sermas.x.men.model.Flags;
-import com.sermas.x.men.model.InMemoryMultipartFile;
-import com.sermas.x.men.model.Mutations;
-import com.sermas.x.men.model.ParametersBundle;
-import com.sermas.x.men.model.Rule;
+import com.sermas.x.men.model.*;
 import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.service.ZipService;
 import com.sermas.x.men.utilities.TagSetter;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Set;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,9 +23,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Set;
+
 /** Controller for neglect mutation. */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Neglect Mutations")
 @Slf4j
 public class NeglectMutationController {
 
@@ -46,8 +51,24 @@ public class NeglectMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate neglect mutations",
+      description = "Creates neglect mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/neglect/mutations")
-  public ResponseEntity<?> neglectMutations(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> neglectMutations(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
     try {
 

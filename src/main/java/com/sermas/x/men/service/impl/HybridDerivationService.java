@@ -1,15 +1,18 @@
 package com.sermas.x.men.service.impl;
 
-import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.*;
+import com.sermas.x.men.model.Derivation;
+import com.sermas.x.men.model.Message;
+import com.sermas.x.men.model.Rule;
+import com.sermas.x.men.service.DerivationService;
 import com.sermas.x.men.service.HaskellDerivationFetcher;
-
-import java.util.ArrayList;
-import java.util.Set;
+import com.sermas.x.men.service.HaskellFormatConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * Hybrid Derivation Service that can use either: 1. Haskell-based derivation (when enabled) 2.

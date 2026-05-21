@@ -8,9 +8,13 @@ import com.sermas.x.men.service.FileLoadingService;
 import com.sermas.x.men.service.FileSplitterService;
 import com.sermas.x.men.service.MutationGeneratorService;
 import com.sermas.x.men.service.ZipService;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +24,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+
 /** Controller for add mutation. */
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Add Mutations")
 public class AddMutationController {
 
   @Autowired private FileLoadingService fileLoadingService;
@@ -41,8 +50,24 @@ public class AddMutationController {
    * @param file The file to process.
    * @return A ResponseEntity containing the zipped mutation files.
    */
+  @Operation(
+      summary = "Generate add mutations",
+      description = "Creates add-rule mutation variants from the uploaded SPTHY file.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Zipped mutation bundle",
+        content =
+            @Content(
+                mediaType = "application/zip",
+                schema = @Schema(type = "string", format = "binary"))),
+    @ApiResponse(responseCode = "400", description = "Invalid input"),
+    @ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   @PostMapping("/addMutations")
-  public ResponseEntity<?> addMutations(@RequestParam("file") MultipartFile file)
+  public ResponseEntity<?> addMutations(
+      @Parameter(description = "SPTHY input file", required = true)
+      @RequestParam("file") MultipartFile file)
       throws Exception {
 
     ParametersBundle parametersBundle = new ParametersBundle();

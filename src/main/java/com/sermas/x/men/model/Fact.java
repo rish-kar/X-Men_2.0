@@ -1,9 +1,10 @@
 package com.sermas.x.men.model;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Represents a fact in the system. A fact consists of a name, type, parameters, and flags

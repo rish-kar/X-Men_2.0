@@ -1,14 +1,16 @@
 package com.sermas.x.men.service.forget;
 
-import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.DerivationService;
+import com.sermas.x.men.model.Derivation;
+import com.sermas.x.men.model.Function;
+import com.sermas.x.men.model.Message;
 import com.sermas.x.men.service.derivation.DerivationConfig;
 import com.sermas.x.men.service.impl.DerivationServiceImpl;
-import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+
+import java.util.*;
 
 /**
  * ForgetDerivationChecker implements the core derivation checking for Algorithm 1:

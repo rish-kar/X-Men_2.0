@@ -3,10 +3,11 @@ package com.sermas.x.men.service.impl;
 import com.sermas.x.men.model.ParametersBundle;
 import com.sermas.x.men.model.Rule;
 import com.sermas.x.men.service.MutationStrategy;
-import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 
 /** ReplaceSubMessagesStrategy class. This strategy replaces sub-messages in the rules. */
 @Service

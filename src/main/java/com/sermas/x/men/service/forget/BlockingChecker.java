@@ -1,10 +1,12 @@
 package com.sermas.x.men.service.forget;
 
 import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
-import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * BlockingChecker implements the three blocking cases from the paper:

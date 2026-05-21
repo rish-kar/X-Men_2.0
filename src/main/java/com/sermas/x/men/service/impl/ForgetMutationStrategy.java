@@ -1,14 +1,21 @@
 package com.sermas.x.men.service.impl;
 
 import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.*;
-import com.sermas.x.men.service.forget.*;
+import com.sermas.x.men.service.DerivationCheckService;
+import com.sermas.x.men.service.DerivationService;
+import com.sermas.x.men.service.MutationStrategy;
+import com.sermas.x.men.service.forget.BlockingChecker;
+import com.sermas.x.men.service.forget.ForgetContext;
 import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
-import com.sermas.x.men.utilities.*;
-import java.util.*;
+import com.sermas.x.men.service.forget.ForgetDerivationChecker;
+import com.sermas.x.men.service.forget.ReplacementComputer;
+import com.sermas.x.men.utilities.SetupKnowledgeExtractor;
+import com.sermas.x.men.utilities.UtilityFunctions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
 
 /**
  * ForgetMutationStrategy implements Algorithm 1 from the paper:
@@ -227,7 +234,6 @@ public class ForgetMutationStrategy implements MutationStrategy {
               applyStringSubstitutionToFact(post, textualSub);
             }
           }
-          startRule.setTypo(Type.MUTATED);
         } else {
           // No replacement available. Per Algorithm 1: skip the send, and
           // conditionally trigger Neglect for any internal action that uses the
@@ -236,13 +242,17 @@ public class ForgetMutationStrategy implements MutationStrategy {
                    + " neglecting internal actions using the forgotten term");
           removeSendAndMatchingReceive(theoryClone, startRule, target);
           removeNeglectedActions(startRule, actionsToNeglect);
-          startRule.setTypo(Type.MUTATED);
         }
 
         // Remove Forget actions
         for (String forgotten : forgetSet) {
           removeForgetMutation(startRule, canonicalize(forgotten));
         }
+
+        // Mark the rule as mutated and tag it with the _M suffix so the output
+        // makes the mutation visible at the rule-name level.
+        startRule.setRule_name(startRule.getRule_name() + "_M");
+        startRule.setTypo(Type.MUTATED);
       }
       parametersBundle.getCollections().add(theoryClone);
       return parametersBundle;

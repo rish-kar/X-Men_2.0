@@ -1,15 +1,16 @@
 package com.sermas.x.men.service.forget;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.sermas.x.men.model.*;
-import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
 import com.sermas.x.men.service.derivation.DerivationConfig;
+import com.sermas.x.men.service.forget.ForgetContext.BlockingMode;
 import com.sermas.x.men.service.impl.DerivationServiceImpl;
-import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * End-to-end tests for Forget Mutation per Algorithm 1:
