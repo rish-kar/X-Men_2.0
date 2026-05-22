@@ -1,0 +1,819 @@
+/* ============================================================================
+ * X-Men 3.0 — UI v2 stylesheet
+ *
+ * Themes inject palette values via inline -fx-* variables on the .x-root node.
+ * Defaults match SERMAS Classic.
+ * ========================================================================== */
+
+.x-root {
+    -accent:        #A56BFF;
+    -accent-soft:   #D4B4FF;
+    -overlay:       rgba(26, 10, 48, 0.70);
+    -glass-fill:    rgba(155, 93, 229, 0.22);
+    -glass-stroke:  rgba(214, 178, 255, 0.45);
+    -text:          #F8F2FF;
+    -text-muted:    rgba(238, 222, 255, 0.78);
+    -shadow:        rgba(10, 0, 30, 0.55);
+    -fx-font-family: "Inter", "Segoe UI Variable", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* Suppress JavaFX's default blue focus ring globally. */
+.x-root .button:focused,
+.x-root .check-box:focused,
+.x-root .radio-button:focused,
+.x-root .choice-box:focused,
+.x-root .text-field:focused,
+.x-root .tab:focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.x-overlay { -fx-background-color: -overlay; }
+
+/* ============================================================================ */
+/* Generic helpers                                                              */
+/* ============================================================================ */
+
+/* Generous transparent padding around any node carrying an -fx-effect dropshadow
+ * so JavaFX never clips the shadow at the parent's content bounds. */
+.x-shadow-room {
+    -fx-padding: 26 30 36 30;
+    -fx-background-color: transparent;
+}
+
+/* Stroke colour for themed SVG icons. ladder() flips to black on light accents
+ * (e.g. Charcoal Mono) and stays white on dark accents. */
+.x-icon-themed { -fx-stroke: -text; }
+.x-cta-primary .x-icon-themed,
+.x-settings-btn .x-icon-themed { -fx-stroke: ladder(-accent, white 49%, black 50%); }
+.x-cta-primary:hover .x-icon-themed,
+.x-settings-btn:hover .x-icon-themed { -fx-stroke: ladder(-accent, white 49%, black 50%); }
+
+/* ============================================================================ */
+/* Settings button (bottom-left)                                                */
+/* ============================================================================ */
+
+.x-settings-btn {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            derive(-accent, 38%) 0%,
+            derive(-accent, 14%) 28%,
+            -accent 55%,
+            derive(-accent, -18%) 82%,
+            derive(-accent, -34%) 100%);
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
+    -fx-padding: 14 28 14 22;
+    -fx-background-radius: 999;
+    -fx-border-color: derive(-accent, 40%);
+    -fx-border-radius: 999;
+    -fx-border-width: 1.5;
+    -fx-graphic-text-gap: 12;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -shadow, 22, 0.45, 0, 6);
+}
+.x-settings-btn:hover {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            derive(-accent-soft, 22%) 0%,
+            -accent-soft 38%,
+            -accent 75%,
+            derive(-accent, -18%) 100%);
+    -fx-text-fill: ladder(-accent-soft, white 49%, black 50%);
+}
+
+/* ============================================================================ */
+/* Hero layout                                                                  */
+/* ============================================================================ */
+
+.x-hero-left {
+    -fx-padding: 30 24 80 60;
+    -fx-spacing: 22;
+    /* Top-left items but content blocks themselves are centred horizontally
+     * via x-hero-center (logo + title group). */
+    -fx-alignment: TOP_LEFT;
+}
+
+.x-hero-center {
+    -fx-alignment: CENTER;
+    -fx-spacing: 22;
+}
+
+.x-logo-wrap {
+    -fx-alignment: CENTER;
+}
+
+.x-logo-img {
+    -fx-effect: dropshadow(gaussian, -shadow, 24, 0.30, 0, 6);
+}
+
+.x-logo-slot {
+    -fx-min-width: 220;
+    -fx-min-height: 114;
+    -fx-pref-width: 220;
+    -fx-pref-height: 114;
+}
+
+.x-hero-title {
+    -fx-fill: -text;
+    -fx-font-size: 86px;
+    -fx-font-weight: 200;
+    -fx-line-spacing: -16px;
+    -fx-effect: dropshadow(gaussian, -shadow, 28, 0.40, 0, 10);
+    -fx-text-alignment: CENTER;
+}
+
+.x-hero-sub {
+    -fx-text-fill: -text;
+    -fx-font-size: 16px;
+    -fx-line-spacing: 4px;
+    -fx-padding: 4 0 0 20;
+    -fx-border-color: transparent transparent transparent -accent;
+    -fx-border-width: 0 0 0 3;
+}
+
+/* ============================================================================ */
+/* CTA buttons                                                                  */
+/* ============================================================================ */
+
+.x-cta-primary {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            derive(-accent, 38%) 0%,
+            derive(-accent, 14%) 28%,
+            -accent 55%,
+            derive(-accent, -18%) 82%,
+            derive(-accent, -34%) 100%);
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+    -fx-font-weight: 700;
+    -fx-font-size: 15px;
+    -fx-padding: 14 28 14 26;
+    -fx-background-radius: 999;
+    -fx-border-color: derive(-accent, 38%);
+    -fx-border-radius: 999;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -shadow, 20, 0.45, 0, 5);
+    -fx-graphic-text-gap: 10;
+}
+.x-cta-primary:hover {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            derive(-accent-soft, 22%) 0%,
+            -accent-soft 38%,
+            -accent 75%,
+            derive(-accent, -18%) 100%);
+    -fx-text-fill: ladder(-accent-soft, white 49%, black 50%);
+}
+.x-cta-primary:pressed {
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.50, 0, 2);
+}
+
+.x-cta-secondary {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 18%), -glass-fill);
+    -fx-text-fill: -text;
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+    -fx-padding: 12 22 12 22;
+    -fx-background-radius: 999;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 999;
+    -fx-border-width: 1.5;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 8;
+    -fx-effect: dropshadow(gaussian, -shadow, 16, 0.30, 0, 4);
+}
+.x-cta-secondary:hover {
+    -fx-text-fill: -text;
+    -fx-border-color: -accent;
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 28%), -glass-fill);
+}
+.x-cta-secondary:pressed {
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 0, 2);
+}
+
+.x-hero-tagline {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13px;
+    -fx-padding: 4 0 0 0;
+}
+
+/* ============================================================================ */
+/* Mutation Controls glass panel                                                */
+/*                                                                              */
+/* Single seamless surface — no inner sub-panels, no borders inside.            */
+/* ============================================================================ */
+
+.x-controls-wrap {
+    -fx-padding: 30 60 32 12;
+    -fx-alignment: CENTER;
+}
+
+.x-control-panel {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 14%), -glass-fill);
+    -fx-background-radius: 24;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 24;
+    -fx-border-width: 1.5;
+    -fx-padding: 28 30 24 30;
+    -fx-effect: dropshadow(gaussian, -shadow, 32, 0.35, 0, 10);
+}
+
+.x-control-title {
+    -fx-text-fill: -text;
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+}
+.x-control-sub {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13px;
+}
+
+.x-section-label {
+    -fx-text-fill: -accent-soft;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-letter-spacing: 0.18em;
+}
+
+/* Labels inside the panel — theme colour, no shadow. */
+.x-control-panel .label {
+    -fx-text-fill: -text;
+    -fx-effect: null;
+}
+
+/* GridPane carrying the mutation toggles is just a layout — no background. */
+.x-control-panel .grid-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* The legacy "glass-panel" class from main.css must not double-up here. */
+.x-control-panel .glass-panel {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-effect: null;
+}
+
+/* Theme-aware CheckBox / RadioButton — no black drop shadow. */
+.x-control-panel .check-box,
+.x-control-panel .radio-button {
+    -fx-text-fill: -text;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-effect: null;
+}
+.x-control-panel .check-box > .box,
+.x-control-panel .radio-button > .radio {
+    -fx-background-color: -glass-fill;
+    -fx-border-color: -accent-soft;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 3;
+}
+.x-control-panel .check-box:selected > .box,
+.x-control-panel .radio-button:selected > .radio {
+    -fx-background-color: -accent;
+    -fx-border-color: -accent;
+}
+.x-control-panel .check-box:selected > .box > .mark {
+    -fx-background-color: #FFFFFF;
+}
+.x-control-panel .radio-button:selected > .radio > .dot {
+    -fx-background-color: #FFFFFF;
+}
+.x-control-panel .check-box:disabled,
+.x-control-panel .radio-button:disabled {
+    -fx-opacity: 0.55;
+}
+
+.x-input,
+.x-control-panel .text-field {
+    -fx-background-color: -glass-fill;
+    -fx-text-fill: -text;
+    -fx-prompt-text-fill: -text-muted;
+    -fx-background-radius: 10;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 8 12 8 12;
+}
+
+.x-control-footer {
+    -fx-alignment: CENTER_RIGHT;
+    -fx-padding: 8 0 0 0;
+}
+
+/* ============================================================================ */
+/* Algorithm info dialog                                                        */
+/* ============================================================================ */
+
+.x-algo-panel {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-accent, 14%), -glass-fill),
+        -overlay;
+    -fx-background-radius: 22;
+    -fx-padding: 24 28 24 28;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 22;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, -shadow, 28, 0.35, 0, 8);
+}
+.x-algo-body {
+    -fx-text-fill: -text;
+    -fx-font-size: 13px;
+    -fx-line-spacing: 3px;
+}
+
+/* ============================================================================ */
+/* Settings dialog                                                              */
+/* ============================================================================ */
+
+.x-settings-scene { -fx-background-color: transparent; }
+
+/* Buttons inside the settings dialog render at ~65% opacity, but their text
+ * is bumped back to 1.0 via the .button .text rule below so labels stay
+ * crisp. The opacity drop only softens the gradient pill. */
+.x-settings-pane .x-cta-primary,
+.x-settings-pane .x-cta-secondary {
+    -fx-opacity: 0.65;
+}
+.x-settings-pane .x-cta-primary:hover,
+.x-settings-pane .x-cta-secondary:hover {
+    -fx-opacity: 0.85;
+}
+.x-settings-pane .x-cta-primary .text,
+.x-settings-pane .x-cta-secondary .text {
+    -fx-opacity: 1.55;  /* compensate for the parent's 0.65 → ~1.0 effective */
+}
+
+/* Panel: ~60% opaque overall — the theme overlay (single layer, typically
+ * 0.65–0.78 alpha) provides the see-through tint while the glass gradient
+ * on top adds a faint accent wash. -fx-opacity is intentionally NOT used
+ * because it cascades to children and would dim the text. */
+.x-settings-pane {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 18%), -glass-fill),
+        -overlay;
+    -fx-background-radius: 26;
+    -fx-padding: 30 34 30 34;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 26;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.50, 0, 12);
+}
+.x-settings-title {
+    -fx-text-fill: -text;
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+}
+.x-settings-sub {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13px;
+}
+
+/* TabPane chrome — softer accent pill, no protruding shadow. */
+.x-settings-pane .tab-pane {
+    -fx-background-color: transparent;
+    -fx-tab-min-height: 34;
+}
+.x-settings-pane .tab-pane > .tab-header-area { -fx-padding: 0; }
+.x-settings-pane .tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999;
+    -fx-padding: 6 18 6 18;
+    -fx-cursor: hand;
+}
+.x-settings-pane .tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0.04em;
+}
+.x-settings-pane .tab-pane > .tab-header-area > .headers-region > .tab:hover .tab-label {
+    -fx-text-fill: -text;
+}
+.x-settings-pane .tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            derive(-accent, 38%) 0%,
+            derive(-accent, 14%) 30%,
+            -accent 60%,
+            derive(-accent, -18%) 90%,
+            derive(-accent, -32%) 100%);
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.25, 0, 2);
+}
+.x-settings-pane .tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+    -fx-font-weight: 800;
+}
+.x-settings-pane .tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: transparent;
+}
+.x-settings-pane .tab-content-area {
+    -fx-background-color: transparent;
+    -fx-padding: 16 0 0 0;
+}
+.x-settings-pane .tab-pane:focused > .tab-header-area > .headers-region > .tab:selected
+    .focus-indicator { -fx-border-color: transparent; }
+
+/* Preferences tab — checkbox labels render with the page text colour so they
+ * remain readable on every palette, including light themes. The boxes
+ * themselves are theme-tinted glass with a strong accent border. */
+.x-settings-pane .check-box,
+.x-settings-pane .radio-button {
+    -fx-text-fill: -text;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 8 0 8 0;
+    -fx-graphic-text-gap: 12;
+}
+.x-settings-pane .check-box .text,
+.x-settings-pane .radio-button .text {
+    -fx-fill: -text;
+}
+.x-settings-pane .check-box > .box,
+.x-settings-pane .radio-button > .radio {
+    -fx-background-color: derive(-glass-fill, 26%);
+    -fx-border-color: -accent;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 3;
+}
+.x-settings-pane .check-box:selected > .box,
+.x-settings-pane .radio-button:selected > .radio {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-accent, 24%), -accent, derive(-accent, -18%));
+    -fx-border-color: derive(-accent, 28%);
+}
+.x-settings-pane .check-box:selected > .box > .mark,
+.x-settings-pane .radio-button:selected > .radio > .dot {
+    -fx-background-color: ladder(-accent, white 49%, black 50%);
+}
+.x-settings-pane .check-box:focused > .box { -fx-border-color: -accent; }
+
+/* Themed ChoiceBox + TextField (profiles row).
+ * Glass-fill stacked 3× → ~70% effective opacity, matching the dropdown. */
+.x-settings-pane .text-field,
+.x-input {
+    -fx-background-color:
+        -glass-fill,
+        -glass-fill,
+        -glass-fill;
+    -fx-text-fill: -text;
+    -fx-prompt-text-fill: -text-muted;
+    -fx-background-radius: 10;
+    -fx-border-color: -accent;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.5;
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 13px;
+}
+.x-settings-pane .text-field:focused {
+    -fx-border-color: -accent;
+}
+
+/* Profile dropdown — mirrors the .x-input text-field. Theme-tinted at
+ * ~70% effective opacity (three glass-fill layers) so it never looks grey.
+ * Both ChoiceBox AND ComboBox skins are covered. */
+.x-settings-pane .choice-box,
+.x-settings-pane .combo-box,
+.x-settings-pane .combo-box-base,
+.x-glass-choice {
+    -fx-background-color:
+        -glass-fill,
+        -glass-fill,
+        -glass-fill;
+    -fx-text-fill: -text;
+    -fx-background-radius: 10;
+    -fx-border-color: -accent;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.5;
+    -fx-padding: 4 6 4 12;
+    -fx-effect: dropshadow(gaussian, -shadow, 6, 0.18, 0, 2);
+}
+.x-settings-pane .combo-box .list-cell,
+.x-settings-pane .combo-box-base .list-cell,
+.x-glass-choice .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+.x-settings-pane .combo-box .arrow-button,
+.x-settings-pane .combo-box-base .arrow-button,
+.x-glass-choice .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4 8 4 8;
+}
+.x-settings-pane .combo-box .arrow-button .arrow,
+.x-settings-pane .combo-box-base .arrow-button .arrow,
+.x-glass-choice .arrow-button .arrow {
+    -fx-background-color: -text;
+    -fx-shape: "M0 0 L4 4 L8 0 Z";
+}
+/* The popup pane (.combo-box-popup) renders in its own window — colour
+ * variables propagate so the popup picks up the active theme. */
+.combo-box-popup .list-view,
+.x-glass-choice .list-view {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 22%), -glass-fill),
+        -overlay;
+    -fx-border-color: -accent;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 4;
+    -fx-effect: dropshadow(gaussian, -shadow, 18, 0.4, 0, 4);
+}
+.combo-box-popup .list-view .list-cell,
+.x-glass-choice .list-view .list-cell,
+.x-glass-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text;
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-background-radius: 6;
+}
+.combo-box-popup .list-view .list-cell:filled:hover,
+.x-glass-choice .list-view .list-cell:filled:hover,
+.x-glass-cell:filled:hover {
+    -fx-background-color:
+        linear-gradient(to right, derive(-accent, 14%), -accent);
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+}
+.combo-box-popup .list-view .list-cell:filled:selected,
+.x-glass-choice .list-view .list-cell:filled:selected,
+.x-glass-cell:filled:selected {
+    -fx-background-color:
+        linear-gradient(to right, -accent, derive(-accent, -14%));
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+}
+.x-settings-pane .choice-box > .label,
+.x-glass-choice > .label {
+    -fx-text-fill: -text;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+.x-settings-pane .choice-box > .open-button,
+.x-glass-choice > .open-button {
+    -fx-background-color: transparent;
+}
+.x-settings-pane .choice-box > .open-button > .arrow,
+.x-glass-choice > .open-button > .arrow {
+    -fx-background-color: -text;
+    -fx-shape: "M0 0 L4 4 L8 0 Z";
+}
+/* Choice-box popup pane — context-menu inherits the glass look. */
+.x-settings-pane .choice-box .context-menu,
+.x-glass-choice .context-menu,
+.context-menu.x-glass-menu {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 22%), -glass-fill),
+        -overlay;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 6;
+    -fx-effect: dropshadow(gaussian, -shadow, 18, 0.35, 0, 4);
+}
+.x-settings-pane .choice-box .menu-item .label,
+.x-glass-choice .menu-item .label {
+    -fx-text-fill: -text;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+}
+.x-settings-pane .choice-box .menu-item,
+.x-glass-choice .menu-item {
+    -fx-background-radius: 6;
+    -fx-padding: 6 12 6 12;
+}
+.x-settings-pane .choice-box .menu-item:focused,
+.x-glass-choice .menu-item:focused {
+    -fx-background-color:
+        linear-gradient(to right, derive(-accent, 8%), -accent, derive(-accent, -12%));
+}
+.x-settings-pane .choice-box .menu-item:focused .label,
+.x-glass-choice .menu-item:focused .label {
+    -fx-text-fill: -text;
+    -fx-font-weight: 700;
+}
+
+/* Theme swatches — solid colour-card thumbnails. */
+.x-theme-swatch {
+    -fx-background-radius: 12;
+    -fx-min-width: 112;
+    -fx-min-height: 76;
+    -fx-pref-width: 112;
+    -fx-pref-height: 76;
+    -fx-border-color: rgba(255,255,255,0.18);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 10, 0.30, 0, 3);
+}
+.x-theme-swatch:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 14, 0.40, 0, 4);
+}
+.x-theme-swatch.is-selected {
+    -fx-border-color: white;
+    -fx-border-width: 3;
+    -fx-effect: dropshadow(gaussian, -accent, 22, 0.70, 0, 0);
+}
+.x-theme-name {
+    -fx-font-size: 11.5px;
+    -fx-font-weight: 800;
+    -fx-letter-spacing: 0.02em;
+}
+
+/* ============================================================================ */
+/* Vocabulary table                                                             */
+/* ============================================================================ */
+
+/* Vocab table — theme-tinted, NEVER grey.
+ * Overrides JavaFX's default -fx-control-inner-background so the internal
+ * sheet/virtual-flow areas pick up the accent colour too. */
+.x-vocab-table {
+    -fx-control-inner-background: derive(-accent, 38%);
+    -fx-control-inner-background-alt: derive(-accent, 50%);
+    -fx-selection-bar: -accent;
+    -fx-selection-bar-non-focused: derive(-accent, -10%);
+    -fx-background-color:
+        linear-gradient(to bottom, derive(-glass-fill, 22%), -glass-fill),
+        derive(-accent, 32%);
+    -fx-border-color: -accent;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, -shadow, 14, 0.22, 0, 3);
+}
+.x-vocab-table > .virtual-flow,
+.x-vocab-table > .virtual-flow > .clipped-container,
+.x-vocab-table > .virtual-flow > .clipped-container > .sheet,
+.x-vocab-table .table-view {
+    -fx-background-color: transparent;
+}
+.x-vocab-table .column-header-background {
+    -fx-background-color:
+        linear-gradient(to bottom, derive(-accent, 14%), -accent);
+    -fx-background-radius: 14 14 0 0;
+}
+.x-vocab-table .column-header,
+.x-vocab-table .filler,
+.x-vocab-table .corner {
+    -fx-background-color: transparent;
+}
+.x-vocab-table .column-header .label {
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+    -fx-font-weight: 800;
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 0.14em;
+}
+.x-vocab-table .table-cell {
+    -fx-text-fill: ladder(derive(-accent, 38%), white 49%, black 50%);
+    -fx-font-size: 13px;
+    -fx-border-color: transparent;
+    -fx-padding: 8 10 8 10;
+}
+.x-vocab-table .table-row-cell {
+    -fx-background-color: derive(-accent, 44%);
+    -fx-table-cell-border-color: transparent;
+}
+.x-vocab-table .table-row-cell:filled:odd {
+    -fx-background-color: derive(-accent, 32%);
+}
+.x-vocab-table .table-row-cell:filled:hover {
+    -fx-background-color: derive(-accent, 18%);
+}
+.x-vocab-table .table-row-cell:filled:selected,
+.x-vocab-table .table-row-cell:filled:odd:selected {
+    -fx-background-color:
+        linear-gradient(to right, derive(-accent, 8%), -accent);
+}
+.x-vocab-table .table-row-cell:filled:selected .table-cell {
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+}
+.x-vocab-table .text-field {
+    -fx-background-color: -glass-fill;
+    -fx-text-fill: -text;
+    -fx-border-color: -accent;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 4 8 4 8;
+}
+
+/* Scroll-bars across the dialog and table. */
+.x-vocab-table .scroll-bar,
+.x-settings-pane .scroll-bar { -fx-background-color: transparent; }
+.x-vocab-table .scroll-bar .track,
+.x-settings-pane .scroll-bar .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.x-vocab-table .scroll-bar .thumb,
+.x-settings-pane .scroll-bar .thumb {
+    -fx-background-color: -accent-soft;
+    -fx-background-radius: 8;
+    -fx-background-insets: 2;
+}
+.x-vocab-table .scroll-bar .increment-button,
+.x-vocab-table .scroll-bar .decrement-button,
+.x-settings-pane .scroll-bar .increment-button,
+.x-settings-pane .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.x-vocab-table .scroll-bar .increment-arrow,
+.x-vocab-table .scroll-bar .decrement-arrow,
+.x-settings-pane .scroll-bar .increment-arrow,
+.x-settings-pane .scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-shape: " ";
+    -fx-padding: 0;
+}
+
+/* ============================================================================ */
+/* Themed toast                                                                 */
+/* ============================================================================ */
+
+.x-toast {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-accent, 16%), -accent, -glass-fill),
+        -overlay;
+    -fx-background-radius: 18;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 18;
+    -fx-border-width: 1.5;
+    -fx-padding: 16 22 16 22;
+    -fx-effect: dropshadow(gaussian, -shadow, 22, 0.45, 0, 6);
+}
+.x-toast-message {
+    -fx-text-fill: -text;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
+/* Final override: profile ComboBox should look like x-input */
+.x-settings-pane .combo-box-base.x-glass-choice {
+    -fx-background-color:
+            -glass-fill,
+            -glass-fill,
+            -glass-fill;
+    -fx-background-insets: 0;
+    -fx-background-radius: 10;
+    -fx-border-color: -accent;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.5;
+    -fx-padding: 4 6 4 12;
+}
+
+.x-settings-pane .combo-box-base.x-glass-choice > .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.x-settings-pane .combo-box-base.x-glass-choice > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.x-settings-pane .combo-box-base.x-glass-choice > .arrow-button > .arrow {
+    -fx-background-color: -text;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color:
+            -glass-fill,
+            -glass-fill,
+            -glass-fill;
+    -fx-background-insets: 0;
+    -fx-border-color: -accent;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.5;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text;
+}
+
+.combo-box-popup .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: -accent;
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+}

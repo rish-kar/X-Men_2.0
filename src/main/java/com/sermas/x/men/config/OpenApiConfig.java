@@ -31,7 +31,11 @@ import org.springframework.context.annotation.Configuration;
       @Tag(name = "Neglect Mutations", description = "Neglect mutation generation"),
       @Tag(name = "Replace Mutations", description = "Replace sub-messages or types"),
       @Tag(name = "Skip Mutations", description = "Skip send/receive mutations"),
-      @Tag(name = "Derivation", description = "Haskell derivation analysis")
+      @Tag(name = "Derivation", description = "Haskell derivation analysis"),
+      @Tag(
+          name = "Settings",
+          description =
+              "Vocabulary, theme catalogue, and pre-flight Tamarin syntax validation")
     })
 public class OpenApiConfig {}
 

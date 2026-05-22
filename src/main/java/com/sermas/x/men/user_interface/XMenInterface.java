@@ -72,6 +72,9 @@ public class XMenInterface extends Application {
   // Keep a reference to the root StackPane so we can show a glass overlay.
   private StackPane mainRoot;
 
+  // Hero logo — held so we can swap between Black.png / White.png on theme changes.
+  private ImageView heroLogo;
+
   @Override
   public void start(Stage stage) {
     StackPane splashRoot = new StackPane();
@@ -143,28 +146,116 @@ public class XMenInterface extends Application {
   }
 
   /**
-   * Builds the main scene by combining a background video (if available) and the mutation option
-   * panel.
+   * Builds the main scene using {@link MainSceneFactory} for the elevra-style hero, and docks the
+   * existing mutation-controls panel as a glass card on the right.
+   *
+   * <p>The old grid-pane scene is intentionally kept reachable via {@link #setupGridPane(Stage)}
+   * for parity, but it's now wrapped in a glass container and positioned by the factory.
    */
   private Scene createMainScene(Stage stage) {
-    StackPane root = new StackPane();
-    this.mainRoot = root;
-    Scene scene = new Scene(root, 1080, 720);
+    int serverPort = 8081;
+    MainSceneFactory.Built built =
+        MainSceneFactory.build(stage, serverPort, ignored -> openSettings(stage));
 
-    // CSS
-    URL cssUrl = getClass().getResource("/css/main.css");
-    if (cssUrl != null) {
-      scene.getStylesheets().add(cssUrl.toExternalForm());
-    } else {
-      log.error("main.css not found!");
+    this.mainRoot = built.root();
+    this.heroLogo = built.logoView();
+
+    // Build the legacy controls panel and dock it into the right-hand 65% of the layout.
+    GridPane checkboxPanel = setupGridPane(stage);
+    checkboxPanel.setMaxWidth(Double.MAX_VALUE);
+
+    // Panel header (title + sub).
+    Label panelTitle = new Label("Mutation Controls");
+    panelTitle.getStyleClass().add("x-control-title");
+    Label panelSub = new Label("Pick the mutations to generate, then hit Start.");
+    panelSub.getStyleClass().add("x-control-sub");
+    VBox panelHeader = new VBox(4, panelTitle, panelSub);
+
+    // Panel footer with "How it works" right-aligned. Icon stroke is themed via CSS
+    // (.x-icon-themed → -text), so it stays visible on every palette.
+    Button howItWorks = new Button("How it works");
+    howItWorks.getStyleClass().add("x-cta-secondary");
+    howItWorks.setGraphic(Icons.info(18, javafx.scene.paint.Color.WHITE));
+    howItWorks.setOnAction(e -> AlgorithmInfoDialog.show(stage));
+    Animations.hoverLift(howItWorks, 1.03);
+    StackPane howItWorksWrap = new StackPane(howItWorks);
+    howItWorksWrap.getStyleClass().add("x-shadow-room");
+    HBox panelFooter = new HBox(howItWorksWrap);
+    panelFooter.getStyleClass().add("x-control-footer");
+
+    VBox panelWrap = new VBox(14, panelHeader, checkboxPanel, panelFooter);
+    panelWrap.getStyleClass().add("x-control-panel");
+    panelWrap.setMaxWidth(Double.MAX_VALUE);
+    VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
+    built.controlsHost().getChildren().add(panelWrap);
+
+    // The hero scene's "Start Mutation" and "Upload File" CTAs delegate to the legacy
+    // buttons (which carry the upload / submit logic).
+    Node heroStart = built.root().lookup("#heroStart");
+    Node heroUpload = built.root().lookup("#heroUpload");
+    if (heroStart instanceof Button hs && buttonStart != null) {
+      hs.setOnAction(e -> buttonStart.fire());
+    }
+    if (heroUpload instanceof Button hu && buttonUpload != null) {
+      hu.setOnAction(e -> buttonUpload.fire());
     }
 
-    Node backgroundNode = setupMediaOrFallback(stage);
-    GridPane checkboxPanel = setupGridPane(stage);
+    Scene scene = new Scene(built.root(), 1280, 800);
 
-    root.getChildren().addAll(backgroundNode, checkboxPanel);
+    // Modern stylesheet; keep legacy main.css as a secondary so any selectors the controls
+    // panel still relies on continue to work.
+    URL v2 = getClass().getResource("/css/main-v2.css");
+    if (v2 != null) scene.getStylesheets().add(v2.toExternalForm());
+    URL legacy = getClass().getResource("/css/main.css");
+    if (legacy != null) scene.getStylesheets().add(legacy.toExternalForm());
 
     return scene;
+  }
+
+  /** Open the settings dialog and apply theme/logo/preference changes back into the scene. */
+  private void openSettings(Stage stage) {
+    int serverPort = 8081;
+    SettingsDialog dialog =
+        new SettingsDialog(
+            serverPort,
+            // 1) Live theme preview: pull the resolved theme by id and re-style the main root.
+            themeId -> {
+              try {
+                okhttp3.OkHttpClient http = new okhttp3.OkHttpClient();
+                okhttp3.Response r =
+                    http.newCall(
+                            new okhttp3.Request.Builder()
+                                .url(
+                                    "http://localhost:"
+                                        + serverPort
+                                        + "/api/settings/themes/"
+                                        + themeId)
+                                .build())
+                        .execute();
+                try (r) {
+                  if (r.body() != null && mainRoot != null) {
+                    com.fasterxml.jackson.databind.ObjectMapper m =
+                        new com.fasterxml.jackson.databind.ObjectMapper();
+                    com.sermas.x.men.config.ThemeCatalog.Theme theme =
+                        m.readValue(
+                            r.body().bytes(),
+                            com.sermas.x.men.config.ThemeCatalog.Theme.class);
+                    javafx.application.Platform.runLater(
+                        () -> {
+                          ThemeApplier.apply(mainRoot, theme);
+                          ThemeLogo.apply(heroLogo, theme);
+                        });
+                  }
+                }
+              } catch (Exception ex) {
+                log.warn("Failed to refresh theme: {}", ex.getMessage());
+              }
+            },
+            // 2) Preferences callback (logged for now).
+            prefs -> log.debug("UI preferences: {}", prefs),
+            // 3) Logo-swap on theme change (light themes → Black.png, dark → White.png).
+            theme -> javafx.application.Platform.runLater(() -> ThemeLogo.apply(heroLogo, theme)));
+    dialog.show(stage);
   }
 
   /**
@@ -253,8 +344,8 @@ public class XMenInterface extends Application {
     checkboxPanel.setVgap(36);
     checkboxPanel.setAlignment(Pos.CENTER);
 
-    // Add the glass effect style class to the panel.
-    checkboxPanel.getStyleClass().add("glass-panel");
+    // Legacy "glass-panel" styling intentionally NOT applied — the new
+    // .x-control-panel wrapper provides the single seamless glass surface.
 
     // Initialize buttons
     buttonUpload = new Button("Upload File");
@@ -282,43 +373,34 @@ public class XMenInterface extends Application {
         });
 
     // Set up HTTP request trigger for the "Start Mutation" button.
+    // Since the redesigned UI exposes a single CTA, "Start Mutation" now also
+    // handles file selection when nothing has been chosen yet: it opens a file
+    // chooser, stores the picked file, and proceeds to submit. If the user
+    // cancels the chooser, no mutation is fired.
     buttonStart.setOnAction(
         e -> {
           if (selectedFile == null) {
-            Platform.runLater(
-                () -> {
-                  Alert alert = new Alert(Alert.AlertType.WARNING);
-                  alert.setTitle("File Not Selected");
-                  alert.setHeaderText(null);
-                  alert.setContentText("Please Upload a File before Mutating");
-
-                  // Set your custom logo
-                  ImageView customLogo =
-                      new ImageView(
-                          new Image(
-                              Objects.requireNonNull(
-                                  getClass().getResourceAsStream("/images/warning_mutation.png"))));
-                  customLogo.setFitWidth(120);
-                  customLogo.setFitHeight(120);
-                  alert.setGraphic(customLogo);
-
-                  // Load the custom CSS file from resources
-                  String cssPath =
-                      Objects.requireNonNull(getClass().getResource("/css/alert.css"))
-                          .toExternalForm();
-                  DialogPane dialogPane = alert.getDialogPane();
-                  dialogPane.getStylesheets().add(cssPath);
-                  dialogPane.getStyleClass().add("my-alert");
-
-                  alert.showAndWait();
-                });
-            return;
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Select a .spthy file to mutate");
+            chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Tamarin SPTHY", "*.spthy"));
+            chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("All files", "*.*"));
+            File picked = chooser.showOpenDialog(stage);
+            if (picked == null) {
+              // User cancelled — silently abort.
+              return;
+            }
+            selectedFile = picked;
+            log.debug("Selected file via Start CTA: {}", picked.getAbsolutePath());
           }
           sendMutationRequest();
         });
 
     // Initialize check boxes.
-    String checkboxStyle = "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;";
+    // NOTE: text colour is intentionally NOT hardcoded any more — the .x-check
+    // selector in main-v2.css picks it up from the active theme's -text variable.
+    String checkboxStyle = "-fx-font-weight: 600; -fx-font-size: 14px;";
     cbSkipS = new CheckBox("Send");
     cbSkipS.setId("cbSkipS");
 
@@ -359,6 +441,8 @@ public class XMenInterface extends Application {
     cbForgetHaskell = new CheckBox("Forget Mutation using external Haskell Script");
     cbForgetHaskell.setId("cbForgetHaskell");
     cbForgetHaskell.setDisable(true); // enabled only when Forget is selected
+    cbForgetHaskell.setWrapText(true);
+    cbForgetHaskell.setMaxWidth(220);
 
     // Create radio buttons for derivation type (Forget mutation)
     derivationTypeGroup = new ToggleGroup();
@@ -455,25 +539,27 @@ public class XMenInterface extends Application {
     rbDerivationInfinite.setStyle(checkboxStyle);
     cbShowDerivationTree.setStyle(checkboxStyle);
 
-    // Use an updated CSS drop-shadow with all required parameters.
-    String labelStyle =
-        "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-effect: "
-            + "dropshadow(gaussian, rgba(0,0,0,0.8), 2, 0.5, 1, 1);";
-    Label lblSkip = new Label("Skip mutation:");
+    // Theme-aware section labels. Colour now flows from the .x-control-panel .label
+    // selector in main-v2.css (i.e. the active theme's -text variable).
+    String labelStyle = "-fx-font-weight: 700; -fx-font-size: 15px; -fx-letter-spacing: 0.04em;"
+        + "-fx-font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;";
+    Label lblSkip = new Label("Skip Mutation:");
     lblSkip.setStyle(labelStyle);
-    Label lblReplace = new Label("Replace mutation:");
+    Label lblReplace = new Label("Replace Mutation:");
     lblReplace.setStyle(labelStyle);
-    Label lblAdd = new Label("Add mutation:");
+    Label lblAdd = new Label("Add Mutation:");
     lblAdd.setStyle(labelStyle);
-    Label lblCombine = new Label("Combine mutation:");
+    Label lblCombine = new Label("Combine Mutation:");
     lblCombine.setStyle(labelStyle);
-    Label lblForget = new Label("Forget mutation:");
+    Label lblForget = new Label("Forget Mutation:");
     lblForget.setStyle(labelStyle);
 
-    Label lblForgetHaskell = new Label("Forget mutation (Haskell derivation):");
+    Label lblForgetHaskell = new Label("Forget Mutation (Haskell Derivation):");
     lblForgetHaskell.setStyle(labelStyle);
+    lblForgetHaskell.setWrapText(true);
+    lblForgetHaskell.setMaxWidth(220);
 
-    Label lblNeglect = new Label("Neglect mutation:");
+    Label lblNeglect = new Label("Neglect Mutation:");
     lblNeglect.setStyle(labelStyle);
 
     // Arrange components in rows.
@@ -482,32 +568,82 @@ public class XMenInterface extends Application {
     checkboxPanel.addRow(2, lblReplace, cbSubmessages, cbType);
     checkboxPanel.addRow(3, lblAdd, cbAdd);
     checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
-    // Forget mutation (Java derivation)
+
+    // ----- Forget mutation (Java derivation) -----
     checkboxPanel.addRow(5, lblForget, cbForget);
-    checkboxPanel.addRow(
-        6,
-        new Label(""),
-        rbDerivationLimited,
-        rbDerivationSpecified,
-        tfDerivationDepth,
-        rbDerivationInfinite);
-    checkboxPanel.addRow(7, new Label(""), cbShowDerivationTree);
-    // Forget mutation (external Haskell script)
-    checkboxPanel.addRow(8, lblForgetHaskell, cbForgetHaskell);
 
-    // Neglect
-    checkboxPanel.addRow(9, lblNeglect, cbNeglect);
+    // Derivation-mode radios in an HBox so no label ever truncates.
+    HBox derivationRadios =
+        new HBox(20, rbDerivationLimited, rbDerivationSpecified, rbDerivationInfinite);
+    derivationRadios.setAlignment(Pos.CENTER_LEFT);
+    checkboxPanel.add(new Label(""), 0, 6);
+    checkboxPanel.add(derivationRadios, 1, 6);
+    GridPane.setColumnSpan(derivationRadios, 4);
 
-    // Buttons
-    checkboxPanel.addRow(10, new Label(""), buttonUpload, buttonStart);
+    // The depth text-field appears on its own row, ONLY when "Specified Depth" is selected.
+    tfDerivationDepth.setManaged(false);
+    tfDerivationDepth.setVisible(false);
+    tfDerivationDepth.setMaxWidth(150);
+    HBox depthRow = new HBox(8, tfDerivationDepth);
+    depthRow.setAlignment(Pos.CENTER_LEFT);
+    depthRow.managedProperty().bind(tfDerivationDepth.managedProperty());
+    depthRow.visibleProperty().bind(tfDerivationDepth.visibleProperty());
+    checkboxPanel.add(new Label(""), 0, 7);
+    checkboxPanel.add(depthRow, 1, 7);
+    GridPane.setColumnSpan(depthRow, 4);
+
+    rbDerivationSpecified
+        .selectedProperty()
+        .addListener(
+            (obs, was, now) -> {
+              boolean enabled = now != null && now;
+              tfDerivationDepth.setManaged(enabled);
+              tfDerivationDepth.setVisible(enabled);
+              if (!enabled) tfDerivationDepth.setText("");
+            });
+
+    checkboxPanel.add(new Label(""), 0, 8);
+    checkboxPanel.add(cbShowDerivationTree, 1, 8);
+    GridPane.setColumnSpan(cbShowDerivationTree, 4);
+
+    // ----- Forget mutation (external Haskell script) -----
+    checkboxPanel.addRow(9, lblForgetHaskell, cbForgetHaskell);
+
+    // ----- Neglect -----
+    checkboxPanel.addRow(10, lblNeglect, cbNeglect);
+
+    // Column constraints — label column left, controls column expands.
+    javafx.scene.layout.ColumnConstraints labelCol = new javafx.scene.layout.ColumnConstraints();
+    labelCol.setMinWidth(160);
+    labelCol.setPrefWidth(180);
+    javafx.scene.layout.ColumnConstraints controlsCol1 = new javafx.scene.layout.ColumnConstraints();
+    controlsCol1.setHgrow(Priority.SOMETIMES);
+    controlsCol1.setMinWidth(150);
+    javafx.scene.layout.ColumnConstraints controlsCol2 = new javafx.scene.layout.ColumnConstraints();
+    controlsCol2.setHgrow(Priority.SOMETIMES);
+    controlsCol2.setMinWidth(150);
+    javafx.scene.layout.ColumnConstraints controlsCol3 = new javafx.scene.layout.ColumnConstraints();
+    controlsCol3.setHgrow(Priority.SOMETIMES);
+    controlsCol3.setMinWidth(150);
+    checkboxPanel
+        .getColumnConstraints()
+        .addAll(labelCol, controlsCol1, controlsCol2, controlsCol3);
+
+    // Buttons are intentionally NOT added to the legacy panel any more —
+    // the hero "Start Mutation" CTA in the redesigned scene drives the flow.
+    // The Button instances still exist and remain wired so the hero CTA can
+    // delegate to their onAction handlers (see createMainScene).
 
     return checkboxPanel;
   }
 
-  /** Sets up a button's preferred size and style. */
+  /**
+   * Sets up a button's preferred size. The legacy buttons aren't shown any more (the hero CTA
+   * delegates to them), but we still call this for backwards compatibility with old tests.
+   */
   private void setupButton(Button button) {
     button.setPrefSize(150, 40);
-    button.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;");
+    button.getStyleClass().add("x-cta-secondary");
     GridPane.setMargin(button, new Insets(20, 0, 0, 0));
   }
 

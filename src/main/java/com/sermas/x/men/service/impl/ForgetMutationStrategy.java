@@ -34,20 +34,33 @@ import java.util.*;
 @Service
 public class ForgetMutationStrategy implements MutationStrategy {
 
-  private Set<String> nonInternalActions = new HashSet<>(Set.of(
-      "Send", "Receive", "To", "H", "Fr", "Setup", "OnlyOnce", "Neq", "Roles",
-      "ChanSndS", "ChanRcvS", "Hfin", "Forget"));
+  // Override-able set; resolved lazily from the live CeremonyVocabulary on each access
+  // so users can re-target X-Men at a different naming convention at runtime.
+  private Set<String> nonInternalActionsOverride;
 
   public Set<String> getNonInternalActions() {
-    return Collections.unmodifiableSet(nonInternalActions);
+    return Collections.unmodifiableSet(currentNonInternalActions());
   }
 
   public void setNonInternalActions(Set<String> newSet) {
-    this.nonInternalActions = new HashSet<>(newSet);
+    this.nonInternalActionsOverride = (newSet == null) ? null : new HashSet<>(newSet);
   }
 
   public void addWitnessActions(Collection<String> witnessNames) {
-    if (witnessNames != null) this.nonInternalActions.addAll(witnessNames);
+    if (witnessNames == null || witnessNames.isEmpty()) return;
+    Set<String> base = new HashSet<>(currentNonInternalActions());
+    base.addAll(witnessNames);
+    this.nonInternalActionsOverride = base;
+  }
+
+  /** Live view: the override if set, otherwise the configured vocabulary. */
+  private Set<String> currentNonInternalActions() {
+    if (nonInternalActionsOverride != null) return nonInternalActionsOverride;
+    if (vocabulary != null) return vocabulary.nonInternalActions();
+    // Fallback for unit tests or contexts where the bean wasn't injected.
+    return new HashSet<>(Set.of(
+        "Send", "Receive", "To", "H", "Fr", "Setup", "OnlyOnce", "Neq", "Roles",
+        "ChanSndS", "ChanRcvS", "Hfin", "Forget"));
   }
 
   @Autowired private DerivationCheckService derivationCheckService;
@@ -57,6 +70,9 @@ public class ForgetMutationStrategy implements MutationStrategy {
   @Autowired private ForgetDerivationChecker forgetDerivationChecker;
   @Autowired private BlockingChecker blockingChecker;
   @Autowired private ReplacementComputer replacementComputer;
+
+  @Autowired(required = false)
+  private com.sermas.x.men.config.CeremonyVocabulary vocabulary;
 
   // Default blocking mode - can be configured
   private BlockingMode blockingMode = BlockingMode.CASE1_WEAK;
@@ -165,7 +181,7 @@ public class ForgetMutationStrategy implements MutationStrategy {
     if (rule.isHuman()) {
       for (Message forgottenMessage : forgottenMessages) {
         List<Fact> internalActions =
-            isMessageUsedInInternalAction(rule, forgottenMessage, nonInternalActions);
+            isMessageUsedInInternalAction(rule, forgottenMessage, currentNonInternalActions());
         if (!internalActions.isEmpty()) {
           log.info(
               "Forget triggers Neglect on rule {} - removing {} internal action(s) using forgotten message {}",

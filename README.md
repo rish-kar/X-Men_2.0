@@ -44,6 +44,7 @@
   - [Build & run the image](#build--run-the-image)
   - [Docker Compose](#docker-compose)
   - [Environment overrides](#environment-overrides)
+- [Settings, Vocabulary & Themes](#-settings-vocabulary--themes)
 - [Configuration](#-configuration)
 - [Haskell Derivation Service](#-haskell-derivation-service)
 - [Project Structure](#-project-structure)
@@ -538,6 +539,88 @@ docker run --rm -p 9090:9090 \
   -e DERIVATION_SERVICE_URL=http://host.docker.internal:9091 \
   x-men:latest
 ```
+
+---
+
+## 🎨 Settings, Vocabulary & Themes
+
+X-Men ships with a runtime-mutable settings layer so the same tool can be re-targeted at
+different naming conventions and re-skinned with a new colour palette **without changing
+any code**.
+
+### 🗣️ Vocabulary (Level 1 generalisation)
+
+Every "hardcoded" word like `Send`, `Receive`, `Forget`, `State`, `Out`, `In` lives in
+[`src/main/resources/vocabulary.yaml`](src/main/resources/vocabulary.yaml). The Forget
+mutation reads its non-internal action set from there, and the file binds to a Spring
+`@ConfigurationProperties` bean (`CeremonyVocabulary`) that the Settings API can mutate at
+runtime.
+
+| Endpoint | What it does |
+| --- | --- |
+| `GET /api/settings/vocabulary` | Read the live vocabulary. |
+| `POST /api/settings/vocabulary` | Patch the live vocabulary (partial JSON allowed). |
+| `POST /api/settings/vocabulary/reset` | Restore built-in defaults. |
+| `GET /api/settings/vocabulary/export` | Download the active vocabulary as `vocabulary.yaml`. |
+| `POST /api/settings/vocabulary/import` | Upload a YAML file (`multipart/form-data` field `file`). |
+
+### 🎨 Themes (15 built-in palettes)
+
+[`src/main/resources/themes.yaml`](src/main/resources/themes.yaml) ships fifteen named
+themes — Garden Mint, Midnight Violet, Ocean Cobalt, Sunset Coral, Amber Grove, Rose
+Quartz, Forest Emerald, Cyber Teal, Solar Yellow, Indigo Night, Lavender Mist, Charcoal
+Mono, Paper Light, SERMAS Classic, Arctic Ice.
+
+Each theme controls the accent colour, glass-panel shade, overlay tone, and text colour
+all at once. Switching a theme is a single HTTP call:
+
+```bash
+curl -X POST http://localhost:8081/api/settings/themes/active \
+  -H "Content-Type: application/json" \
+  -d '{"id":"midnight-violet"}'
+```
+
+| Endpoint | What it does |
+| --- | --- |
+| `GET /api/settings/themes` | List all 15 themes + the active id. |
+| `GET /api/settings/themes/active` | Resolve the active theme. |
+| `POST /api/settings/themes/active` | Switch the active theme by id. |
+| `GET /api/settings/themes/{id}` | Look up one theme. |
+
+### ✅ Pre-flight Tamarin syntax validation
+
+Upload a `.spthy` file to the validator before kicking off a mutation run. The validator
+performs a structural check (mandatory `theory … begin … end` envelope, balanced
+delimiters) followed by the full ANTLR parse. Errors come back with line and column
+numbers in a JSON body.
+
+```bash
+curl -X POST http://localhost:8081/api/settings/validate \
+  -F "file=@Bank_revised_new.spthy"
+```
+
+### 🖥️ Native UI
+
+The JavaFX UI exposes all of the above through a redesigned hero scene (glass panels +
+gradient CTAs + pill nav) plus a dedicated **Settings** dialog (gear icon, top-right).
+The dialog has three tabs:
+
+| Tab | Contents |
+| --- | --- |
+| **Vocabulary** | Editable table of every key/value, with **Save · Reset · Export YAML · Import YAML**. |
+| **Themes** | The 15 palette swatches; clicking one re-tints the whole UI instantly. |
+| **Preferences** | UI toggles — validate on upload, animations, derivation overlay, log trimming. |
+
+### Snapshot in one call
+
+Need every setting at once (for a new UI client)?
+
+```bash
+curl http://localhost:8081/api/settings
+```
+
+Returns `{ "vocabulary": …, "themes": { "active": …, "catalog": [...] } }` in a single
+request.
 
 ---
 

@@ -1,6 +1,9 @@
 spring:
   config:
-    import: optional:file:.env[.properties]
+    import:
+      - optional:file:.env[.properties]
+      - classpath:vocabulary.yaml
+      - classpath:themes.yaml
   application:
     name: ${APP_NAME:X-Men}
   main:

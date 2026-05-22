@@ -54,6 +54,12 @@
             <version>2.11.0</version>
         </dependency>
 
+        <!-- Jackson YAML for runtime vocabulary/theme config import-export -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+
         <!-- ANTLR -->
         <dependency>
             <groupId>org.antlr</groupId>

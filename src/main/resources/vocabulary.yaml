@@ -1,0 +1,68 @@
+# X-Men Ceremony Vocabulary
+# -------------------------------------------------------------------
+# Maps semantic roles (e.g. "the send action") to the concrete fact
+# names a ceremony specification uses. Edit this file (or use the
+# Settings UI / Settings API) to make X-Men recognise a different
+# naming convention without touching any Java code.
+#
+# Every key has a sensible default that matches the X-Men 1.0/2.0
+# Tamarin convention. Anything you don't override falls back to the
+# default at runtime.
+# -------------------------------------------------------------------
+
+xmen:
+  vocabulary:
+
+    # ---------------------------------------------------------------
+    # Action names (what appears between --[ ... ]-> in a rule)
+    # ---------------------------------------------------------------
+    actions:
+      send:          "Send"           # H sends m to A
+      receive:       "Receive"        # H receives m from A
+      forget:        "Forget"         # H forgets a message
+      human-marker:  "H"              # marks a rule as human-driven
+      setup:         "Setup"          # ceremony setup action
+      fresh:         "Fr"             # fresh-value declaration
+
+      # control / system actions that should never be classified as
+      # "internal cognitive actions" by the Forget strategy.
+      core-actions:
+        - "Send"
+        - "Receive"
+        - "To"
+        - "H"
+        - "Fr"
+        - "Setup"
+        - "OnlyOnce"
+        - "Neq"
+        - "Roles"
+        - "ChanSndS"
+        - "ChanRcvS"
+        - "Hfin"
+        - "Forget"
+
+    # ---------------------------------------------------------------
+    # Fact families (what appears inside [ ... ] on either side of a rule)
+    # ---------------------------------------------------------------
+    facts:
+      state:                ["State"]
+      outbound-channels:    ["Out", "SndS"]
+      inbound-channels:     ["In",  "RcvS"]
+      fresh:                ["Fr"]
+
+    # ---------------------------------------------------------------
+    # Naming conventions
+    # ---------------------------------------------------------------
+    adornments:
+      fresh-prefix:   "~"     # Tamarin-style fresh-value prefix
+      public-prefix:  "$"     # Tamarin-style public-name prefix
+      persistent-prefix: "!"  # marks a Tamarin persistent fact
+
+    # ---------------------------------------------------------------
+    # Channel modes
+    # ---------------------------------------------------------------
+    channels:
+      insecure:     "insec"
+      confidential: "conf"
+      authentic:    "auth"
+      secure:       "sec"
