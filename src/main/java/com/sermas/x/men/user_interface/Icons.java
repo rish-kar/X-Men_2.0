@@ -38,6 +38,36 @@ public final class Icons {
     return strokeIcon(d, size, stroke);
   }
 
+  /**
+   * Friendly chat-bot face — rounded head, antenna, two eyes. Used as the
+   * trigger for the X-Men assistant button so it reads as an AI bot rather
+   * than the "info" glyph it used to share with help dialogs.
+   */
+  public static SVGPath chatBot(double size, Color stroke) {
+    String d =
+        "M12 3 v2 "
+            + "M9 5 h6 a3 3 0 0 1 3 3 v7 a3 3 0 0 1-3 3 h-3 l-3 3 v-3 h-0 a3 3 0 0 1-3-3 v-7 a3 3 0 0 1 3-3 z "
+            + "M9.5 11 a1 1 0 1 0 0 0.01 z "
+            + "M14.5 11 a1 1 0 1 0 0 0.01 z";
+    return strokeIcon(d, size, stroke);
+  }
+
+  /** Trash-can icon used to delete chat threads. */
+  public static SVGPath trash(double size, Color stroke) {
+    String d =
+        "M3 6 h18 M8 6 v-2 a2 2 0 0 1 2-2 h4 a2 2 0 0 1 2 2 v2 "
+            + "M5 6 l1 14 a2 2 0 0 0 2 2 h8 a2 2 0 0 0 2-2 l1-14 "
+            + "M10 11 v6 M14 11 v6";
+    return strokeIcon(d, size, stroke);
+  }
+
+  /** Download arrow icon. */
+  public static SVGPath download(double size, Color stroke) {
+    String d =
+        "M12 3 v12 M7 10 l5 5 l5-5 M5 19 h14";
+    return strokeIcon(d, size, stroke);
+  }
+
   /* ------------------------------------------------------------------ */
   /*  Internal                                                          */
   /* ------------------------------------------------------------------ */

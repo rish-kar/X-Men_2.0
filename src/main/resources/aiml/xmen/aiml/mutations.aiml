@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+    <!--
+      Per-mutation explanations. Atomic categories — one mutation per
+      <pattern> — phrased as the assistant's own knowledge. No tables, no
+      diagrams, no source citations. Authored follow-ups end every template.
+    -->
+
+    <!-- ===== Catalog ===== -->
+
+    <category>
+        <pattern>WHAT MUTATIONS ARE AVAILABLE</pattern>
+        <template><![CDATA[There are twelve mutations, grouped into six families:
+
+• Skip — remove a single Send, Receive, or fixed pair of steps.
+• Add — inject a fresh Send step into the protocol flow.
+• Replace — swap a message component for a different one of the same shape.
+• Combine — combine an addition with an existing step instead of inserting it.
+• Forget — remove a piece of knowledge from an agent's state, then propagate the consequences.
+• Neglect — mark a knowledge fact as derivable but unused, so the protocol carries on without it.
+
+Each one stresses the protocol differently. Pick one and I will explain what it preserves and what it can break.
+
+[[FOLLOWUPS]] What is Skip? | What is Add? | What is Replace? | What is Forget?]]></template>
+    </category>
+
+    <category><pattern>LIST MUTATIONS</pattern><template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template></category>
+    <category><pattern>WHAT ARE THE MUTATIONS</pattern><template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template></category>
+    <category><pattern>SHOW ME THE MUTATIONS</pattern><template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template></category>
+    <category><pattern>HOW MANY MUTATIONS ARE THERE</pattern><template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template></category>
+    <category><pattern>MUTATIONS</pattern><template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template></category>
+
+    <!-- ===== Skip family ===== -->
+
+    <category>
+        <pattern>WHAT IS SKIP</pattern>
+        <template><![CDATA[Skip removes a single step from a protocol role and re-checks whether the security goal still holds without it. It is the cleanest way to ask "is this step actually load-bearing?"
+
+There are five variants: Skip Send, Skip Receive, Skip Send-Receive, Skip Receive-Send, and Skip Receive-Send-Receive. The pair-skip variants remove a tightly coupled exchange together, so the role still type-checks after the change.
+
+[[FOLLOWUPS]] When should I use Skip? | What is Skip Send? | What is Skip Send-Receive? | How is Skip different from Forget?]]></template>
+    </category>
+
+    <category><pattern>HOW DOES SKIP WORK</pattern><template><srai>WHAT IS SKIP</srai></template></category>
+    <category><pattern>EXPLAIN SKIP</pattern><template><srai>WHAT IS SKIP</srai></template></category>
+    <category><pattern>SKIP</pattern><template><srai>WHAT IS SKIP</srai></template></category>
+    <category><pattern>SKIP MUTATION</pattern><template><srai>WHAT IS SKIP</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS SKIP SEND</pattern>
+        <template><![CDATA[Skip Send drops a single Send action from a role. The agent moves on as if the message had been sent, but no message ever reaches the network — so the matching Receive on the other side will never fire on its own.
+
+Use it when you want to test whether a confirmation or acknowledgement is genuinely required for the security goal, or whether the protocol still authenticates without it.
+
+[[FOLLOWUPS]] What is Skip Receive? | What is Skip Send-Receive? | When should I use Skip?]]></template>
+    </category>
+
+    <category><pattern>SKIP SEND</pattern><template><srai>WHAT IS SKIP SEND</srai></template></category>
+    <category><pattern>HOW DOES SKIP SEND WORK</pattern><template><srai>WHAT IS SKIP SEND</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS SKIP RECEIVE</pattern>
+        <template><![CDATA[Skip Receive drops a Receive action: the agent proceeds without ever consuming the incoming message. The values that would have come from that message stay unbound, which often forces the role to commit on assumptions instead of evidence.
+
+It is a fast way to surface protocols that rely on implicit trust in inbound data — if Skip Receive does not break the property, that data was never security-relevant.
+
+[[FOLLOWUPS]] What is Skip Send? | What is Skip Receive-Send? | When should I use Skip?]]></template>
+    </category>
+
+    <category><pattern>SKIP RECEIVE</pattern><template><srai>WHAT IS SKIP RECEIVE</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS SKIP SEND RECEIVE</pattern>
+        <template><![CDATA[Skip Send-Receive removes a paired send-then-receive exchange in one go. Because it drops both halves, the role's state after the skip is still type-consistent — but a whole round-trip never happens.
+
+This is the right variant when a single Send and its expected reply are tightly coupled (challenge/response, request/ack). Removing just one half would leave dangling variables; removing both tests whether the round-trip itself was load-bearing.
+
+[[FOLLOWUPS]] What is Skip Receive-Send? | What is Skip Receive-Send-Receive? | When should I use Skip?]]></template>
+    </category>
+
+    <category><pattern>SKIP SEND RECEIVE</pattern><template><srai>WHAT IS SKIP SEND RECEIVE</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS SKIP RECEIVE SEND</pattern>
+        <template><![CDATA[Skip Receive-Send removes a receive-then-send pair: the agent skips processing an incoming message and the reply it would have triggered. Useful for testing whether reactive replies — acknowledgements, forwarding, confirmations — are essential to the goal or merely operational.
+
+[[FOLLOWUPS]] What is Skip Send-Receive? | What is Skip Receive-Send-Receive? | When should I use Skip?]]></template>
+    </category>
+
+    <category><pattern>SKIP RECEIVE SEND</pattern><template><srai>WHAT IS SKIP RECEIVE SEND</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS SKIP RECEIVE SEND RECEIVE</pattern>
+        <template><![CDATA[Skip Receive-Send-Receive removes a three-step burst: an inbound message, the outbound reply it triggers, and the follow-up confirmation. It is the heaviest Skip variant and is meant for short challenge-response-confirm sequences.
+
+If the goal still holds after this, that whole exchange contributes nothing to the security argument — which is a strong (and often surprising) signal.
+
+[[FOLLOWUPS]] What is Skip Send-Receive? | When should I use Skip?]]></template>
+    </category>
+
+    <category><pattern>SKIP RECEIVE SEND RECEIVE</pattern><template><srai>WHAT IS SKIP RECEIVE SEND RECEIVE</srai></template></category>
+
+    <category>
+        <pattern>WHEN SHOULD I USE SKIP</pattern>
+        <template><![CDATA[Reach for Skip when you want to find load-bearing steps. Concretely:
+
+• You suspect a step is ceremonial (logging, courtesy ack) and want to prove it.
+• You are auditing a protocol for minimality before publication.
+• You want a cheap baseline before running heavier mutations like Forget.
+
+Skip is the lightest mutation and runs fastest, so it is a good first sweep.
+
+[[FOLLOWUPS]] What is Skip? | Which mutation should I pick? | How is Skip different from Forget?]]></template>
+    </category>
+
+    <!-- ===== Add ===== -->
+
+    <category>
+        <pattern>WHAT IS ADD</pattern>
+        <template><![CDATA[Add injects a fresh Send action into a role. The new step transmits a synthesised message — typically a fresh nonce or a re-broadcast of state — at a point where the original protocol stayed silent.
+
+It is the mirror image of Skip: instead of asking "is this step necessary?", Add asks "would an extra message here weaken anything?" If a leak emerges, the role is over-sharing relative to its goal.
+
+[[FOLLOWUPS]] When should I use Add? | What is Combine? | How is Add different from Replace?]]></template>
+    </category>
+
+    <category><pattern>ADD</pattern><template><srai>WHAT IS ADD</srai></template></category>
+    <category><pattern>ADD MUTATION</pattern><template><srai>WHAT IS ADD</srai></template></category>
+    <category><pattern>HOW DOES ADD WORK</pattern><template><srai>WHAT IS ADD</srai></template></category>
+    <category><pattern>EXPLAIN ADD</pattern><template><srai>WHAT IS ADD</srai></template></category>
+
+    <category>
+        <pattern>WHEN SHOULD I USE ADD</pattern>
+        <template><![CDATA[Use Add when you care about over-disclosure: leak detection, side-channel checks, or any scenario where a well-meaning implementer might log "one extra thing" and quietly break secrecy.
+
+It is also useful before deployment changes — if Add a debug echo breaks confidentiality in the model, it will break it in production too.
+
+[[FOLLOWUPS]] What is Add? | What is Combine? | Which mutation should I pick?]]></template>
+    </category>
+
+    <!-- ===== Replace ===== -->
+
+    <category>
+        <pattern>WHAT IS REPLACE</pattern>
+        <template><![CDATA[Replace swaps one component of a message for another of the same shape — same type, same arity — so the protocol still parses but now carries a different value. There are two flavours:
+
+• Replace Sub Messages — substitute a sub-term inside an existing message (e.g., swap one nonce for another).
+• Replace Type — substitute a value of one type for a value of the same type from elsewhere in the trace.
+
+Both ask the same question: does the protocol rely on the identity of this value, or just on its shape?
+
+[[FOLLOWUPS]] What is Replace Sub Messages? | What is Replace Type? | When should I use Replace?]]></template>
+    </category>
+
+    <category><pattern>REPLACE</pattern><template><srai>WHAT IS REPLACE</srai></template></category>
+    <category><pattern>REPLACE MUTATION</pattern><template><srai>WHAT IS REPLACE</srai></template></category>
+    <category><pattern>HOW DOES REPLACE WORK</pattern><template><srai>WHAT IS REPLACE</srai></template></category>
+    <category><pattern>EXPLAIN REPLACE</pattern><template><srai>WHAT IS REPLACE</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS REPLACE SUB MESSAGES</pattern>
+        <template><![CDATA[Replace Sub Messages digs inside a structured message and swaps one of its components — for instance, replacing the nonce inside an encrypted payload with a different nonce already known to the agent. The outer structure is preserved; only the chosen sub-term changes.
+
+It is the surgical variant of Replace: useful when you suspect a particular field is doing the security work and want to test that hypothesis in isolation.
+
+[[FOLLOWUPS]] What is Replace Type? | When should I use Replace? | What is Replace?]]></template>
+    </category>
+
+    <category><pattern>REPLACE SUB MESSAGES</pattern><template><srai>WHAT IS REPLACE SUB MESSAGES</srai></template></category>
+    <category><pattern>SUB MESSAGES</pattern><template><srai>WHAT IS REPLACE SUB MESSAGES</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS REPLACE TYPE</pattern>
+        <template><![CDATA[Replace Type substitutes one whole message value with another of the same type from the agent's knowledge. The shape is preserved, but the semantic role changes — e.g., a session key gets replaced by a long-term key of the same type.
+
+This is the variant that exposes type-confusion attacks: protocols that treat "any value of type T" as interchangeable when they shouldn't.
+
+[[FOLLOWUPS]] What is Replace Sub Messages? | When should I use Replace? | What is Replace?]]></template>
+    </category>
+
+    <category><pattern>REPLACE TYPE</pattern><template><srai>WHAT IS REPLACE TYPE</srai></template></category>
+
+    <category>
+        <pattern>WHEN SHOULD I USE REPLACE</pattern>
+        <template><![CDATA[Pick Replace when you want to test whether identity matters or only shape does. Typical cases:
+
+• Hunting type-confusion bugs (Replace Type).
+• Checking whether a specific nonce or key is essential (Replace Sub Messages).
+• Validating that authentication actually binds to a value, not to a slot.
+
+[[FOLLOWUPS]] What is Replace? | What is Replace Type? | Which mutation should I pick?]]></template>
+    </category>
+
+    <!-- ===== Combine ===== -->
+
+    <category>
+        <pattern>WHAT IS COMBINE</pattern>
+        <template><![CDATA[Combine is a structural variant of Add. Instead of inserting a new Send as a standalone step, it folds the new payload into an existing message — attaching it to a neighbouring Send. Two modes:
+
+• Combine in Addition — keep the original Add step and also fold its payload into a neighbour.
+• Combine Only — skip the standalone Add entirely and only fold the payload in.
+
+Combine is how you test message-piggybacking: would shipping this data alongside an existing message create the same problem (or a different one) than sending it on its own?
+
+[[FOLLOWUPS]] What is Combination in Addition? | What is Combination Only? | What is Add?]]></template>
+    </category>
+
+    <category><pattern>COMBINE</pattern><template><srai>WHAT IS COMBINE</srai></template></category>
+    <category><pattern>COMBINE MUTATION</pattern><template><srai>WHAT IS COMBINE</srai></template></category>
+    <category><pattern>HOW DOES COMBINE WORK</pattern><template><srai>WHAT IS COMBINE</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS COMBINATION IN ADDITION</pattern>
+        <template><![CDATA[Combination in Addition keeps the new Add step and additionally piggybacks its payload onto a neighbouring message. The mutant therefore carries the same fact twice — once standalone, once folded in.
+
+Use it to compare two delivery strategies side by side: does the issue come from sending the fact at all, or specifically from sending it bundled?
+
+[[FOLLOWUPS]] What is Combination Only? | What is Combine? | What is Add?]]></template>
+    </category>
+
+    <category><pattern>COMBINATION IN ADDITION</pattern><template><srai>WHAT IS COMBINATION IN ADDITION</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS COMBINATION ONLY</pattern>
+        <template><![CDATA[Combination Only drops the standalone Add step entirely and just folds the would-be payload into an adjacent message. There is no extra round-trip — the new content rides along on an existing one.
+
+This is the variant that reveals problems caused by message coupling rather than by message count.
+
+[[FOLLOWUPS]] What is Combination in Addition? | What is Combine? | What is Add?]]></template>
+    </category>
+
+    <category><pattern>COMBINATION ONLY</pattern><template><srai>WHAT IS COMBINATION ONLY</srai></template></category>
+
+    <!-- ===== Forget ===== -->
+
+    <category>
+        <pattern>WHAT IS FORGET</pattern>
+        <template><![CDATA[Forget removes a piece of knowledge from an agent's state mid-run — as if the agent had simply lost or discarded that value — and then propagates the consequences forward. Any later step that depended on the forgotten value has to re-derive it from what the agent still knows; if it cannot, that step is blocked and the trace is pruned.
+
+In effect, Forget asks: "if this agent loses this fact, can the rest of the protocol still complete?" The interesting cases are the ones where it can — because that means the fact was redundant and the protocol is hiding spare derivation paths.
+
+[[FOLLOWUPS]] When should I use Forget? | What is the forget set? | What is a blocked derivation? | How is Forget different from Neglect?]]></template>
+    </category>
+
+    <category><pattern>FORGET</pattern><template><srai>WHAT IS FORGET</srai></template></category>
+    <category><pattern>FORGET MUTATION</pattern><template><srai>WHAT IS FORGET</srai></template></category>
+    <category><pattern>HOW DOES FORGET WORK</pattern><template><srai>WHAT IS FORGET</srai></template></category>
+    <category><pattern>EXPLAIN FORGET</pattern><template><srai>WHAT IS FORGET</srai></template></category>
+    <category><pattern>HOW DOES THE FORGET MUTATION WORK</pattern><template><srai>WHAT IS FORGET</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS THE FORGET SET</pattern>
+        <template><![CDATA[The forget set is the bag of values you mark as lost. Once a fact is in the set, the agent no longer has it in state, and any rule that would have used it must derive it from the rest of the agent's knowledge instead.
+
+You can populate the forget set with a single key, a whole class of facts, or a list — the analysis just iterates: for each derivation attempt, is the missing fact still reachable?
+
+[[FOLLOWUPS]] What is a blocked derivation? | What is Forget? | When should I use Forget?]]></template>
+    </category>
+
+    <category><pattern>FORGET SET</pattern><template><srai>WHAT IS THE FORGET SET</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS A BLOCKED DERIVATION</pattern>
+        <template><![CDATA[A blocked derivation is what happens when an agent tries to reconstruct a forgotten value but cannot — every candidate derivation path either consumes another forgotten fact or hits a primitive the agent never had. That branch of the trace dies, the rule cannot fire, and the protocol cannot continue from there.
+
+Blocked derivations are the point of Forget: they tell you exactly which downstream steps were silently depending on the forgotten value.
+
+[[FOLLOWUPS]] What is the forget set? | What is Forget? | When should I use Forget?]]></template>
+    </category>
+
+    <category><pattern>BLOCKED DERIVATION</pattern><template><srai>WHAT IS A BLOCKED DERIVATION</srai></template></category>
+
+    <category>
+        <pattern>WHEN SHOULD I USE FORGET</pattern>
+        <template><![CDATA[Forget is the right choice when you want to model realistic state loss or stress-test redundancy:
+
+• Device reboots, session-cache eviction, key rotation — anywhere an agent might lose a value mid-run.
+• Confirming that a critical secret has no alternative derivation path (if Forget on the secret does not block downstream rules, you have a leak).
+• Auditing protocols that brag about "graceful degradation" — Forget tells you whether the graceful path is actually secure.
+
+Pair it with the derivation tree option to see exactly which alternative paths the tool tried before declaring a block.
+
+[[FOLLOWUPS]] What is Forget? | What is a blocked derivation? | How is Forget different from Neglect?]]></template>
+    </category>
+
+    <category>
+        <pattern>HOW IS FORGET DIFFERENT FROM NEGLECT</pattern>
+        <template><![CDATA[They look similar at a glance, but the question they ask is different.
+
+• Forget says the fact is gone. Any rule that needs it must re-derive it from scratch, and if it cannot, the run dies.
+• Neglect says the fact is still derivable in principle, but the agent does not use it on this run — so any rule that gates on its presence fires anyway, just with a substitute value.
+
+Forget exposes derivation gaps; Neglect exposes assumption gaps. Use Forget to check whether knowledge is essential, Neglect to check whether the agent's checks are essential.
+
+[[FOLLOWUPS]] What is Forget? | What is Neglect? | Which mutation should I pick?]]></template>
+    </category>
+
+    <category><pattern>FORGET VS NEGLECT</pattern><template><srai>HOW IS FORGET DIFFERENT FROM NEGLECT</srai></template></category>
+    <category><pattern>DIFFERENCE BETWEEN FORGET AND NEGLECT</pattern><template><srai>HOW IS FORGET DIFFERENT FROM NEGLECT</srai></template></category>
+
+    <!-- ===== Neglect ===== -->
+
+    <category>
+        <pattern>WHAT IS NEGLECT</pattern>
+        <template><![CDATA[Neglect marks a knowledge fact as derivable-but-unused: the agent still has it (or could derive it), but on this run skips the check that would normally consume it. The downstream rule fires regardless, often with a placeholder value substituted in.
+
+In short, Neglect models implementations that "trust by default" — the value is there, the check is just not enforced. If your security goal still holds after Neglect, the check was redundant. If it breaks, the check was load-bearing and any implementation that drops it is exploitable.
+
+[[FOLLOWUPS]] When should I use Neglect? | How is Forget different from Neglect? | What is Forget?]]></template>
+    </category>
+
+    <category><pattern>NEGLECT</pattern><template><srai>WHAT IS NEGLECT</srai></template></category>
+    <category><pattern>NEGLECT MUTATION</pattern><template><srai>WHAT IS NEGLECT</srai></template></category>
+    <category><pattern>HOW DOES NEGLECT WORK</pattern><template><srai>WHAT IS NEGLECT</srai></template></category>
+    <category><pattern>EXPLAIN NEGLECT</pattern><template><srai>WHAT IS NEGLECT</srai></template></category>
+
+    <category>
+        <pattern>WHEN SHOULD I USE NEGLECT</pattern>
+        <template><![CDATA[Neglect is for auditing skipped-check vulnerabilities — places where a real implementation might fail to verify a tag, signature, or freshness value while the formal model assumes it always does.
+
+If your team is shipping a protocol whose security relies on "the receiver checks X", Neglect tells you the cost of that assumption being wrong.
+
+[[FOLLOWUPS]] What is Neglect? | How is Forget different from Neglect? | Which mutation should I pick?]]></template>
+    </category>
+
+    <!-- ===== Comparisons ===== -->
+
+    <category>
+        <pattern>HOW IS SKIP DIFFERENT FROM FORGET</pattern>
+        <template><![CDATA[Skip is structural: a whole step disappears from the role.
+Forget is semantic: the step stays, but a piece of knowledge it depends on is gone.
+
+So Skip asks "is the step necessary?" and Forget asks "is the knowledge necessary?" — different questions, sometimes overlapping answers. Skip is cheaper; Forget is more precise.
+
+[[FOLLOWUPS]] What is Skip? | What is Forget? | Which mutation should I pick?]]></template>
+    </category>
+
+    <category><pattern>SKIP VS FORGET</pattern><template><srai>HOW IS SKIP DIFFERENT FROM FORGET</srai></template></category>
+
+    <category>
+        <pattern>HOW IS ADD DIFFERENT FROM REPLACE</pattern>
+        <template><![CDATA[Add introduces a new message that did not exist in the original protocol. Replace keeps the message count the same but changes the content of an existing message.
+
+Add probes for over-disclosure ("does an extra send leak something?"). Replace probes for value-binding ("does this protocol care which value goes here, or just that something of the right shape does?").
+
+[[FOLLOWUPS]] What is Add? | What is Replace? | Which mutation should I pick?]]></template>
+    </category>
+
+    <category><pattern>ADD VS REPLACE</pattern><template><srai>HOW IS ADD DIFFERENT FROM REPLACE</srai></template></category>
+
+</aiml>

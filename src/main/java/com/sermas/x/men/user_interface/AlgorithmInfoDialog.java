@@ -90,9 +90,7 @@ public final class AlgorithmInfoDialog {
 
     StackPane root = new StackPane(card);
     root.getStyleClass().add("x-root");
-    if (owner != null && owner.getScene() != null && owner.getScene().getRoot() != null) {
-      root.setStyle(owner.getScene().getRoot().getStyle());
-    }
+    root.setStyle(ThemedToast.transparentPopupStyleFrom(owner));
 
     Scene scene = new Scene(root);
     scene.setFill(Color.TRANSPARENT);

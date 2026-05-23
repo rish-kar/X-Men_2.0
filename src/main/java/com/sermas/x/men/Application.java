@@ -1,14 +1,20 @@
 package com.sermas.x.men;
 
 import com.sermas.x.men.user_interface.XMenInterface;
+import javafx.application.Platform;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 
 /** Main Application. */
 @SpringBootApplication(scanBasePackages = "com.sermas.x.men")
 public class Application implements CommandLineRunner {
+
+  /** Spring context handle — kept so the shutdown hook can close it. */
+  private static volatile ConfigurableApplicationContext SPRING_CONTEXT;
 
   /**
    * Main method.
@@ -17,7 +23,22 @@ public class Application implements CommandLineRunner {
    */
   public static void main(String[] args) {
     System.out.println("java.awt.headless=" + System.getProperty("java.awt.headless"));
-    ApplicationContext context = SpringApplication.run(Application.class, args);
+    SPRING_CONTEXT = SpringApplication.run(Application.class, args);
+
+    // JVM-wide safety net: if anything (an OS signal, a sibling exit() call,
+    // an Actuator /shutdown, etc.) starts tearing the JVM down, make sure the
+    // JavaFX runtime also exits so we don't leak windows.
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  try {
+                    Platform.exit();
+                  } catch (Throwable ignored) {
+                    // JavaFX already gone or never started — nothing to do.
+                  }
+                },
+                "javafx-shutdown-hook"));
   }
 
   /**
@@ -30,11 +51,28 @@ public class Application implements CommandLineRunner {
     System.out.println("Is Headless: " + java.awt.GraphicsEnvironment.isHeadless());
 
     if (!java.awt.GraphicsEnvironment.isHeadless()) {
-      // Just launch JavaFX directly.
-      // NOTE: This call is blocking until the JavaFX app is closed.
+      // Blocks until the JavaFX app exits (last stage closed or Platform.exit()).
       XMenInterface.launch(XMenInterface.class);
+
+      // Belt-and-braces: when launch() returns, force a JVM exit so the
+      // embedded web server doesn't keep the process alive forever.
+      System.exit(0);
     } else {
       System.err.println("Cannot run GUI in a headless environment");
+    }
+  }
+
+  /**
+   * Spring context is closing for some reason other than the user clicking
+   * the X (e.g. SIGTERM, /actuator/shutdown, devtools reload). Pull the
+   * JavaFX runtime down with it so no window is left orphaned.
+   */
+  @EventListener
+  public void onContextClosed(ContextClosedEvent event) {
+    try {
+      Platform.exit();
+    } catch (Throwable ignored) {
+      // already gone
     }
   }
 }

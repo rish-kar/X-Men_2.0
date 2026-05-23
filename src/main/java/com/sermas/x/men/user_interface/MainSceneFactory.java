@@ -73,6 +73,16 @@ public final class MainSceneFactory {
     overlay.getStyleClass().add("x-overlay");
     overlay.setPickOnBounds(false);
 
+    // Subtle smoky atmosphere over the background video. Mouse-transparent so
+    // it doesn't intercept clicks. The radial gradients in .x-smoke shift
+    // very gently — combined with the looping video this reads as drifting
+    // haze rather than a static tint.
+    Pane smoke = new Pane();
+    smoke.getStyleClass().add("x-smoke");
+    smoke.setMouseTransparent(true);
+    smoke.setPickOnBounds(false);
+    animateSmoke(smoke);
+
     HBox body = new HBox();
     body.setFillHeight(true);
     body.setPickOnBounds(false);
@@ -93,19 +103,21 @@ public final class MainSceneFactory {
     body.getChildren().addAll(heroLeft, controlsHost);
 
     // Settings button — bottom-left corner with shadow room so the drop-shadow isn't clipped.
+    // Pushed away from the hero tagline (bottom inset) so the gear button does
+    // not sit flush against the "Exploring Formal-methods" text.
     Button settings = buildSettingsButton(onSettingsRequested);
     StackPane settingsHost = new StackPane(settings);
     settingsHost.getStyleClass().add("x-shadow-room");
     settingsHost.setAlignment(Pos.BOTTOM_LEFT);
     settingsHost.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
     StackPane.setAlignment(settingsHost, Pos.BOTTOM_LEFT);
-    StackPane.setMargin(settingsHost, new Insets(0, 0, 0, 18));
+    StackPane.setMargin(settingsHost, new Insets(0, 0, 24, 18));
 
     BorderPane content = new BorderPane();
     content.setPickOnBounds(false);
     content.setCenter(body);
 
-    root.getChildren().addAll(background, overlay, content, settingsHost);
+    root.getChildren().addAll(background, overlay, smoke, content, settingsHost);
 
     // Entrance animation
     fadeInScene(root);
@@ -128,7 +140,10 @@ public final class MainSceneFactory {
 
   private static Node buildBackground(Stage stage) {
     StackPane container = new StackPane();
-    Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+    // Pick the monitor the stage currently lives on instead of always the
+    // primary screen — multi-monitor users still see the video sized to the
+    // window they have X-Men open on.
+    Rectangle2D screen = screenForStage(stage);
     container.setPrefSize(screen.getWidth(), screen.getHeight());
 
     try {
@@ -151,9 +166,13 @@ public final class MainSceneFactory {
         view.fitHeightProperty().bind(container.heightProperty());
         player.setOnReady(
             () -> {
-              stage.setWidth(screen.getWidth());
-              stage.setHeight(screen.getHeight());
-              stage.centerOnScreen();
+              // Size the stage to the active monitor so the video fills the
+              // screen the user actually has X-Men on (multi-monitor safe).
+              Rectangle2D current = screenForStage(stage);
+              stage.setX(current.getMinX());
+              stage.setY(current.getMinY());
+              stage.setWidth(current.getWidth());
+              stage.setHeight(current.getHeight());
               player.play();
             });
         // If the player ever errors out, log and fall back to the still image.
@@ -179,6 +198,20 @@ public final class MainSceneFactory {
     return container;
   }
 
+  /** Pick the screen containing the stage's centre. Falls back to primary. */
+  private static Rectangle2D screenForStage(Stage stage) {
+    if (stage != null && !Double.isNaN(stage.getX()) && !Double.isNaN(stage.getY())) {
+      double cx = stage.getX() + (stage.getWidth() > 0 ? stage.getWidth() / 2.0 : 1);
+      double cy = stage.getY() + (stage.getHeight() > 0 ? stage.getHeight() / 2.0 : 1);
+      for (Screen s : Screen.getScreens()) {
+        Rectangle2D b = s.getVisualBounds();
+        if (b.contains(cx, cy)) return b;
+      }
+    }
+    Screen primary = Screen.getPrimary();
+    return primary != null ? primary.getVisualBounds() : new Rectangle2D(0, 0, 1280, 800);
+  }
+
   /** Extract the bundled MP4 to a temp file once, then reuse the file across rebuilds. */
   private static synchronized File ensureCachedVideo() throws IOException {
     if (cachedBackgroundFile != null && cachedBackgroundFile.exists()) {
@@ -202,18 +235,41 @@ public final class MainSceneFactory {
   /** Logo container + the (possibly null) ImageView we re-paint when the theme changes. */
   private record LogoSlot(HBox container, ImageView imageView) {}
 
-  /** Logo width: 265 (prev) × 1.25 = 331 per latest design feedback. */
-  private static final double LOGO_WIDTH = 331;
+  /** Logo width: 331 (prev) × 1.10 ≈ 364 per latest design feedback. */
+  private static final double LOGO_WIDTH = 364;
 
   private static LogoSlot buildLogoSlot() {
-    // Default to the dark-theme (white) logo until the active theme is resolved.
+    // Single brand mark used across every theme — see ThemeLogo.
     ImageView iv = null;
-    try (InputStream is = MainSceneFactory.class.getResourceAsStream("/images/White.png")) {
+    try (InputStream is = MainSceneFactory.class.getResourceAsStream("/images/SERMAS Classic.png")) {
       if (is != null) {
-        iv = new ImageView(new Image(is));
+        // setSmooth + setCache → JavaFX uses a higher-quality scaling filter
+        // and caches the rasterised result. Together they remove the
+        // jaggies on the diagonal edges of the wordmark.
+        Image img = new Image(is, LOGO_WIDTH * 2, 0, true, true);
+        iv = new ImageView(img);
         iv.setFitWidth(LOGO_WIDTH);
         iv.setPreserveRatio(true);
+        iv.setSmooth(true);
+        iv.setCache(true);
         iv.getStyleClass().add("x-logo-img");
+
+        // Cinematic directional lighting: a single distant key light angled
+        // from the upper-left (azimuth 135°, elevation 35°). The surface
+        // scale is small so the logo still reads as a clean wordmark — we
+        // just want a subtle "lit from above" feel, not heavy embossing.
+        javafx.scene.effect.Light.Distant key =
+            new javafx.scene.effect.Light.Distant();
+        key.setAzimuth(135);
+        key.setElevation(35);
+        key.setColor(Color.WHITE);
+        javafx.scene.effect.Lighting lighting =
+            new javafx.scene.effect.Lighting(key);
+        lighting.setSurfaceScale(1.2);
+        lighting.setDiffuseConstant(1.35);
+        lighting.setSpecularConstant(0.45);
+        lighting.setSpecularExponent(22);
+        iv.setEffect(lighting);
       }
     } catch (Exception ignored) {
     }
@@ -224,7 +280,45 @@ public final class MainSceneFactory {
     // rest of the column (translateY does not affect layout of siblings).
     wrap.setTranslateY(60);
     if (iv != null) {
-      wrap.getChildren().add(iv);
+      double glowRadius = LOGO_WIDTH * 0.72;
+      javafx.scene.shape.Circle glow = new javafx.scene.shape.Circle(glowRadius);
+      glow.getStyleClass().add("x-logo-glow");
+      glow.setMouseTransparent(true);
+      glow.setEffect(new javafx.scene.effect.GaussianBlur(60));
+      glow.setOpacity(0.34);
+      glow.setManaged(false);
+
+      javafx.animation.Timeline pulse =
+              new javafx.animation.Timeline(
+                      new javafx.animation.KeyFrame(
+                              Duration.ZERO,
+                              new javafx.animation.KeyValue(glow.opacityProperty(), 0.26, javafx.animation.Interpolator.EASE_BOTH),
+                              new javafx.animation.KeyValue(glow.scaleXProperty(), 0.97, javafx.animation.Interpolator.EASE_BOTH),
+                              new javafx.animation.KeyValue(glow.scaleYProperty(), 0.97, javafx.animation.Interpolator.EASE_BOTH)),
+                      new javafx.animation.KeyFrame(
+                              Duration.seconds(3.2),
+                              new javafx.animation.KeyValue(glow.opacityProperty(), 0.40, javafx.animation.Interpolator.EASE_BOTH),
+                              new javafx.animation.KeyValue(glow.scaleXProperty(), 1.04, javafx.animation.Interpolator.EASE_BOTH),
+                              new javafx.animation.KeyValue(glow.scaleYProperty(), 1.04, javafx.animation.Interpolator.EASE_BOTH)),
+                      new javafx.animation.KeyFrame(
+                              Duration.seconds(6.4),
+                              new javafx.animation.KeyValue(glow.opacityProperty(), 0.26, javafx.animation.Interpolator.EASE_BOTH),
+                              new javafx.animation.KeyValue(glow.scaleXProperty(), 0.97, javafx.animation.Interpolator.EASE_BOTH),
+                              new javafx.animation.KeyValue(glow.scaleYProperty(), 0.97, javafx.animation.Interpolator.EASE_BOTH)));
+
+      pulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
+      pulse.play();
+
+      StackPane stack = new StackPane(iv);
+      stack.setAlignment(Pos.CENTER);
+      stack.setPickOnBounds(false);
+
+      glow.centerXProperty().bind(stack.widthProperty().multiply(0.5));
+      glow.centerYProperty().bind(stack.heightProperty().multiply(0.5));
+      stack.getChildren().add(0, glow);
+
+      wrap.getChildren().add(stack);
+
     } else {
       Pane empty = new Pane();
       empty.getStyleClass().add("x-logo-slot");
@@ -281,17 +375,26 @@ public final class MainSceneFactory {
     uploadBtn.minWidthProperty().bind(startBtn.widthProperty());
     uploadBtn.minHeightProperty().bind(startBtn.heightProperty());
 
+    // "Download" CTA — appears next to Start/Upload but stays hidden until a
+    // mutation succeeds (XMenInterface toggles visibility after onResponse).
+    Button downloadBtn = new Button("Download");
+    downloadBtn.getStyleClass().add("x-cta-secondary");
+    downloadBtn.setId("heroDownload");
+    downloadBtn.setGraphic(Icons.download(16, Color.WHITE));
+    Animations.hoverLift(downloadBtn, 1.03);
+
     StackPane startWrap = new StackPane(startBtn);
     StackPane uploadWrap = new StackPane(uploadBtn);
+    StackPane downloadWrap = new StackPane(downloadBtn);
     startWrap.getStyleClass().add("x-shadow-room");
     uploadWrap.getStyleClass().add("x-shadow-room");
+    downloadWrap.getStyleClass().add("x-shadow-room");
+    downloadWrap.managedProperty().bind(downloadBtn.managedProperty());
+    downloadWrap.visibleProperty().bind(downloadBtn.visibleProperty());
 
-    // Buttons share one row, centred horizontally beneath the "Turn ceremony…"
-    // description block. The wrapper has the same maxWidth as the sub label so
-    // the centred CTAs sit under that text rather than the whole column.
-    HBox ctas = new HBox(6, startWrap, uploadWrap);
+    HBox ctas = new HBox(6, startWrap, uploadWrap, downloadWrap);
     ctas.setAlignment(Pos.CENTER_LEFT);
-    ctas.setMaxWidth(500);
+    ctas.setMaxWidth(620);
     ctas.setTranslateX(-20);
     VBox.setMargin(ctas, new javafx.geometry.Insets(0, 0, 0, 0));
 
@@ -303,8 +406,10 @@ public final class MainSceneFactory {
     tagline.setMaxWidth(540);
     tagline.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
     tagline.setAlignment(Pos.CENTER_LEFT);
-    VBox.setMargin(tagline, new javafx.geometry.Insets(0, 0, 0, 20));
-    tagline.translateYProperty().bind(col.heightProperty().multiply(-0.04));
+    VBox.setMargin(tagline, new javafx.geometry.Insets(18, 0, 0, 20));
+    tagline.translateYProperty().unbind();
+    tagline.setTranslateY(0);
+    tagline.translateXProperty().unbind();
     tagline.translateXProperty().bind(col.widthProperty().multiply(-0.02));
 
     col.getChildren().addAll(centerGroup, sub, ctas, tagline);
@@ -351,6 +456,38 @@ public final class MainSceneFactory {
     slide.setFromY(12);
     slide.setToY(0);
     new ParallelTransition(fade, slide).play();
+  }
+
+  /**
+   * Slow opacity + translate cycle on the smoke pane so the haze drifts a bit
+   * over the background video, giving the scene a more "alive" atmosphere
+   * without distracting from the content. Indefinite, very gentle.
+   */
+  private static void animateSmoke(Pane smoke) {
+    javafx.animation.Timeline drift = new javafx.animation.Timeline(
+        new javafx.animation.KeyFrame(Duration.ZERO,
+            new javafx.animation.KeyValue(smoke.opacityProperty(), 0.12,
+                javafx.animation.Interpolator.EASE_BOTH),
+            new javafx.animation.KeyValue(smoke.translateXProperty(), -16,
+                javafx.animation.Interpolator.EASE_BOTH),
+            new javafx.animation.KeyValue(smoke.translateYProperty(), -10,
+                javafx.animation.Interpolator.EASE_BOTH)),
+        new javafx.animation.KeyFrame(Duration.seconds(8.5),
+            new javafx.animation.KeyValue(smoke.opacityProperty(), 0.20,
+                javafx.animation.Interpolator.EASE_BOTH),
+            new javafx.animation.KeyValue(smoke.translateXProperty(), 18,
+                javafx.animation.Interpolator.EASE_BOTH),
+            new javafx.animation.KeyValue(smoke.translateYProperty(), 6,
+                javafx.animation.Interpolator.EASE_BOTH)),
+        new javafx.animation.KeyFrame(Duration.seconds(17),
+            new javafx.animation.KeyValue(smoke.opacityProperty(), 0.12,
+                javafx.animation.Interpolator.EASE_BOTH),
+            new javafx.animation.KeyValue(smoke.translateXProperty(), -16,
+                javafx.animation.Interpolator.EASE_BOTH),
+            new javafx.animation.KeyValue(smoke.translateYProperty(), -10,
+                javafx.animation.Interpolator.EASE_BOTH)));
+    drift.setCycleCount(javafx.animation.Animation.INDEFINITE);
+    drift.play();
   }
 
   /* ------------------------------------------------------------------ */

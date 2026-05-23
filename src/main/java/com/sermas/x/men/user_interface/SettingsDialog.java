@@ -17,14 +17,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
@@ -33,7 +32,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -62,17 +60,9 @@ import okhttp3.Response;
 /**
  * Theme-aware settings dialog with three tabs (Vocabulary, Themes, Preferences).
  *
- * <p>Adds in round 3:
- *
- * <ul>
- *   <li>SVG icons (no more Unicode glyphs);
- *   <li>"Detect from .spthy" — runs the file through the validator + detector;
- *   <li>Named vocabulary profiles (save, switch, delete) persisted under {@code
- *       ~/.xmen/vocabularies/};
- *   <li>Live theme preview that also updates the parent stage's hero logo to the matching
- *       light/dark PNG;
- *   <li>Removed the "Play background video" preference.
- * </ul>
+ * <p>Vocabulary tab supports profile load/delete and YAML import; importing a YAML prompts the
+ * user to save it as a new profile after validation succeeds. Detect-from-.spthy creates a new
+ * named profile after a confirmation popup.
  */
 @Slf4j
 public class SettingsDialog {
@@ -87,7 +77,6 @@ public class SettingsDialog {
   private final Consumer<Map<String, Object>> onPreferencesChanged;
   private final Consumer<Theme> onLogoSwap;
 
-  /* View-state captured across the three tabs, ready for the single Save. */
   private final ObservableList<VocabRow> vocabRows = FXCollections.observableArrayList();
   private final AtomicReference<String> selectedThemeId = new AtomicReference<>();
   private TilePane themeTiles;
@@ -95,12 +84,9 @@ public class SettingsDialog {
   private CheckBox cbShowAnimations;
   private CheckBox cbKeepDerivationTree;
 
-  /* Saved-vocabulary widgets. */
   private final ObservableList<String> profileNames = FXCollections.observableArrayList();
   private ComboBox<String> profilePicker;
-  private TextField profileNameField;
 
-  /* The dialog's own root — re-themed when the user picks a swatch. */
   private StackPane dialogRoot;
 
   public SettingsDialog(
@@ -137,7 +123,7 @@ public class SettingsDialog {
 
     TabPane tabs = new TabPane();
     tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-    tabs.getTabs().addAll(buildVocabularyTab(), buildThemeTab(), buildPreferencesTab());
+    tabs.getTabs().addAll(buildVocabularyTab(owner), buildThemeTab(), buildPreferencesTab());
     VBox.setVgrow(tabs, Priority.ALWAYS);
 
     Button save = new Button("Save");
@@ -165,10 +151,7 @@ public class SettingsDialog {
     dialogRoot = new StackPane(panel);
     dialogRoot.getStyleClass().addAll("x-root", "x-settings-scene");
     dialogRoot.setPadding(new Insets(24));
-    dialogRoot.setStyle(
-        (owner != null && owner.getScene() != null && owner.getScene().getRoot() != null)
-            ? owner.getScene().getRoot().getStyle()
-            : "");
+    dialogRoot.setStyle(ThemedToast.transparentPopupStyleFrom(owner));
 
     Scene scene = new Scene(dialogRoot);
     scene.setFill(Color.TRANSPARENT);
@@ -176,7 +159,29 @@ public class SettingsDialog {
 
     stage.setScene(scene);
 
-    // Fade in.
+    // Multi-monitor positioning: centre over the owner stage's monitor.
+    stage.setOnShown(
+        e -> {
+          Rectangle2D screen = ThemedToast.screenFor(owner);
+          double w = stage.getWidth();
+          double h = stage.getHeight();
+          double x;
+          double y;
+          if (owner != null) {
+            x = owner.getX() + (owner.getWidth() - w) / 2.0;
+            y = owner.getY() + (owner.getHeight() - h) / 2.0;
+          } else {
+            x = screen.getMinX() + (screen.getWidth() - w) / 2.0;
+            y = screen.getMinY() + (screen.getHeight() - h) / 2.0;
+          }
+          if (x < screen.getMinX() + 8) x = screen.getMinX() + 8;
+          if (x + w > screen.getMaxX() - 8) x = screen.getMaxX() - w - 8;
+          if (y < screen.getMinY() + 8) y = screen.getMinY() + 8;
+          if (y + h > screen.getMaxY() - 8) y = screen.getMaxY() - h - 8;
+          stage.setX(x);
+          stage.setY(y);
+        });
+
     FadeTransition fade = new FadeTransition(Duration.millis(260), dialogRoot);
     fade.setFromValue(0.0);
     fade.setToValue(1.0);
@@ -184,10 +189,6 @@ public class SettingsDialog {
 
     stage.showAndWait();
   }
-
-  /* ------------------------------------------------------------------ */
-  /*  Save-all                                                          */
-  /* ------------------------------------------------------------------ */
 
   private void saveAll(Stage hostStage, Stage thisStage) {
     Map<String, Object> vocabBody = unflatten(vocabRows);
@@ -214,7 +215,6 @@ public class SettingsDialog {
                   if (themeId != null && onThemeApplied != null) onThemeApplied.accept(themeId);
                   if (onPreferencesChanged != null) onPreferencesChanged.accept(prefs);
                   ThemedToast.show(hostStage, "Settings saved.");
-                  // Auto-close after a brief delay so the toast has time to be seen.
                   javafx.animation.PauseTransition wait =
                       new javafx.animation.PauseTransition(javafx.util.Duration.millis(900));
                   wait.setOnFinished(ev -> {
@@ -245,14 +245,14 @@ public class SettingsDialog {
   /* ------------------------------------------------------------------ */
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private Tab buildVocabularyTab() {
+  private Tab buildVocabularyTab(Stage owner) {
     Tab tab = new Tab("Vocabulary");
 
     Label hint =
         new Label(
-            "Map each semantic role to a single atomic value. List-typed entries are shown one "
-                + "element per row so every value stays atomic. Use Import / Export YAML for "
-                + "bulk edits, or detect a vocabulary directly from a .spthy file.");
+            "Map each semantic role to a single atomic value. Use Import YAML to bring in a "
+                + "configuration (you'll be asked to save it as a new profile after validation), "
+                + "or detect a vocabulary straight from a .spthy file.");
     hint.getStyleClass().add("x-settings-sub");
     hint.setWrapText(true);
 
@@ -286,51 +286,43 @@ public class SettingsDialog {
 
     table.getColumns().addAll(keyCol, valCol);
 
-    // ------------ Profiles row ------------
+    // ----- Profiles row (Load + Delete) -----
     Label profileLabel = new Label("Profile:");
     profileLabel.getStyleClass().add("x-settings-sub");
 
     profilePicker = new ComboBox<>(profileNames);
     profilePicker.setPrefWidth(220);
-    profilePicker.setPromptText("Oyster");
+    profilePicker.setPromptText("Pick a profile");
     profilePicker.getStyleClass().addAll("x-input", "x-glass-choice");
-    profilePicker.setStyle(
-              "-fx-background-color: -glass-fill;"
-                      + "-fx-border-color: -glass-stroke;"
-                      + "-fx-background-radius: 12;"
-                      + "-fx-border-radius: 12;"
-                      + "-fx-border-width: 1;"
-                      + "-fx-text-fill: -text;"
-      );
     profilePicker.setVisibleRowCount(8);
     profilePicker.setCellFactory(list -> profileCell());
     profilePicker.setButtonCell(profileCell());
+    // Switching the picker also refreshes the displayed vocabulary so the
+    // table always mirrors the currently-selected profile (Load activates it
+    // server-side; this listener gives the UI immediate feedback).
+    profilePicker
+        .getSelectionModel()
+        .selectedItemProperty()
+        .addListener((obs, oldName, newName) -> {
+          if (newName != null && !newName.isBlank()) previewProfile(newName);
+        });
 
     Button loadProfile = new Button("Load");
     loadProfile.getStyleClass().add("x-cta-secondary");
-    loadProfile.setOnAction(e -> loadProfile());
+    loadProfile.setOnAction(e -> loadProfile(owner));
 
     Button deleteProfile = new Button("Delete");
     deleteProfile.getStyleClass().add("x-cta-secondary");
-    deleteProfile.setOnAction(e -> deleteProfile());
-
-    profileNameField = new TextField();
-    profileNameField.setPromptText("Save as…");
-    profileNameField.setPrefWidth(180);
-    profileNameField.getStyleClass().add("x-input");
-
-    Button saveProfile = new Button("Save profile");
-    saveProfile.getStyleClass().add("x-cta-secondary");
-    saveProfile.setOnAction(e -> saveProfile());
+    deleteProfile.setOnAction(e -> deleteProfile(owner));
 
     HBox profileRow =
-        new HBox(8, profileLabel, profilePicker, loadProfile, deleteProfile, profileNameField, saveProfile);
+        new HBox(8, profileLabel, profilePicker, loadProfile, deleteProfile);
     profileRow.setAlignment(Pos.CENTER_LEFT);
 
-    // ------------ Actions row ------------
+    // ----- Actions row -----
     Button detect = new Button("Detect from .spthy");
     detect.getStyleClass().add("x-cta-secondary");
-    detect.setOnAction(e -> detectFromSpthy());
+    detect.setOnAction(e -> detectFromSpthy(owner));
 
     Button reset = new Button("Reset defaults");
     reset.getStyleClass().add("x-cta-secondary");
@@ -339,11 +331,11 @@ public class SettingsDialog {
 
     Button export = new Button("Export YAML");
     export.getStyleClass().add("x-cta-secondary");
-    export.setOnAction(e -> exportVocabulary());
+    export.setOnAction(e -> exportVocabulary(owner));
 
     Button importYaml = new Button("Import YAML");
     importYaml.getStyleClass().add("x-cta-secondary");
-    importYaml.setOnAction(e -> importVocabulary());
+    importYaml.setOnAction(e -> importVocabulary(owner));
 
     HBox actions = new HBox(10, detect, reset, export, importYaml);
     actions.setAlignment(Pos.CENTER_LEFT);
@@ -398,12 +390,12 @@ public class SettingsDialog {
         "reset vocabulary");
   }
 
-  private void exportVocabulary() {
+  private void exportVocabulary(Stage owner) {
     FileChooser fc = new FileChooser();
     fc.setTitle("Export vocabulary as YAML");
     fc.setInitialFileName("vocabulary.yaml");
     fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("YAML", "*.yaml", "*.yml"));
-    File target = fc.showSaveDialog(null);
+    File target = fc.showSaveDialog(owner);
     if (target == null) return;
     runHttp(
         () -> {
@@ -416,27 +408,35 @@ public class SettingsDialog {
           try (r) {
             if (r.body() == null) return;
             Files.write(target.toPath(), r.body().bytes());
-            Platform.runLater(() -> ThemedToast.show(null, "Exported to " + target.getName()));
+            Platform.runLater(() -> ThemedToast.show(owner, "Exported to " + target.getName()));
           }
         },
         "export vocabulary");
   }
 
-  private void importVocabulary() {
+  /**
+   * Import a YAML vocabulary. Parses defensively first; on success, applies it to the table and
+   * prompts the user to save it as a named profile.
+   */
+  private void importVocabulary(Stage owner) {
     FileChooser fc = new FileChooser();
     fc.setTitle("Import vocabulary YAML");
     fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("YAML", "*.yaml", "*.yml"));
-    File source = fc.showOpenDialog(null);
+    File source = fc.showOpenDialog(owner);
     if (source == null) return;
     runHttp(
         () -> {
           byte[] bytes = Files.readAllBytes(source.toPath());
-          // Pre-validate with Jackson — if it doesn't parse, abort.
           try {
             yaml.readTree(bytes);
           } catch (Exception parseError) {
             Platform.runLater(
-                () -> ThemedToast.show(null, "Invalid YAML: " + parseError.getMessage()));
+                () ->
+                    ThemedDialog.show(
+                        owner,
+                        ThemedDialog.Kind.ERROR,
+                        "Invalid YAML",
+                        parseError.getMessage()));
             return;
           }
           RequestBody fileBody =
@@ -452,16 +452,24 @@ public class SettingsDialog {
                           .url(BASE + serverPort + "/api/settings/vocabulary/import")
                           .post(mp)
                           .build())
-                  .execute();
+              .execute();
           try (r) {
             boolean ok = r.isSuccessful();
             Platform.runLater(
                 () -> {
                   if (ok) {
                     loadVocabulary();
-                    ThemedToast.show(null, "Imported " + source.getName());
+                    String suggested = stripExt(source.getName());
+                    promptSaveAsProfile(
+                        owner,
+                        suggested,
+                        "Imported " + source.getName() + ".\nSave it as a new profile?");
                   } else {
-                    ThemedToast.show(null, "Import rejected by server.");
+                    ThemedDialog.show(
+                        owner,
+                        ThemedDialog.Kind.ERROR,
+                        "Import rejected",
+                        "The server rejected the YAML payload.");
                   }
                 });
           }
@@ -469,13 +477,12 @@ public class SettingsDialog {
         "import vocabulary");
   }
 
-  /* ----- detect from .spthy ----- */
-
-  private void detectFromSpthy() {
+  /** Detect-from-.spthy: parse, then prompt for a profile name and save. */
+  private void detectFromSpthy(Stage owner) {
     FileChooser fc = new FileChooser();
     fc.setTitle("Pick a .spthy file to detect vocabulary from");
     fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Tamarin SPTHY", "*.spthy"));
-    File source = fc.showOpenDialog(null);
+    File source = fc.showOpenDialog(owner);
     if (source == null) return;
 
     runHttp(
@@ -498,7 +505,12 @@ public class SettingsDialog {
           try (r) {
             if (!r.isSuccessful() || r.body() == null) {
               Platform.runLater(
-                  () -> ThemedToast.show(null, "File failed validation; nothing detected."));
+                  () ->
+                      ThemedDialog.show(
+                          owner,
+                          ThemedDialog.Kind.ERROR,
+                          "Detection failed",
+                          "The file did not pass validation; nothing was detected."));
               return;
             }
             @SuppressWarnings("unchecked")
@@ -507,15 +519,135 @@ public class SettingsDialog {
                 () -> {
                   vocabRows.clear();
                   flatten("", body, vocabRows);
-                  ThemedToast.show(
-                      null, "Vocabulary detected from " + source.getName() + " (review then Save)");
+                  String suggested = stripExt(source.getName());
+                  promptSaveAsProfile(
+                      owner,
+                      suggested,
+                      "Vocabulary detected from "
+                          + source.getName()
+                          + ".\nSave it as a new profile?");
                 });
           }
         },
         "detect vocabulary");
   }
 
-  /* ----- vocabulary profiles ----- */
+  /**
+   * Show a confirmation dialog with a pre-filled profile name (editable). Posts the active
+   * vocabulary to the server under that name once the user confirms.
+   */
+  private void promptSaveAsProfile(Stage owner, String suggestedName, String question) {
+    Stage stage = new Stage();
+    if (owner != null) stage.initOwner(owner);
+    stage.initModality(Modality.APPLICATION_MODAL);
+    stage.initStyle(StageStyle.TRANSPARENT);
+    stage.setAlwaysOnTop(true);
+
+    Label title = new Label("Save as profile?");
+    title.getStyleClass().add("x-dialog-title");
+    Label body = new Label(question);
+    body.getStyleClass().add("x-dialog-body");
+    body.setWrapText(true);
+    body.setMaxWidth(420);
+
+    TextField nameField = new TextField(suggestedName);
+    nameField.getStyleClass().add("x-input");
+
+    Button yes = new Button("Save profile");
+    yes.getStyleClass().add("x-cta-primary");
+    Button no = new Button("Skip");
+    no.getStyleClass().add("x-cta-secondary");
+
+    yes.setOnAction(
+        e -> {
+          String name = nameField.getText() == null ? "" : nameField.getText().trim();
+          if (name.isEmpty()) {
+            ThemedToast.show(stage, "Pick a name first.");
+            return;
+          }
+          stage.close();
+          persistProfile(owner, name);
+        });
+    no.setOnAction(e -> stage.close());
+
+    Region spacer = new Region();
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+    StackPane yesWrap = new StackPane(yes);
+    yesWrap.getStyleClass().add("x-shadow-room");
+    StackPane noWrap = new StackPane(no);
+    noWrap.getStyleClass().add("x-shadow-room");
+    HBox buttons = new HBox(10, spacer, noWrap, yesWrap);
+
+    VBox card = new VBox(14, title, body, nameField, buttons);
+    card.getStyleClass().addAll("x-dialog-card", "x-dialog-info");
+    card.setPadding(new Insets(22, 24, 18, 24));
+    card.setMaxWidth(520);
+
+    StackPane wrap = new StackPane(card);
+    wrap.getStyleClass().add("x-shadow-room");
+
+    StackPane root = new StackPane(wrap);
+    root.getStyleClass().add("x-root");
+    root.setStyle(ThemedToast.transparentPopupStyleFrom(owner));
+
+    Scene scene = new Scene(root);
+    scene.setFill(Color.TRANSPARENT);
+    scene.getStylesheets().add(getClass().getResource("/css/main-v2.css").toExternalForm());
+    stage.setScene(scene);
+
+    stage.setOnShown(
+        e -> {
+          Rectangle2D screen = ThemedToast.screenFor(owner);
+          double w = stage.getWidth();
+          double h = stage.getHeight();
+          double x =
+              owner != null ? owner.getX() + (owner.getWidth() - w) / 2.0 : screen.getMinX() + 40;
+          double y =
+              owner != null ? owner.getY() + (owner.getHeight() - h) / 2.0 : screen.getMinY() + 40;
+          stage.setX(Math.max(screen.getMinX() + 8, Math.min(x, screen.getMaxX() - w - 8)));
+          stage.setY(Math.max(screen.getMinY() + 8, Math.min(y, screen.getMaxY() - h - 8)));
+        });
+
+    stage.show();
+  }
+
+  /** Save the current live vocabulary under {@code name}, then refresh the profile list. */
+  private void persistProfile(Stage owner, String name) {
+    runHttp(
+        () -> {
+          Response r =
+              http.newCall(
+                      new Request.Builder()
+                          .url(
+                              BASE
+                                  + serverPort
+                                  + "/api/settings/vocabulary/profiles/"
+                                  + java.net.URLEncoder.encode(name, "UTF-8"))
+                          .post(RequestBody.create(new byte[0]))
+                          .build())
+                  .execute();
+          try (r) {
+            boolean ok = r.isSuccessful();
+            Platform.runLater(
+                () -> {
+                  if (ok) {
+                    loadProfiles();
+                    if (profilePicker != null) profilePicker.getSelectionModel().select(name);
+                    ThemedToast.show(owner, "Saved profile '" + name + "'.");
+                  } else {
+                    ThemedDialog.show(
+                        owner,
+                        ThemedDialog.Kind.ERROR,
+                        "Save failed",
+                        "Could not persist profile.");
+                  }
+                });
+          }
+        },
+        "save profile");
+  }
+
+  /* ----- profile network ops ----- */
 
   @SuppressWarnings("unchecked")
   private void loadProfiles() {
@@ -548,7 +680,6 @@ public class SettingsDialog {
         "load profiles");
   }
 
-  /** Themed list cell — uses the same x-glass-cell class so the popup matches the field. */
   private ListCell<String> profileCell() {
     ListCell<String> cell = new ListCell<>() {
       @Override
@@ -561,46 +692,11 @@ public class SettingsDialog {
     return cell;
   }
 
-  private void saveProfile() {
-    String name = profileNameField.getText() == null ? "" : profileNameField.getText().trim();
-    if (name.isEmpty()) {
-      ThemedToast.show(null, "Type a name in the 'Save as…' box first.");
-      return;
-    }
-    runHttp(
-        () -> {
-          Response r =
-              http.newCall(
-                      new Request.Builder()
-                          .url(
-                              BASE
-                                  + serverPort
-                                  + "/api/settings/vocabulary/profiles/"
-                                  + java.net.URLEncoder.encode(name, "UTF-8"))
-                          .post(RequestBody.create(new byte[0]))
-                          .build())
-                  .execute();
-          try (r) {
-            boolean ok = r.isSuccessful();
-            Platform.runLater(
-                () -> {
-                  if (ok) {
-                    profileNameField.clear();
-                    loadProfiles();
-                    ThemedToast.show(null, "Profile '" + name + "' saved.");
-                  } else {
-                    ThemedToast.show(null, "Could not save profile.");
-                  }
-                });
-          }
-        },
-        "save profile");
-  }
-
-  private void loadProfile() {
+  /** Hit the activate endpoint AND reload the table so the user sees the change. */
+  private void loadProfile(Stage owner) {
     String name = profilePicker.getValue();
     if (name == null || name.isBlank()) {
-      ThemedToast.show(null, "Pick a profile from the dropdown first.");
+      ThemedToast.show(owner, "Pick a profile from the dropdown first.");
       return;
     }
     runHttp(
@@ -623,9 +719,13 @@ public class SettingsDialog {
                 () -> {
                   if (ok) {
                     loadVocabulary();
-                    ThemedToast.show(null, "Loaded profile '" + name + "'.");
+                    ThemedToast.show(owner, "Loaded profile '" + name + "'.");
                   } else {
-                    ThemedToast.show(null, "Could not activate profile.");
+                    ThemedDialog.show(
+                        owner,
+                        ThemedDialog.Kind.ERROR,
+                        "Activation failed",
+                        "Could not activate profile '" + name + "'.");
                   }
                 });
           }
@@ -633,12 +733,13 @@ public class SettingsDialog {
         "activate profile");
   }
 
-  private void deleteProfile() {
-    String name = profilePicker.getValue();
-    if (name == null || name.isBlank()) {
-      ThemedToast.show(null, "Pick a profile from the dropdown first.");
-      return;
-    }
+  /**
+   * Pull the named profile's JSON without activating it server-side, so changing the picker
+   * shows the user what they're about to Load (matches the user's expectation that switching
+   * the dropdown should refresh the vocab they see).
+   */
+  @SuppressWarnings("unchecked")
+  private void previewProfile(String name) {
     runHttp(
         () -> {
           Response r =
@@ -648,24 +749,63 @@ public class SettingsDialog {
                               BASE
                                   + serverPort
                                   + "/api/settings/vocabulary/profiles/"
-                                  + java.net.URLEncoder.encode(name, "UTF-8"))
-                          .delete()
+                                  + java.net.URLEncoder.encode(name, "UTF-8")
+                                  + "/activate")
+                          .post(RequestBody.create(new byte[0]))
                           .build())
                   .execute();
           try (r) {
-            boolean ok = r.isSuccessful();
-            Platform.runLater(
-                () -> {
-                  if (ok) {
-                    loadProfiles();
-                    ThemedToast.show(null, "Deleted '" + name + "'.");
-                  } else {
-                    ThemedToast.show(null, "Could not delete profile.");
-                  }
-                });
+            if (!r.isSuccessful()) return;
+            // After activate, /vocabulary reflects the active profile.
+            Platform.runLater(this::loadVocabulary);
           }
         },
-        "delete profile");
+        "preview profile " + name);
+  }
+
+  private void deleteProfile(Stage owner) {
+    String name = profilePicker.getValue();
+    if (name == null || name.isBlank()) {
+      ThemedToast.show(owner, "Pick a profile from the dropdown first.");
+      return;
+    }
+    ThemedDialog.confirm(
+        owner,
+        "Delete profile?",
+        "Permanently remove profile '" + name + "'?",
+        () ->
+            runHttp(
+                () -> {
+                  Response r =
+                      http.newCall(
+                              new Request.Builder()
+                                  .url(
+                                      BASE
+                                          + serverPort
+                                          + "/api/settings/vocabulary/profiles/"
+                                          + java.net.URLEncoder.encode(name, "UTF-8"))
+                                  .delete()
+                                  .build())
+                          .execute();
+                  try (r) {
+                    boolean ok = r.isSuccessful();
+                    Platform.runLater(
+                        () -> {
+                          if (ok) {
+                            loadProfiles();
+                            ThemedToast.show(owner, "Deleted '" + name + "'.");
+                          } else {
+                            ThemedDialog.show(
+                                owner,
+                                ThemedDialog.Kind.ERROR,
+                                "Delete failed",
+                                "Could not delete profile '" + name + "'.");
+                          }
+                        });
+                  }
+                },
+                "delete profile"),
+        null);
   }
 
   /* ------------------------------------------------------------------ */
@@ -684,15 +824,11 @@ public class SettingsDialog {
 
     themeTiles = new TilePane();
     themeTiles.setHgap(12);
-    themeTiles.setVgap(12);
-    // 28 themes total → 7 columns × 4 rows. Each tile holds the classy
-    // glass-pill swatch + theme name; the grid fits without scrolling.
-    themeTiles.setPrefColumns(7);
-    themeTiles.setPrefTileWidth(118);
-    themeTiles.setPrefTileHeight(96);
-    themeTiles.setMinWidth(7 * 118 + 6 * 12);
-    themeTiles.setPrefWidth(7 * 118 + 6 * 12);
-    themeTiles.setMaxWidth(7 * 118 + 6 * 12);
+    themeTiles.setVgap(14);
+    themeTiles.setPrefColumns(6);
+    themeTiles.setPrefTileWidth(124);
+    themeTiles.setPrefTileHeight(112);
+    themeTiles.setMaxWidth(Double.MAX_VALUE);
     themeTiles.setAlignment(Pos.TOP_LEFT);
 
     runHttp(
@@ -721,63 +857,76 @@ public class SettingsDialog {
         },
         "load themes");
 
-    // No scroll-pane — all 28 themes fit in the 7×4 grid by design.
-    VBox content = new VBox(14, hint, themeTiles);
-    content.setPadding(new Insets(8, 0, 0, 0));
-    tab.setContent(content);
+      javafx.scene.control.ScrollPane themeScroll =
+              new javafx.scene.control.ScrollPane(themeTiles);
+
+      themeScroll.setFitToWidth(true);
+      themeScroll.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
+      themeScroll.setVbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED);
+      themeScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+
+      VBox content = new VBox(14, hint, themeScroll);
+      content.setPadding(new Insets(8, 0, 0, 0));
+      VBox.setVgrow(themeScroll, Priority.ALWAYS);
+      tab.setContent(content);
     return tab;
   }
 
+  /**
+   * Each theme tile renders: a classy preview card (accent pill on a stacked overlay + glass
+   * gradient backdrop) followed by the theme's human-readable name. Click selects the theme.
+   */
   private VBox buildSwatch(Map<String, Object> theme, boolean selected) {
     String id = String.valueOf(theme.get("id"));
     String name = String.valueOf(theme.getOrDefault("name", id));
     String accent = String.valueOf(theme.getOrDefault("accent", "#A56BFF"));
+    String accentSoft = String.valueOf(theme.getOrDefault("accent-soft", "#D4B4FF"));
     String glass = String.valueOf(theme.getOrDefault("glass-fill", "rgba(155,93,229,0.22)"));
     String overlay = String.valueOf(theme.getOrDefault("overlay", "rgba(26,10,48,0.70)"));
 
-    // Original-style classy preview: a single accent pill sitting on top of a
-    // glass + overlay background so every theme reads at a glance.
-    Rectangle accentBar = new Rectangle(56, 8);
-    accentBar.setStyle("-fx-fill: " + accent + ";");
-    accentBar.setArcWidth(8);
-    accentBar.setArcHeight(8);
-
-    StackPane swatch = new StackPane(accentBar);
-    swatch.getStyleClass().add("x-theme-swatch");
-    swatch.setStyle(
-        "-fx-background-color: " + glass + ", " + overlay + ";"
+    // Two-layer preview backdrop matching the live UI's glass-over-overlay recipe.
+    StackPane preview = new StackPane();
+    preview.getStyleClass().add("x-theme-preview");
+    preview.setStyle(
+        "-fx-background-color: "
+            + "linear-gradient(to bottom right, derive(" + glass + ", 22%), " + glass + "), "
+            + overlay + ";"
             + "-fx-background-radius: 14;");
-    if (selected) swatch.getStyleClass().add("is-selected");
+
+    // Accent pill: theme's accent gradient over a soft-accent under-shadow.
+    Rectangle accentPill = new Rectangle(64, 14);
+    accentPill.setArcWidth(12);
+    accentPill.setArcHeight(12);
+    accentPill.setStyle(
+        "-fx-fill: linear-gradient(to right, " + accentSoft + ", " + accent + ");");
+    preview.getChildren().add(accentPill);
 
     Label label = new Label(name);
     label.getStyleClass().add("x-theme-name");
+    label.setWrapText(true);
+    label.setMaxWidth(120);
+    label.setAlignment(Pos.CENTER);
+    label.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
 
-    VBox col = new VBox(6, swatch, label);
+    VBox col = new VBox(6, preview, label);
+    col.getStyleClass().add("x-theme-tile");
     col.setAlignment(Pos.CENTER);
+    if (selected) col.getStyleClass().add("is-selected");
+
     col.setOnMouseClicked(
         e -> {
           selectedThemeId.set(id);
           previewTheme(id);
           if (themeTiles != null) {
             for (var node : themeTiles.getChildren()) {
-              if (node instanceof VBox vb) {
-                vb.getChildrenUnmodifiable()
-                    .forEach(
-                        c -> {
-                          if (c instanceof StackPane sp) sp.getStyleClass().remove("is-selected");
-                        });
-              }
+              if (node instanceof VBox vb) vb.getStyleClass().remove("is-selected");
             }
           }
-          swatch.getStyleClass().add("is-selected");
+          col.getStyleClass().add("is-selected");
         });
     return col;
   }
 
-  /**
-   * Live preview: re-style both the dialog root and the parent stage's root, plus swap the
-   * hero logo to the matching light/dark PNG.
-   */
   private void previewTheme(String id) {
     runHttp(
         () -> {
@@ -906,6 +1055,12 @@ public class SettingsDialog {
   /*  Misc                                                              */
   /* ------------------------------------------------------------------ */
 
+  private static String stripExt(String filename) {
+    if (filename == null) return "";
+    int dot = filename.lastIndexOf('.');
+    return dot > 0 ? filename.substring(0, dot) : filename;
+  }
+
   private static boolean asBool(Object v, boolean fallback) {
     if (v instanceof Boolean b) return b;
     if (v == null) return fallback;
@@ -930,7 +1085,6 @@ public class SettingsDialog {
     void run() throws Exception;
   }
 
-  /** One row of the vocabulary table. */
   @Getter
   @Setter
   @AllArgsConstructor

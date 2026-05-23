@@ -122,6 +122,10 @@
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
   </repositories>
   <dependencies>
     <dependency>
@@ -328,6 +332,26 @@
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>2.6.0</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.AIMLang.aiml-java-interpreter</groupId>
+      <artifactId>app-core</artifactId>
+      <version>master</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>spring-boot-autoconfigure</artifactId>
+          <groupId>org.springframework.boot</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>logback-classic</artifactId>
+          <groupId>ch.qos.logback</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jcl-over-slf4j</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
   <properties>

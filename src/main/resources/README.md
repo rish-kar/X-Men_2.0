@@ -25,17 +25,17 @@ src/main/resources    ←  you are here
 
 ## 📁 Files at a glance
 
-| File | Role |
-| --- | --- |
-| ⚙️ `application.yaml` | Spring Boot configuration with env-var defaults (`SERVER_PORT`, `APP_CORS_ALLOWED_ORIGINS`, `DERIVATION_SERVICE_URL`, …). |
-| 🎬 `DNA-Background.mp4` | Background video for the JavaFX main scene. |
-| 🎬 `X-Men-Logo.mp4` | Splash-screen video. |
+| File                               | Role |
+|------------------------------------| --- |
+| ⚙️ `application.yaml`              | Spring Boot configuration with env-var defaults (`SERVER_PORT`, `APP_CORS_ALLOWED_ORIGINS`, `DERIVATION_SERVICE_URL`, …). |
+| 🎬 `DNA-Background.mp4`            | Background video for the JavaFX main scene. |
+| 🎬 `X - Men 2.0.mp4`               | Splash-screen video. |
 | 📦 `X-Men.postman_collection.json` | Importable Postman collection — every mutation endpoint pre-wired. |
-| 🧪 `TrialCase.spthy` | Sample SPTHY model used in demos and tests. |
-| 📄 `Forget_Mutation.pdf` | Research / documentation artefact for the Forget mutation. |
-| 📝 `Packaging-Commands.txt` | Packaging notes. |
-| 🎨 `css/` | JavaFX stylesheets — see [`css/README.md`](css/README.md). |
-| 🖼️ `images/` | UI image assets — see [`images/README.md`](images/README.md). |
+| 🧪 `TrialCase.spthy`               | Sample SPTHY model used in demos and tests. |
+| 📄 `Forget_Mutation.pdf`           | Research / documentation artefact for the Forget mutation. |
+| 📝 `Packaging-Commands.txt`        | Packaging notes. |
+| 🎨 `css/`                          | JavaFX stylesheets — see [`css/README.md`](css/README.md). |
+| 🖼️ `images/`                      | UI image assets — see [`images/README.md`](images/README.md). |
 
 ## 🔬 Deep dive
 

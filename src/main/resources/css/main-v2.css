@@ -111,6 +111,23 @@
     -fx-effect: dropshadow(gaussian, -shadow, 24, 0.30, 0, 6);
 }
 
+/*
+ * Soft halo behind the brand mark. The gradient starts already partly
+ * transparent and feathers fully to zero alpha well inside the circle
+ * boundary, so combined with the gaussian blur in Java the bloom looks
+ * natural — not a fake fuzzy disk. The circle's radius is sized to cover
+ * the full wordmark; opacity is low so the halo doesn't compete with it.
+ */
+.x-logo-glow {
+    -fx-fill:
+        radial-gradient(center 50% 50%, radius 50%,
+            derive(-accent, 22%) 0%,
+            -accent 18%,
+            derive(-accent, -8%) 38%,
+            transparent 78%);
+    -fx-stroke: transparent;
+}
+
 .x-logo-slot {
     -fx-min-width: 220;
     -fx-min-height: 114;
@@ -210,8 +227,11 @@
 /* Single seamless surface — no inner sub-panels, no borders inside.            */
 /* ============================================================================ */
 
+/* The mutation controls glass card sits inside this wrapper; the extra top
+ * and bottom padding shrinks the visible panel ~10% so it stops touching the
+ * top/bottom edge of the screen. */
 .x-controls-wrap {
-    -fx-padding: 30 60 32 12;
+    -fx-padding: 80 60 80 12;
     -fx-alignment: CENTER;
 }
 
@@ -287,10 +307,10 @@
     -fx-border-color: -accent;
 }
 .x-control-panel .check-box:selected > .box > .mark {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: ladder(-accent, white 49%, black 50%);
 }
 .x-control-panel .radio-button:selected > .radio > .dot {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: ladder(-accent, white 49%, black 50%);
 }
 .x-control-panel .check-box:disabled,
 .x-control-panel .radio-button:disabled {
@@ -424,8 +444,7 @@
     -fx-background-color: transparent;
     -fx-padding: 16 0 0 0;
 }
-.x-settings-pane .tab-pane:focused > .tab-header-area > .headers-region > .tab:selected
-    .focus-indicator { -fx-border-color: transparent; }
+.x-settings-pane .tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator { -fx-border-color: transparent; }
 
 /* Preferences tab — checkbox labels render with the page text colour so they
  * remain readable on every palette, including light themes. The boxes
@@ -817,3 +836,429 @@
     -fx-background-color: -accent;
     -fx-text-fill: ladder(-accent, white 49%, black 50%);
 }
+
+/* ============================================================================ */
+/* Chat assistant — glass panel that grows out of the trigger button.           */
+/* ============================================================================ */
+
+/* The outer card. Same two-layer glass recipe as .x-settings-pane: a soft
+   accent gradient on top of the theme overlay so the panel reads as a sheet
+   of frosted glass over whatever is behind it. */
+.x-chat-card {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            derive(-accent, 24%) 0%,
+            derive(-glass-fill, 6%) 35%,
+            -glass-fill 100%),
+        -overlay;
+    -fx-background-radius: 22;
+    -fx-border-color: -glass-stroke;
+    -fx-border-width: 1.2;
+    -fx-border-radius: 22;
+    -fx-effect: dropshadow(gaussian, -shadow, 38, 0.45, 0, 14);
+}
+
+/* Header text. */
+.x-chat-title {
+    -fx-text-fill: -text;
+    -fx-font-size: 17px;
+    -fx-font-weight: 800;
+}
+.x-chat-status-on  { -fx-text-fill: #5BD68A; -fx-font-size: 11px; }
+.x-chat-status-off { -fx-text-fill: #FF7A7A; -fx-font-size: 11px; }
+.x-chat-status-text {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: 500;
+}
+
+/* Header close button — small, ghosted, hover lifts the glass. */
+.x-chat-close {
+    -fx-background-color: transparent;
+    -fx-border-color: -glass-stroke;
+    -fx-border-width: 1;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-min-width: 30; -fx-min-height: 30;
+    -fx-max-width: 30; -fx-max-height: 30;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+.x-chat-close:hover {
+    -fx-background-color: -glass-fill;
+    -fx-border-color: -accent-soft;
+}
+
+/* Scrollable message column — fully transparent, scrollbar themed. */
+.x-chat-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.x-chat-scroll > .viewport { -fx-background-color: transparent; }
+.x-chat-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-padding: 2;
+}
+.x-chat-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: -glass-stroke;
+    -fx-background-insets: 0;
+    -fx-background-radius: 999;
+}
+.x-chat-scroll .scroll-bar:vertical .track,
+.x-chat-scroll .scroll-bar:vertical .track-background {
+    -fx-background-color: transparent;
+}
+.x-chat-scroll .scroll-bar .increment-button,
+.x-chat-scroll .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.x-chat-scroll .scroll-bar .increment-arrow,
+.x-chat-scroll .scroll-bar .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
+}
+
+/* Bubbles — bot reads as a translucent panel; user reads as the accent. */
+.x-chat-bubble-bot,
+.x-chat-bubble-user {
+    -fx-padding: 10 14 10 14;
+    -fx-font-size: 13px;
+    -fx-line-spacing: 2.5px;
+}
+.x-chat-bubble-bot {
+    -fx-background-color: linear-gradient(to bottom right,
+        derive(-glass-fill, 12%), -glass-fill);
+    -fx-text-fill: -text;
+    -fx-background-radius: 14 14 14 4;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 14 14 14 4;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.15, 0, 2);
+}
+.x-chat-bubble-user {
+    -fx-background-color: linear-gradient(to bottom right,
+        derive(-accent, 18%), -accent);
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+    -fx-font-weight: 600;
+    -fx-background-radius: 14 14 4 14;
+    -fx-border-color: derive(-accent, 26%);
+    -fx-border-radius: 14 14 4 14;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.20, 0, 2);
+}
+
+/* Suggestion chips. */
+.x-chat-chip {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text;
+    -fx-border-color: -glass-stroke;
+    -fx-border-width: 1;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 5 12 5 12;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: 600;
+    -fx-cursor: hand;
+}
+.x-chat-chip:hover {
+    -fx-background-color: -glass-fill;
+    -fx-border-color: -accent-soft;
+    -fx-text-fill: -text;
+}
+.x-chat-chip:pressed {
+    -fx-background-color: derive(-accent, 8%);
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+}
+
+/* Input pill — flat, transparent, accent-glow on focus. */
+.x-chat-input {
+    -fx-background-color: rgba(0, 0, 0, 0.18);
+    -fx-text-fill: -text;
+    -fx-prompt-text-fill: -text-muted;
+    -fx-border-color: -glass-stroke;
+    -fx-border-width: 1;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 9 16 9 16;
+    -fx-font-size: 13px;
+}
+.x-chat-input:focused {
+    -fx-border-color: -accent;
+    -fx-effect: dropshadow(gaussian, derive(-accent, 30%), 12, 0.25, 0, 0);
+}
+
+/* Send button — circular accent pill. */
+.x-chat-send {
+    -fx-background-color: linear-gradient(to bottom right,
+        derive(-accent, 22%), -accent, derive(-accent, -18%));
+    -fx-border-color: derive(-accent, 30%);
+    -fx-border-width: 1;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-min-width: 38; -fx-min-height: 38;
+    -fx-max-width: 38; -fx-max-height: 38;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -shadow, 14, 0.35, 0, 4);
+}
+/* Send icon must contrast against its accent button — flips with theme. */
+.x-chat-send .x-icon-themed { -fx-stroke: ladder(-accent, white 49%, black 50%); }
+.x-chat-send:hover {
+    -fx-background-color: linear-gradient(to bottom right,
+        derive(-accent, 30%), derive(-accent, 6%), derive(-accent, -10%));
+}
+.x-chat-send:pressed {
+    -fx-translate-y: 1;
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.25, 0, 2);
+}
+
+/* Two-column shell wrapping sidebar + transcript inside the chat popup. */
+.x-chat-shell {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            derive(-accent, 24%) 0%,
+            derive(-glass-fill, 6%) 35%,
+            -glass-fill 100%),
+        -overlay;
+    -fx-background-radius: 22;
+    -fx-border-color: -glass-stroke;
+    -fx-border-width: 1.2;
+    -fx-border-radius: 22;
+    -fx-effect: dropshadow(gaussian, -shadow, 38, 0.45, 0, 14);
+}
+
+/* Sidebar — a darker translucent rail on the left. */
+.x-chat-sidebar {
+    -fx-background-color: rgba(0, 0, 0, 0.16);
+    -fx-background-radius: 22 0 0 22;
+    -fx-border-color: transparent -glass-stroke transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+.x-chat-side-title {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-letter-spacing: 0.12em;
+    -fx-padding: 2 0 4 4;
+}
+
+/* New Chat button. */
+.x-chat-newchat {
+    -fx-background-color: linear-gradient(to bottom right,
+        derive(-accent, 22%), -accent);
+    -fx-text-fill: ladder(-accent, white 49%, black 50%);
+    -fx-font-weight: 700;
+    -fx-font-size: 12.5px;
+    -fx-border-color: derive(-accent, 30%);
+    -fx-border-width: 1;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 8 14 8 14;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.25, 0, 3);
+}
+.x-chat-newchat:hover {
+    -fx-background-color: linear-gradient(to bottom right,
+        derive(-accent, 30%), derive(-accent, 6%));
+}
+
+/* Thread list rows. */
+.x-chat-thread {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 8 10 8 10;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER_LEFT;
+}
+.x-chat-thread:hover { -fx-background-color: rgba(255, 255, 255, 0.07); }
+.x-chat-thread-active {
+    -fx-background-color: -glass-fill;
+    -fx-border-color: -accent-soft;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+.x-chat-thread-title {
+    -fx-text-fill: -text;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+.x-chat-thread-time {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 10.5px;
+}
+
+/* TextFlow bubble children: body text + inline code monospace. */
+.x-chat-bubble-bot .x-chat-text,
+.x-chat-bubble-user .x-chat-text {
+    -fx-font-size: 13px;
+}
+.x-chat-bubble-bot .x-chat-text { -fx-fill: -text; }
+.x-chat-bubble-user .x-chat-text {
+    -fx-fill: ladder(-accent, white 49%, black 50%);
+    -fx-font-weight: 600;
+}
+.x-chat-bubble-bot .x-chat-text-code,
+.x-chat-bubble-user .x-chat-text-code {
+    -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", monospace;
+    -fx-font-size: 12px;
+}
+.x-chat-bubble-bot .x-chat-text-code { -fx-fill: derive(-accent, 35%); }
+.x-chat-bubble-user .x-chat-text-code {
+    -fx-fill: ladder(-accent, white 49%, black 50%);
+}
+.x-chat-text-bold { -fx-font-weight: 800; }
+.x-chat-bullet-row { -fx-padding: 2 0 2 0; }
+.x-chat-bullet-dot {
+    -fx-text-fill: -accent;
+    -fx-font-weight: 800;
+    -fx-min-width: 18;
+    -fx-font-size: 14px;
+}
+.x-chat-bullet-text { -fx-text-fill: -text; -fx-font-size: 13px; }
+
+/* Delete-thread affordance inside the sidebar row. */
+.x-chat-thread-delete {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 0 6 0 6;
+    -fx-cursor: hand;
+    -fx-min-width: 22; -fx-min-height: 22;
+}
+.x-chat-thread-delete:hover { -fx-text-fill: -accent; }
+
+/* ============================================================================ */
+/* Themed dialogs (Success / Error / Confirm)                                   */
+/* Replaces JavaFX Alert — no white OS wrapper.                                 */
+/* ============================================================================ */
+
+.x-dialog-card {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 18%), -glass-fill),
+        -overlay;
+    -fx-background-radius: 22;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 22;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.50, 0, 12);
+}
+.x-dialog-success { -fx-border-color: -accent-soft; }
+.x-dialog-error   { -fx-border-color: #FF7A7A; }
+.x-dialog-title {
+    -fx-text-fill: -text;
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+}
+.x-dialog-body {
+    -fx-text-fill: -text;
+    -fx-font-size: 14px;
+    -fx-line-spacing: 2px;
+}
+
+/* ============================================================================ */
+/* Derivation overlay (now themed, replaces dark hardcoded panel)               */
+/* ============================================================================ */
+
+.x-derivation-overlay { -fx-background-color: rgba(0,0,0,0.55); }
+.x-derivation-panel {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 18%), -glass-fill),
+        -overlay;
+    -fx-background-radius: 18;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 18;
+    -fx-border-width: 1.5;
+    -fx-padding: 18 22 18 22;
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.50, 0, 12);
+}
+.x-derivation-title {
+    -fx-text-fill: -text;
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+}
+.x-derivation-sub {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 12.5px;
+}
+.x-derivation-text {
+    -fx-control-inner-background: derive(-overlay, -15%);
+    -fx-background-color: derive(-overlay, -15%);
+    -fx-text-fill: -text;
+    -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", monospace;
+    -fx-font-size: 12px;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+.x-derivation-text .content { -fx-background-color: transparent; }
+.x-derivation-text .scroll-pane,
+.x-derivation-text .viewport { -fx-background-color: transparent; }
+
+/* Smoky overlay drawn above the background video to give it a hazy feel. */
+.x-smoke {
+    -fx-background-color:
+        radial-gradient(center 30% 25%, radius 70%,
+            derive(-accent-soft, 8%) 0%,
+            transparent 60%),
+        radial-gradient(center 75% 80%, radius 80%,
+            derive(-accent, 6%) 0%,
+            transparent 65%);
+    -fx-opacity: 0.16;
+}
+
+/* Theme tile (settings → themes). Classy preview card with a soft pill,
+ * gradient backdrop and theme name underneath. */
+.x-theme-tile {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+}
+.x-theme-tile .x-theme-preview {
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-width: 1.5;
+    -fx-border-color: rgba(255,255,255,0.18);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.40), 12, 0.32, 0, 4);
+    -fx-min-height: 64;
+    -fx-pref-height: 64;
+    -fx-min-width: 112;
+    -fx-pref-width: 112;
+}
+.x-theme-tile .x-theme-pill {
+    -fx-background-radius: 999;
+}
+.x-theme-tile.is-selected .x-theme-preview {
+    -fx-border-color: white;
+    -fx-border-width: 2.5;
+    -fx-effect: dropshadow(gaussian, -accent, 18, 0.80, 0, 0);
+}
+.x-theme-tile .x-theme-name {
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -text;
+}
+
+/* Stronger contrast for the vocabulary table — ladder switches between
+ * white/black text depending on the background luminance so columns stay
+ * readable on every palette. Visible separation between key/value columns. */
+.x-vocab-table .table-cell { -fx-border-color: transparent transparent transparent -glass-stroke; }
+.x-vocab-table .table-cell:first-visible { -fx-border-color: transparent; }
+.x-vocab-table .table-row-cell {
+    -fx-background-color: ladder(-text, derive(-overlay, 10%) 49%, derive(-overlay, -8%) 50%);
+}
+.x-vocab-table .table-row-cell:filled:odd {
+    -fx-background-color: ladder(-text, derive(-overlay, 18%) 49%, derive(-overlay, -2%) 50%);
+}
+.x-vocab-table .table-cell {
+    -fx-text-fill: -text;
+}
+
+/* ============================================================================ */
+/* Chat icon (bot icon used for the trigger button)                             */
+/* ============================================================================ */
+
+.x-chat-bot-icon { -fx-fill: ladder(-accent, white 49%, black 50%); -fx-stroke: ladder(-accent, white 49%, black 50%); }

@@ -30,7 +30,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -41,6 +40,11 @@ public class XMenInterface extends Application {
 
   private MediaPlayer mediaPlayer;
   private File selectedFile; // Holds the selected file
+
+  // Last mutation zip held in memory so the user can re-download it.
+  private byte[] lastGeneratedZip;
+  private String lastGeneratedZipName = "X-Men-Mutations.zip";
+  private Button heroDownloadBtn;
 
   // Declare checkboxes as class fields so they are accessible in event handlers.
   private CheckBox cbSkipS;
@@ -53,9 +57,9 @@ public class XMenInterface extends Application {
   private CheckBox cbType;
   private CheckBox cbCombineAddition;
   private CheckBox cbCombineOnly;
-  private CheckBox cbForget; // Added forget mutation checkbox
-  private CheckBox cbNeglect; // Added neglect mutation checkbox
-  private CheckBox cbForgetHaskell; // New checkbox for Haskell derivation
+  private CheckBox cbForget;
+  private CheckBox cbNeglect;
+  private CheckBox cbForgetHaskell;
 
   private ToggleGroup derivationTypeGroup;
   private RadioButton rbDerivationLimited;
@@ -69,62 +73,177 @@ public class XMenInterface extends Application {
 
   private static final String message = "Error while performing mutation";
 
+  /** Splash video resource (under src/main/resources). */
+  private static final String SPLASH_VIDEO_RESOURCE = "X - Men 2.0.mp4";
+
+  /** Design size — used as a minimum before maximize on the chosen monitor. */
+  private static final double MAIN_WIDTH = 1280;
+  private static final double MAIN_HEIGHT = 800;
+
   // Keep a reference to the root StackPane so we can show a glass overlay.
   private StackPane mainRoot;
 
-  // Hero logo — held so we can swap between Black.png / White.png on theme changes.
+  // Stage handle so dialogs can resolve owner positioning on the active monitor.
+  private Stage primaryStage;
+
+  // Hero logo — held so the theme switcher can repaint it.
   private ImageView heroLogo;
 
   @Override
   public void start(Stage stage) {
+    this.primaryStage = stage;
+    // Ask the OS for a dark title bar / window chrome — best-effort, see WindowChrome.
+    // Same hint applies to the splash and main windows because it's process-wide.
+    WindowChrome.requestDarkChrome(stage);
+    // Detect the screen the OS placed the stage on, fall back to primary.
+    Rectangle2D screen = currentScreenBounds(stage);
+
     StackPane splashRoot = new StackPane();
-    MediaView splashMediaView = createSplashScreen(splashRoot, stage);
-    stage.setScene(new Scene(splashRoot));
+    splashRoot.setStyle("-fx-background-color: black;");
+    splashRoot.setPrefSize(screen.getWidth(), screen.getHeight());
+    MediaPlayer splashPlayer = createSplashScreen(splashRoot, stage);
+    Scene splashScene = new Scene(splashRoot, screen.getWidth(), screen.getHeight());
+    stage.setScene(splashScene);
     stage.setTitle("X-Men 3.0");
+    stage.setX(screen.getMinX());
+    stage.setY(screen.getMinY());
+    stage.setWidth(screen.getWidth());
+    stage.setHeight(screen.getHeight());
     stage.show();
 
+    stage.setOnCloseRequest(e -> shutdownEverything());
+
     stage.setIconified(false);
-    stage.setAlwaysOnTop(true); // prevents auto-minimize briefly
-    PauseTransition pause = new PauseTransition(Duration.seconds(5));
-    pause.setOnFinished(
-        e -> {
+    stage.setAlwaysOnTop(true);
+
+    final boolean[] handedOff = {false};
+    Runnable handOff =
+        () -> {
+          if (handedOff[0]) return;
+          handedOff[0] = true;
+          if (splashPlayer != null) {
+            try {
+              splashPlayer.stop();
+              splashPlayer.dispose();
+            } catch (Exception ignored) {
+            }
+          }
           stage.setScene(createMainScene(stage));
-          stage.setAlwaysOnTop(false); // revert after scene change
-        });
-    pause.play();
+          stage.setAlwaysOnTop(false);
+          // Maximize on whichever monitor the stage is currently sitting on.
+          Rectangle2D current = currentScreenBounds(stage);
+          stage.setX(current.getMinX());
+          stage.setY(current.getMinY());
+          stage.setWidth(current.getWidth());
+          stage.setHeight(current.getHeight());
+          stage.setMaximized(true);
+        };
+
+    if (splashPlayer != null) {
+      splashPlayer.setOnEndOfMedia(() -> Platform.runLater(handOff));
+      splashPlayer.setOnError(() -> Platform.runLater(handOff));
+    }
+    PauseTransition safety = new PauseTransition(Duration.seconds(12));
+    safety.setOnFinished(e -> handOff.run());
+    safety.play();
   }
 
   /**
-   * Attempts to load the splash video from resources. If the resource is not found, a fallback
-   * Label is displayed.
+   * Find the screen that contains the stage's centre; fall back to the primary screen.
+   * Multi-monitor safe.
    */
-  private MediaView createSplashScreen(StackPane splashRoot, Stage stage) {
+  static Rectangle2D currentScreenBounds(Stage stage) {
+    if (stage != null && !Double.isNaN(stage.getX()) && !Double.isNaN(stage.getY())) {
+      double cx = stage.getX() + (stage.getWidth() > 0 ? stage.getWidth() / 2.0 : 1);
+      double cy = stage.getY() + (stage.getHeight() > 0 ? stage.getHeight() / 2.0 : 1);
+      for (Screen s : Screen.getScreens()) {
+        Rectangle2D b = s.getVisualBounds();
+        if (b.contains(cx, cy)) return b;
+      }
+    }
+    Screen primary = Screen.getPrimary();
+    return primary != null ? primary.getVisualBounds() : new Rectangle2D(0, 0, MAIN_WIDTH, MAIN_HEIGHT);
+  }
+
+  @Override
+  public void stop() {
+    shutdownEverything();
+  }
+
+  private void shutdownEverything() {
+    try {
+      if (mediaPlayer != null) mediaPlayer.dispose();
+    } catch (Exception ignored) {
+    }
+    try {
+      Platform.exit();
+    } catch (Exception ignored) {
+    }
+    System.exit(0);
+  }
+
+  private MediaPlayer createSplashScreen(StackPane splashRoot, Stage stage) {
+    MediaPlayer splashPlayer = null;
     MediaView splashMediaView = new MediaView();
     boolean videoLoaded = false;
 
     try {
-      InputStream videoStream = getClass().getResourceAsStream("/X-Men-Logo.mp4");
-      if (videoStream == null) throw new Exception("Splash video not found");
+      InputStream videoStream = getClass().getResourceAsStream("/" + SPLASH_VIDEO_RESOURCE);
+      if (videoStream == null) {
+        throw new Exception("Splash video resource not found: " + SPLASH_VIDEO_RESOURCE);
+      }
       File tempVideoFile = File.createTempFile("splash", ".mp4");
       tempVideoFile.deleteOnExit();
       Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
       Media splashMedia = new Media(tempVideoFile.toURI().toString());
-      MediaPlayer splashPlayer = new MediaPlayer(splashMedia);
+      splashPlayer = new MediaPlayer(splashMedia);
       splashPlayer.setCycleCount(1);
       splashPlayer.setAutoPlay(true);
+      splashPlayer.setMute(false);
+      splashPlayer.setVolume(1.0);
+      this.mediaPlayer = splashPlayer;
+
       splashMediaView.setMediaPlayer(splashPlayer);
-      splashMediaView.setPreserveRatio(true);
-      splashPlayer.setOnReady(
-          () -> {
-            stage.setWidth(splashMedia.getWidth());
-            stage.setHeight(splashMedia.getHeight());
-            stage.centerOnScreen();
-          });
+      splashMediaView.setPreserveRatio(false);
+
+      MediaPlayer mp = splashPlayer;
+      Runnable applyCover = () -> {
+        double vw = splashMedia.getWidth();
+        double vh = splashMedia.getHeight();
+        double winW = splashRoot.getWidth() > 0 ? splashRoot.getWidth() : MAIN_WIDTH;
+        double winH = splashRoot.getHeight() > 0 ? splashRoot.getHeight() : MAIN_HEIGHT;
+        if (vw <= 0 || vh <= 0) {
+          splashMediaView.setFitWidth(winW);
+          splashMediaView.setFitHeight(winH);
+          return;
+        }
+        double scale = Math.max(winW / vw, winH / vh);
+        splashMediaView.setFitWidth(vw * scale);
+        splashMediaView.setFitHeight(vh * scale);
+      };
+      mp.setOnReady(applyCover);
+      splashRoot.widthProperty().addListener((o, a, b) -> applyCover.run());
+      splashRoot.heightProperty().addListener((o, a, b) -> applyCover.run());
+      applyCover.run();
+
+      splashRoot.setClip(new javafx.scene.shape.Rectangle(MAIN_WIDTH, MAIN_HEIGHT));
+      splashRoot.layoutBoundsProperty().addListener((o, a, b) -> {
+        javafx.scene.shape.Rectangle r =
+            (javafx.scene.shape.Rectangle) splashRoot.getClip();
+        if (r != null) {
+          r.setWidth(b.getWidth());
+          r.setHeight(b.getHeight());
+        }
+      });
+
       splashRoot.getChildren().add(splashMediaView);
       videoLoaded = true;
+      log.info("Splash video '{}' loaded; playing at {}x{} with audio.",
+          SPLASH_VIDEO_RESOURCE, MAIN_WIDTH, MAIN_HEIGHT);
     } catch (Exception e) {
-      log.warn("Splash video not found, using fallback image.");
+      log.warn("Splash video '{}' not playable; falling back to image: {}",
+          SPLASH_VIDEO_RESOURCE, e.getMessage());
     }
 
     if (!videoLoaded) {
@@ -142,16 +261,9 @@ public class XMenInterface extends Application {
       }
     }
     splashRoot.setAlignment(Pos.CENTER);
-    return splashMediaView;
+    return splashPlayer;
   }
 
-  /**
-   * Builds the main scene using {@link MainSceneFactory} for the elevra-style hero, and docks the
-   * existing mutation-controls panel as a glass card on the right.
-   *
-   * <p>The old grid-pane scene is intentionally kept reachable via {@link #setupGridPane(Stage)}
-   * for parity, but it's now wrapped in a glass container and positioned by the factory.
-   */
   private Scene createMainScene(Stage stage) {
     int serverPort = 8081;
     MainSceneFactory.Built built =
@@ -160,23 +272,19 @@ public class XMenInterface extends Application {
     this.mainRoot = built.root();
     this.heroLogo = built.logoView();
 
-    // Build the legacy controls panel and dock it into the right-hand 65% of the layout.
     GridPane checkboxPanel = setupGridPane(stage);
     checkboxPanel.setMaxWidth(Double.MAX_VALUE);
 
-    // Panel header (title + sub).
     Label panelTitle = new Label("Mutation Controls");
     panelTitle.getStyleClass().add("x-control-title");
     Label panelSub = new Label("Pick the mutations to generate, then hit Start.");
     panelSub.getStyleClass().add("x-control-sub");
     VBox panelHeader = new VBox(4, panelTitle, panelSub);
 
-    // Panel footer with "How it works" right-aligned. Icon stroke is themed via CSS
-    // (.x-icon-themed → -text), so it stays visible on every palette.
-    Button howItWorks = new Button("How it works");
+    Button howItWorks = new Button("Chat with X-Men");
     howItWorks.getStyleClass().add("x-cta-secondary");
-    howItWorks.setGraphic(Icons.info(18, javafx.scene.paint.Color.WHITE));
-    howItWorks.setOnAction(e -> AlgorithmInfoDialog.show(stage));
+    howItWorks.setGraphic(Icons.chatBot(18, javafx.scene.paint.Color.WHITE));
+    howItWorks.setOnAction(e -> ChatBotDialog.show(stage, howItWorks));
     Animations.hoverLift(howItWorks, 1.03);
     StackPane howItWorksWrap = new StackPane(howItWorks);
     howItWorksWrap.getStyleClass().add("x-shadow-room");
@@ -189,21 +297,24 @@ public class XMenInterface extends Application {
     VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
     built.controlsHost().getChildren().add(panelWrap);
 
-    // The hero scene's "Start Mutation" and "Upload File" CTAs delegate to the legacy
-    // buttons (which carry the upload / submit logic).
     Node heroStart = built.root().lookup("#heroStart");
     Node heroUpload = built.root().lookup("#heroUpload");
+    Node heroDownload = built.root().lookup("#heroDownload");
     if (heroStart instanceof Button hs && buttonStart != null) {
       hs.setOnAction(e -> buttonStart.fire());
     }
     if (heroUpload instanceof Button hu && buttonUpload != null) {
       hu.setOnAction(e -> buttonUpload.fire());
     }
+    if (heroDownload instanceof Button hd) {
+      this.heroDownloadBtn = hd;
+      hd.setVisible(false);
+      hd.setManaged(false);
+      hd.setOnAction(e -> downloadLastZip(stage));
+    }
 
-    Scene scene = new Scene(built.root(), 1280, 800);
+    Scene scene = new Scene(built.root(), MAIN_WIDTH, MAIN_HEIGHT);
 
-    // Modern stylesheet; keep legacy main.css as a secondary so any selectors the controls
-    // panel still relies on continue to work.
     URL v2 = getClass().getResource("/css/main-v2.css");
     if (v2 != null) scene.getStylesheets().add(v2.toExternalForm());
     URL legacy = getClass().getResource("/css/main.css");
@@ -212,13 +323,11 @@ public class XMenInterface extends Application {
     return scene;
   }
 
-  /** Open the settings dialog and apply theme/logo/preference changes back into the scene. */
   private void openSettings(Stage stage) {
     int serverPort = 8081;
     SettingsDialog dialog =
         new SettingsDialog(
             serverPort,
-            // 1) Live theme preview: pull the resolved theme by id and re-style the main root.
             themeId -> {
               try {
                 okhttp3.OkHttpClient http = new okhttp3.OkHttpClient();
@@ -251,87 +360,9 @@ public class XMenInterface extends Application {
                 log.warn("Failed to refresh theme: {}", ex.getMessage());
               }
             },
-            // 2) Preferences callback (logged for now).
             prefs -> log.debug("UI preferences: {}", prefs),
-            // 3) Logo-swap on theme change (light themes → Black.png, dark → White.png).
             theme -> javafx.application.Platform.runLater(() -> ThemeLogo.apply(heroLogo, theme)));
     dialog.show(stage);
-  }
-
-  /**
-   * Attempts to load the background video from resources. If the resource is not found, logs the
-   * error.
-   */
-  private Node setupMediaOrFallback(Stage stage) {
-    StackPane container = new StackPane();
-
-    Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-    double desiredWidth = screenBounds.getWidth();
-    double desiredHeight = screenBounds.getHeight();
-    container.setPrefSize(desiredWidth, desiredHeight);
-
-    MediaView mediaView = null;
-
-    try (InputStream videoStream = getClass().getResourceAsStream("/DNA-Background.mp4")) {
-      if (videoStream != null) {
-        File tempVideoFile = File.createTempFile("dna", ".mp4");
-        tempVideoFile.deleteOnExit();
-        Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-        Media media = new Media(tempVideoFile.toURI().toString());
-        mediaPlayer = new MediaPlayer(media);
-        mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-
-        mediaView = new MediaView(mediaPlayer);
-        mediaView.setPreserveRatio(false);
-
-        mediaPlayer.setOnReady(
-            () -> {
-              stage.setWidth(desiredWidth);
-              stage.setHeight(desiredHeight);
-              stage.centerOnScreen();
-              mediaPlayer.play();
-            });
-
-        mediaView.fitWidthProperty().bind(container.widthProperty());
-        mediaView.fitHeightProperty().bind(container.heightProperty());
-
-        container.getChildren().add(mediaView);
-        log.info("Media successfully loaded.");
-        return container;
-      }
-      throw new IOException("Video stream null");
-    } catch (Exception e) {
-      log.warn("Video media failed to load: {}", e.getMessage());
-    }
-
-    // Fallback to Image explicitly guaranteed:
-    try (InputStream imgStream =
-        getClass().getResourceAsStream("/images/main_scene_dna_fallback.png")) {
-      if (imgStream == null) {
-        throw new IOException("Fallback image not found in resources");
-      }
-
-      ImageView fallbackImage = new ImageView(new Image(imgStream));
-      fallbackImage.setPreserveRatio(false);
-      fallbackImage.fitWidthProperty().bind(container.widthProperty());
-      fallbackImage.fitHeightProperty().bind(container.heightProperty());
-
-      stage.setWidth(desiredWidth);
-      stage.setHeight(desiredHeight);
-      stage.centerOnScreen();
-
-      container.getChildren().add(fallbackImage);
-      log.info("Fallback image loaded successfully.");
-
-    } catch (Exception imgException) {
-      log.error("Error loading fallback image explicitly: {}", imgException.getMessage());
-      Label errorLabel = new Label("Critical Error: No media or fallback image found.");
-      errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 18px;");
-      container.getChildren().add(errorLabel);
-    }
-
-    return container;
   }
 
   /**
@@ -341,13 +372,9 @@ public class XMenInterface extends Application {
   private GridPane setupGridPane(Stage stage) {
     GridPane checkboxPanel = new GridPane();
     checkboxPanel.setHgap(20);
-    checkboxPanel.setVgap(36);
+    checkboxPanel.setVgap(30);
     checkboxPanel.setAlignment(Pos.CENTER);
 
-    // Legacy "glass-panel" styling intentionally NOT applied — the new
-    // .x-control-panel wrapper provides the single seamless glass surface.
-
-    // Initialize buttons
     buttonUpload = new Button("Upload File");
     buttonUpload.setId("buttonUpload");
 
@@ -356,12 +383,10 @@ public class XMenInterface extends Application {
     setupButton(buttonUpload);
     setupButton(buttonStart);
 
-    // Set up file chooser for the "Upload File" button.
     buttonUpload.setOnAction(
         e -> {
           FileChooser fileChooser = new FileChooser();
           fileChooser.setTitle("Select a File to Upload");
-          // Restrict to XML files (adjust if necessary).
           fileChooser
               .getExtensionFilters()
               .add(new FileChooser.ExtensionFilter("XML Files", "*.*"));
@@ -372,11 +397,6 @@ public class XMenInterface extends Application {
           }
         });
 
-    // Set up HTTP request trigger for the "Start Mutation" button.
-    // Since the redesigned UI exposes a single CTA, "Start Mutation" now also
-    // handles file selection when nothing has been chosen yet: it opens a file
-    // chooser, stores the picked file, and proceeds to submit. If the user
-    // cancels the chooser, no mutation is fired.
     buttonStart.setOnAction(
         e -> {
           if (selectedFile == null) {
@@ -388,7 +408,6 @@ public class XMenInterface extends Application {
                 new FileChooser.ExtensionFilter("All files", "*.*"));
             File picked = chooser.showOpenDialog(stage);
             if (picked == null) {
-              // User cancelled — silently abort.
               return;
             }
             selectedFile = picked;
@@ -397,9 +416,6 @@ public class XMenInterface extends Application {
           sendMutationRequest();
         });
 
-    // Initialize check boxes.
-    // NOTE: text colour is intentionally NOT hardcoded any more — the .x-check
-    // selector in main-v2.css picks it up from the active theme's -text variable.
     String checkboxStyle = "-fx-font-weight: 600; -fx-font-size: 14px;";
     cbSkipS = new CheckBox("Send");
     cbSkipS.setId("cbSkipS");
@@ -437,29 +453,27 @@ public class XMenInterface extends Application {
     cbNeglect = new CheckBox("Neglect Mutation");
     cbNeglect.setId("cbNeglect");
 
-    // New: Forget mutation using external Haskell script
     cbForgetHaskell = new CheckBox("Forget Mutation using external Haskell Script");
     cbForgetHaskell.setId("cbForgetHaskell");
-    cbForgetHaskell.setDisable(true); // enabled only when Forget is selected
+    cbForgetHaskell.setDisable(true);
     cbForgetHaskell.setWrapText(true);
     cbForgetHaskell.setMaxWidth(220);
 
-    // Create radio buttons for derivation type (Forget mutation)
     derivationTypeGroup = new ToggleGroup();
-    rbDerivationLimited = new RadioButton("Limited Depth");
-    rbDerivationLimited.setId("rbDerivationLimited");
-    rbDerivationLimited.setToggleGroup(derivationTypeGroup);
-    rbDerivationLimited.setDisable(true);
+    rbDerivationInfinite = new RadioButton("Infinite");
+    rbDerivationInfinite.setId("rbDerivationInfinite");
+    rbDerivationInfinite.setToggleGroup(derivationTypeGroup);
+    rbDerivationInfinite.setDisable(true);
 
     rbDerivationSpecified = new RadioButton("Specified Depth");
     rbDerivationSpecified.setId("rbDerivationSpecified");
     rbDerivationSpecified.setToggleGroup(derivationTypeGroup);
     rbDerivationSpecified.setDisable(true);
 
-    rbDerivationInfinite = new RadioButton("Infinite");
-    rbDerivationInfinite.setId("rbDerivationInfinite");
-    rbDerivationInfinite.setToggleGroup(derivationTypeGroup);
-    rbDerivationInfinite.setDisable(true);
+    rbDerivationLimited = new RadioButton("Limited Depth");
+    rbDerivationLimited.setId("rbDerivationLimited");
+    rbDerivationLimited.setToggleGroup(derivationTypeGroup);
+    rbDerivationLimited.setDisable(true);
 
     tfDerivationDepth = new TextField();
     tfDerivationDepth.setId("tfDerivationDepth");
@@ -471,7 +485,6 @@ public class XMenInterface extends Application {
     cbShowDerivationTree.setId("cbShowDerivationTree");
     cbShowDerivationTree.setDisable(true);
 
-    // Enable/disable derivation controls together with Forget
     cbForget
         .selectedProperty()
         .addListener(
@@ -483,10 +496,9 @@ public class XMenInterface extends Application {
                 cbShowDerivationTree.setDisable(false);
                 cbForgetHaskell.setDisable(false);
 
-                // Default choice: Limited
-                rbDerivationLimited.setSelected(true);
+                // Default choice: Infinite (per spec).
+                rbDerivationInfinite.setSelected(true);
 
-                // Depth box only for specified
                 tfDerivationDepth.setText("");
                 tfDerivationDepth.setDisable(true);
 
@@ -507,7 +519,6 @@ public class XMenInterface extends Application {
               }
             });
 
-    // Depth enabled only when "Specified Depth" selected
     derivationTypeGroup
         .selectedToggleProperty()
         .addListener(
@@ -520,7 +531,6 @@ public class XMenInterface extends Application {
               }
             });
 
-    // Apply style to check boxes.
     cbSkipS.setStyle(checkboxStyle);
     cbSkipSR.setStyle(checkboxStyle);
     cbSkipR.setStyle(checkboxStyle);
@@ -539,8 +549,6 @@ public class XMenInterface extends Application {
     rbDerivationInfinite.setStyle(checkboxStyle);
     cbShowDerivationTree.setStyle(checkboxStyle);
 
-    // Theme-aware section labels. Colour now flows from the .x-control-panel .label
-    // selector in main-v2.css (i.e. the active theme's -text variable).
     String labelStyle = "-fx-font-weight: 700; -fx-font-size: 15px; -fx-letter-spacing: 0.04em;"
         + "-fx-font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;";
     Label lblSkip = new Label("Skip Mutation:");
@@ -562,25 +570,22 @@ public class XMenInterface extends Application {
     Label lblNeglect = new Label("Neglect Mutation:");
     lblNeglect.setStyle(labelStyle);
 
-    // Arrange components in rows.
     checkboxPanel.addRow(0, lblSkip, cbSkipS, cbSkipSR, cbSkipR);
     checkboxPanel.addRow(1, new Label(""), cbSkipRS, cbSkipRSR);
     checkboxPanel.addRow(2, lblReplace, cbSubmessages, cbType);
     checkboxPanel.addRow(3, lblAdd, cbAdd);
     checkboxPanel.addRow(4, lblCombine, cbCombineAddition, cbCombineOnly);
 
-    // ----- Forget mutation (Java derivation) -----
     checkboxPanel.addRow(5, lblForget, cbForget);
 
-    // Derivation-mode radios in an HBox so no label ever truncates.
+    // Infinite first, then Specified, then Limited (per spec).
     HBox derivationRadios =
-        new HBox(20, rbDerivationLimited, rbDerivationSpecified, rbDerivationInfinite);
+        new HBox(20, rbDerivationInfinite, rbDerivationSpecified, rbDerivationLimited);
     derivationRadios.setAlignment(Pos.CENTER_LEFT);
     checkboxPanel.add(new Label(""), 0, 6);
     checkboxPanel.add(derivationRadios, 1, 6);
     GridPane.setColumnSpan(derivationRadios, 4);
 
-    // The depth text-field appears on its own row, ONLY when "Specified Depth" is selected.
     tfDerivationDepth.setManaged(false);
     tfDerivationDepth.setVisible(false);
     tfDerivationDepth.setMaxWidth(150);
@@ -606,13 +611,10 @@ public class XMenInterface extends Application {
     checkboxPanel.add(cbShowDerivationTree, 1, 8);
     GridPane.setColumnSpan(cbShowDerivationTree, 4);
 
-    // ----- Forget mutation (external Haskell script) -----
     checkboxPanel.addRow(9, lblForgetHaskell, cbForgetHaskell);
 
-    // ----- Neglect -----
     checkboxPanel.addRow(10, lblNeglect, cbNeglect);
 
-    // Column constraints — label column left, controls column expands.
     javafx.scene.layout.ColumnConstraints labelCol = new javafx.scene.layout.ColumnConstraints();
     labelCol.setMinWidth(160);
     labelCol.setPrefWidth(180);
@@ -629,28 +631,25 @@ public class XMenInterface extends Application {
         .getColumnConstraints()
         .addAll(labelCol, controlsCol1, controlsCol2, controlsCol3);
 
-    // Buttons are intentionally NOT added to the legacy panel any more —
-    // the hero "Start Mutation" CTA in the redesigned scene drives the flow.
-    // The Button instances still exist and remain wired so the hero CTA can
-    // delegate to their onAction handlers (see createMainScene).
+    // Attach the legacy upload/start buttons to the panel but render them
+    // invisible+unmanaged. The hero CTAs delegate to their onAction handlers,
+    // and putting them in the scene graph lets tests resolve them by id.
+    buttonUpload.setVisible(false);
+    buttonUpload.setManaged(false);
+    buttonStart.setVisible(false);
+    buttonStart.setManaged(false);
+    checkboxPanel.add(buttonUpload, 0, 11);
+    checkboxPanel.add(buttonStart, 1, 11);
 
     return checkboxPanel;
   }
 
-  /**
-   * Sets up a button's preferred size. The legacy buttons aren't shown any more (the hero CTA
-   * delegates to them), but we still call this for backwards compatibility with old tests.
-   */
   private void setupButton(Button button) {
     button.setPrefSize(150, 40);
     button.getStyleClass().add("x-cta-secondary");
     GridPane.setMargin(button, new Insets(20, 0, 0, 0));
   }
 
-  /**
-   * Builds and sends an HTTP POST request (multipart/form-data) to your Spring Boot endpoint. The
-   * request includes the selected file and mutation options as headers.
-   */
   private void sendMutationRequest() {
     OkHttpClient client =
         new OkHttpClient.Builder()
@@ -659,7 +658,6 @@ public class XMenInterface extends Application {
             .readTimeout(30, TimeUnit.MINUTES)
             .build();
 
-    // Create a MediaType for the file.
     MediaType mediaType = MediaType.parse("application/octet-stream");
     RequestBody fileBody = RequestBody.create(selectedFile, mediaType);
 
@@ -672,7 +670,6 @@ public class XMenInterface extends Application {
         System.getProperty(
             "API_BASE_URL", System.getenv().getOrDefault("API_BASE_URL", "http://localhost:8081"));
 
-    // If Forget is selected, call the Forget endpoint; otherwise keep existing behavior.
     String apiEndpoint;
     if (cbForget.isSelected()) {
       apiEndpoint = "/api/forget/mutations";
@@ -686,40 +683,21 @@ public class XMenInterface extends Application {
     String apiUrl = apiBaseUrl + apiEndpoint;
     Request.Builder requestBuilder = new Request.Builder().url(apiUrl);
 
-    // Add headers based on the state of the checkboxes.
-    if (cbSkipS.isSelected()) {
-      requestBuilder.addHeader("Skip-Send", "true");
-    }
-    if (cbSkipR.isSelected()) {
-      requestBuilder.addHeader("Skip-Receive", "true");
-    }
-    if (cbSkipSR.isSelected()) {
-      requestBuilder.addHeader("Skip-Send-Receive", "true");
-    }
-    if (cbSkipRS.isSelected()) {
-      requestBuilder.addHeader("Skip-Receive-Send", "true");
-    }
-    if (cbSkipRSR.isSelected()) {
-      requestBuilder.addHeader("Skip-Receive-Send-Receive", "true");
-    }
-    if (cbAdd.isSelected()) {
-      requestBuilder.addHeader("Add-Mutation", "true");
-    }
-    if (cbSubmessages.isSelected()) {
-      requestBuilder.addHeader("Replace-Sub-Messages", "true");
-    }
-    if (cbType.isSelected()) {
-      requestBuilder.addHeader("Replace-Type", "true");
-    }
+    if (cbSkipS.isSelected()) requestBuilder.addHeader("Skip-Send", "true");
+    if (cbSkipR.isSelected()) requestBuilder.addHeader("Skip-Receive", "true");
+    if (cbSkipSR.isSelected()) requestBuilder.addHeader("Skip-Send-Receive", "true");
+    if (cbSkipRS.isSelected()) requestBuilder.addHeader("Skip-Receive-Send", "true");
+    if (cbSkipRSR.isSelected()) requestBuilder.addHeader("Skip-Receive-Send-Receive", "true");
+    if (cbAdd.isSelected()) requestBuilder.addHeader("Add-Mutation", "true");
+    if (cbSubmessages.isSelected()) requestBuilder.addHeader("Replace-Sub-Messages", "true");
+    if (cbType.isSelected()) requestBuilder.addHeader("Replace-Type", "true");
     if (cbForget.isSelected()) {
       requestBuilder.addHeader("Forget-Mutation", "true");
 
-      // Haskell derivation (external script path)
       if (cbForgetHaskell != null && cbForgetHaskell.isSelected()) {
         requestBuilder.addHeader("Haskell-Activate", "true");
       }
 
-      // Derivation headers (Forget endpoint)
       String derivationTypeHeader = getSelectedDerivationTypeHeader();
       if (derivationTypeHeader != null) {
         requestBuilder.addHeader("Derivation-Type", derivationTypeHeader);
@@ -744,22 +722,12 @@ public class XMenInterface extends Application {
               public void onFailure(@NotNull Call call, @NotNull IOException ex) {
                 log.error("Error while performing mutation: {}", ex.getMessage());
                 Platform.runLater(
-                    () -> {
-                      Alert alert = new Alert(Alert.AlertType.ERROR);
-                      alert.setTitle("Mutation Request Failed");
-                      alert.setHeaderText(null);
-                      alert.setContentText("Error: " + message);
-
-                      // Common styling for all alerts
-                      String cssPath =
-                          Objects.requireNonNull(getClass().getResource("/css/alert.css"))
-                              .toExternalForm();
-                      DialogPane dialogPane = alert.getDialogPane();
-                      dialogPane.getStylesheets().add(cssPath);
-                      dialogPane.getStyleClass().add("my-alert");
-
-                      alert.showAndWait();
-                    });
+                    () ->
+                        ThemedDialog.show(
+                            primaryStage,
+                            ThemedDialog.Kind.ERROR,
+                            "Mutation Request Failed",
+                            "Error: " + message));
               }
 
               @Override
@@ -773,105 +741,48 @@ public class XMenInterface extends Application {
                     derivationTreeText = extractDerivationTreeFromZip(bodyBytes);
                   }
 
+                  // Remember the zip so the user can download it.
+                  lastGeneratedZip = bodyBytes;
+                  lastGeneratedZipName = suggestedZipName(selectedFile);
+
                   String finalDerivationTreeText = derivationTreeText;
                   Platform.runLater(
                       () -> {
-                        // Existing success alert
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Success");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Mutation Generation Succeeded");
-
-                        ImageView customLogo =
-                            new ImageView(
-                                new Image(
-                                    Objects.requireNonNull(
-                                        getClass().getResourceAsStream("/images/dna_logo.png"))));
-                        customLogo.setFitWidth(120);
-                        customLogo.setFitHeight(120);
-                        alert.setGraphic(customLogo);
-
-                        String cssPath =
-                            Objects.requireNonNull(getClass().getResource("/css/alert.css"))
-                                .toExternalForm();
-                        DialogPane dialogPane = alert.getDialogPane();
-                        dialogPane.getStylesheets().add(cssPath);
-                        dialogPane.getStyleClass().add("my-alert");
-
-                        alert.showAndWait();
+                        if (heroDownloadBtn != null) {
+                          heroDownloadBtn.setVisible(true);
+                          heroDownloadBtn.setManaged(true);
+                        }
+                        ThemedDialog.show(
+                            primaryStage,
+                            ThemedDialog.Kind.SUCCESS,
+                            "Mutation Generation Succeeded",
+                            "Your file is ready. Use Download to save a zip of the generated mutations.");
 
                         if (finalDerivationTreeText != null && !finalDerivationTreeText.isBlank()) {
                           showDerivationOverlay(finalDerivationTreeText);
                         }
                       });
                 } else {
-                  // Log the response code and message
                   log.error("Error: {} {}", response.code(), response.message());
 
-                  // Attempt to read the response body for details
                   String responseBodyStr = response.body() != null ? response.body().string() : "";
 
-                  // Check for the specific "Forget function not found" text
                   if (responseBodyStr.contains("Forget function not found")) {
                     Platform.runLater(
-                        () -> {
-                          Alert alert = new Alert(Alert.AlertType.ERROR);
-                          alert.setTitle("Forget Function Error");
-                          alert.setHeaderText(null);
-                          alert.setContentText("Forget function not found in the input code");
-
-                          // Use the forget_not_found.png image
-                          ImageView customLogo =
-                              new ImageView(
-                                  new Image(
-                                      Objects.requireNonNull(
-                                          getClass()
-                                              .getResourceAsStream(
-                                                  "/images/forget_not_found.png"))));
-                          customLogo.setFitWidth(120);
-                          customLogo.setFitHeight(120);
-                          alert.setGraphic(customLogo);
-
-                          // Load the custom CSS file
-                          String cssPath =
-                              Objects.requireNonNull(getClass().getResource("/css/alert.css"))
-                                  .toExternalForm();
-                          DialogPane dialogPane = alert.getDialogPane();
-                          dialogPane.getStylesheets().add(cssPath);
-                          dialogPane.getStyleClass().add("my-alert");
-
-                          alert.showAndWait();
-                        });
+                        () ->
+                            ThemedDialog.show(
+                                primaryStage,
+                                ThemedDialog.Kind.ERROR,
+                                "Forget Function Error",
+                                "Forget function not found in the input code"));
                   } else {
-                    log.error("Error: {} {}", response.code(), response.message());
                     Platform.runLater(
-                        () -> {
-                          Alert alert = new Alert(Alert.AlertType.ERROR);
-                          alert.setTitle("Error");
-                          alert.setHeaderText(null);
-                          alert.setContentText("Error: " + message);
-
-                          // Set your custom logo
-                          ImageView customLogo =
-                              new ImageView(
-                                  new Image(
-                                      Objects.requireNonNull(
-                                          getClass()
-                                              .getResourceAsStream("/images/error_mutation.png"))));
-                          customLogo.setFitWidth(120);
-                          customLogo.setFitHeight(120);
-                          alert.setGraphic(customLogo);
-
-                          // Load the custom CSS file from resources
-                          String cssPath =
-                              Objects.requireNonNull(getClass().getResource("/css/alert.css"))
-                                  .toExternalForm();
-                          DialogPane dialogPane = alert.getDialogPane();
-                          dialogPane.getStylesheets().add(cssPath);
-                          dialogPane.getStyleClass().add("my-alert");
-
-                          alert.showAndWait();
-                        });
+                        () ->
+                            ThemedDialog.show(
+                                primaryStage,
+                                ThemedDialog.Kind.ERROR,
+                                "Error",
+                                "Error: " + message));
                   }
                 }
                 response.close();
@@ -926,53 +837,69 @@ public class XMenInterface extends Application {
     return null;
   }
 
+  private String suggestedZipName(File source) {
+    if (source == null) return "X-Men-Mutations.zip";
+    String n = source.getName();
+    int dot = n.lastIndexOf('.');
+    String base = dot > 0 ? n.substring(0, dot) : n;
+    return base + "-Mutations.zip";
+  }
+
+  /** Save the last generated zip to disk via a FileChooser. */
+  private void downloadLastZip(Stage stage) {
+    if (lastGeneratedZip == null || lastGeneratedZip.length == 0) {
+      ThemedToast.show(stage, "No mutation output to download yet.");
+      return;
+    }
+    FileChooser fc = new FileChooser();
+    fc.setTitle("Save Mutation Output");
+    fc.setInitialFileName(lastGeneratedZipName);
+    fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Zip Archive", "*.zip"));
+    File out = fc.showSaveDialog(stage);
+    if (out == null) return;
+    try (OutputStream os = Files.newOutputStream(out.toPath())) {
+      os.write(lastGeneratedZip);
+      ThemedToast.show(stage, "Saved " + out.getName());
+    } catch (IOException ex) {
+      log.error("Failed to save zip: {}", ex.getMessage());
+      ThemedDialog.show(stage, ThemedDialog.Kind.ERROR, "Save failed", ex.getMessage());
+    }
+  }
+
   private void showDerivationOverlay(String derivationText) {
     if (mainRoot == null) return;
 
     StackPane overlay = new StackPane();
     overlay.setId("derivationOverlay");
     overlay.setPickOnBounds(true);
-    overlay.setStyle(
-        "-fx-background-color: rgba(0,0,0,0.72); -fx-padding: 24px;");
+    overlay.getStyleClass().add("x-derivation-overlay");
 
     VBox panel = new VBox(12);
+    panel.getStyleClass().add("x-derivation-panel");
     panel.setMaxWidth(980);
     panel.setMaxHeight(680);
     panel.setPadding(new Insets(18));
-    panel.setStyle(
-        "-fx-background-color: rgba(15, 15, 18, 0.92);"
-            + "-fx-background-radius: 14;"
-            + "-fx-border-radius: 14;"
-            + "-fx-border-color: rgba(255,255,255,0.18);"
-            + "-fx-border-width: 1;"
-            + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.75), 24, 0.25, 0, 8);");
 
     Label title = new Label("Derivation Tree");
-    title.setStyle(
-        "-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px;");
+    title.getStyleClass().add("x-derivation-title");
 
-    Label subtitle = new Label("You can copy or save the full derivation as a .txt file.");
-    subtitle.setStyle("-fx-text-fill: rgba(255,255,255,0.75); -fx-font-size: 12px;");
+    Label subtitle = new Label("Copy, save as .txt, or download the full mutation zip.");
+    subtitle.getStyleClass().add("x-derivation-sub");
 
     TextArea textArea = new TextArea(derivationText);
     textArea.setEditable(false);
     textArea.setWrapText(false);
-    textArea.setStyle(
-        "-fx-font-family: 'Consolas'; -fx-font-size: 12px; -fx-control-inner-background: #0b0b0d; -fx-text-fill: #e8e8e8;");
+    textArea.getStyleClass().add("x-derivation-text");
     VBox.setVgrow(textArea, Priority.ALWAYS);
 
     Button btnCopy = new Button("Copy");
+    btnCopy.getStyleClass().add("x-cta-secondary");
     Button btnSave = new Button("Save as .txt");
+    btnSave.getStyleClass().add("x-cta-secondary");
+    Button btnDownload = new Button("Download Zip");
+    btnDownload.getStyleClass().add("x-cta-primary");
     Button btnClose = new Button("Close");
-
-    // Keep button sizing but make them a bit cleaner
-    btnCopy.setPrefSize(140, 38);
-    btnSave.setPrefSize(160, 38);
-    btnClose.setPrefSize(120, 38);
-
-    btnCopy.setStyle("-fx-font-weight: bold;");
-    btnSave.setStyle("-fx-font-weight: bold;");
-    btnClose.setStyle("-fx-font-weight: bold;");
+    btnClose.getStyleClass().add("x-cta-secondary");
 
     btnCopy.setOnAction(
         e -> {
@@ -980,6 +907,7 @@ public class XMenInterface extends Application {
           ClipboardContent content = new ClipboardContent();
           content.putString(derivationText);
           clipboard.setContent(content);
+          ThemedToast.show(primaryStage, "Copied derivation tree.");
         });
 
     btnSave.setOnAction(
@@ -994,18 +922,22 @@ public class XMenInterface extends Application {
           if (out != null) {
             try (OutputStream os = Files.newOutputStream(out.toPath())) {
               os.write(derivationText.getBytes(StandardCharsets.UTF_8));
+              ThemedToast.show(primaryStage, "Saved " + out.getName());
             } catch (IOException ex) {
               log.error("Failed to save derivation tree: {}", ex.getMessage());
             }
           }
         });
 
+    btnDownload.setOnAction(e -> downloadLastZip(primaryStage));
+    btnDownload.setDisable(lastGeneratedZip == null || lastGeneratedZip.length == 0);
+
     btnClose.setOnAction(e -> mainRoot.getChildren().remove(overlay));
 
     Region spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);
 
-    HBox buttons = new HBox(10, btnCopy, btnSave, spacer, btnClose);
+    HBox buttons = new HBox(10, btnCopy, btnSave, btnDownload, spacer, btnClose);
     buttons.setAlignment(Pos.CENTER_LEFT);
 
     panel.getChildren().addAll(title, subtitle, textArea, buttons);
@@ -1015,11 +947,6 @@ public class XMenInterface extends Application {
     mainRoot.getChildren().add(overlay);
   }
 
-  /**
-   * Main method to launch the JavaFX application.
-   *
-   * @param args Command line arguments
-   */
   public static void main(String[] args) {
     launch(args);
   }

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+    <!--
+      Greetings + capability description. Atomic answers in the assistant's own
+      voice; no source-quoting. Every non-redirect template ends with a
+      [[FOLLOWUPS]] marker that ChatBotService strips out and surfaces as
+      clickable chips in the UI. Authored follow-ups are guaranteed to map to
+      another trained category in this brain.
+    -->
+
+    <category>
+        <pattern>HELLO</pattern>
+        <template><![CDATA[Hi — I am the X-Men assistant. I can explain every mutation this tool can apply to a Tamarin protocol, help you decide which one fits a given scenario, and walk you through the analysis pipeline.
+
+What would you like to start with?
+[[FOLLOWUPS]] What mutations are available? | Which mutation should I pick? | How does the analysis pipeline work?]]></template>
+    </category>
+
+    <category><pattern>HI</pattern><template><srai>HELLO</srai></template></category>
+    <category><pattern>HEY</pattern><template><srai>HELLO</srai></template></category>
+    <category><pattern>GOOD MORNING</pattern><template><srai>HELLO</srai></template></category>
+    <category><pattern>GOOD EVENING</pattern><template><srai>HELLO</srai></template></category>
+    <category><pattern>GOOD AFTERNOON</pattern><template><srai>HELLO</srai></template></category>
+    <category><pattern>HELLO *</pattern><template><srai>HELLO</srai></template></category>
+    <category><pattern>HI *</pattern><template><srai>HELLO</srai></template></category>
+    <category><pattern>HEY *</pattern><template><srai>HELLO</srai></template></category>
+
+    <category>
+        <pattern>WHO ARE YOU</pattern>
+        <template><![CDATA[I am the X-Men assistant — an offline helper built into this app. I know the twelve mutations the tool can apply, the case studies it ships with, and the analysis workflow from upload to verdict. Everything I say comes from knowledge bundled with the app; no network calls happen when we chat.
+
+[[FOLLOWUPS]] What can you help me with? | What mutations are available? | How does the analysis pipeline work?]]></template>
+    </category>
+
+    <category><pattern>WHAT ARE YOU</pattern><template><srai>WHO ARE YOU</srai></template></category>
+    <category><pattern>WHAT IS YOUR NAME</pattern><template><srai>WHO ARE YOU</srai></template></category>
+    <category><pattern>ARE YOU AI</pattern><template><srai>WHO ARE YOU</srai></template></category>
+    <category><pattern>ARE YOU A BOT</pattern><template><srai>WHO ARE YOU</srai></template></category>
+    <category><pattern>INTRODUCE YOURSELF</pattern><template><srai>WHO ARE YOU</srai></template></category>
+
+    <category>
+        <pattern>WHAT CAN YOU HELP ME WITH</pattern>
+        <template><![CDATA[Three things, mainly:
+
+1. Explaining each mutation — what it does, what it preserves, when it is useful.
+2. Recommending which mutation fits a scenario you describe.
+3. Walking through the analysis pipeline so you know what to expect after you hit Start.
+
+Pick one and I will go deeper.
+
+[[FOLLOWUPS]] What mutations are available? | Which mutation should I pick? | What case studies do you support?]]></template>
+    </category>
+
+    <category><pattern>HELP</pattern><template><srai>WHAT CAN YOU HELP ME WITH</srai></template></category>
+    <category><pattern>WHAT CAN YOU DO</pattern><template><srai>WHAT CAN YOU HELP ME WITH</srai></template></category>
+    <category><pattern>HOW CAN YOU HELP</pattern><template><srai>WHAT CAN YOU HELP ME WITH</srai></template></category>
+    <category><pattern>WHAT DO YOU KNOW</pattern><template><srai>WHAT CAN YOU HELP ME WITH</srai></template></category>
+    <category><pattern>WHAT TOPICS DO YOU COVER</pattern><template><srai>WHAT CAN YOU HELP ME WITH</srai></template></category>
+
+    <category>
+        <pattern>HOW DOES X MEN WORK</pattern>
+        <template><![CDATA[At a high level: you upload a Tamarin theory file, tick the mutations you want, and hit Start. The tool generates one mutant theory per mutation, runs Tamarin on each, and returns the results so you can compare attacks and goal violations against the original.
+
+The interesting part is the mutations themselves — they are deliberate, structured rewrites of the protocol, not random perturbations.
+
+[[FOLLOWUPS]] What mutations are available? | How does the analysis pipeline work? | What is a mutant?]]></template>
+    </category>
+
+    <category><pattern>WHAT IS X MEN</pattern><template><srai>HOW DOES X MEN WORK</srai></template></category>
+    <category><pattern>WHAT DOES THIS TOOL DO</pattern><template><srai>HOW DOES X MEN WORK</srai></template></category>
+    <category><pattern>EXPLAIN X MEN</pattern><template><srai>HOW DOES X MEN WORK</srai></template></category>
+    <category><pattern>HOW DOES THE TOOL WORK</pattern><template><srai>HOW DOES X MEN WORK</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS A MUTANT</pattern>
+        <template><![CDATA[A mutant is a rewritten copy of your original Tamarin theory in which one targeted change has been applied — for example, a message has been added, a step has been skipped, or a knowledge fact has been forgotten. Each mutant is then re-analysed independently so you can see whether the security goal still holds, or whether the change opens up a new attack.
+
+Mutants are the unit of comparison: original vs mutant tells you what a real-world deviation would cost the protocol.
+
+[[FOLLOWUPS]] What mutations are available? | Which mutation should I pick? | How are mutants analysed?]]></template>
+    </category>
+
+    <category><pattern>WHAT IS MUTATION</pattern><template><srai>WHAT IS A MUTANT</srai></template></category>
+    <category><pattern>DEFINE MUTANT</pattern><template><srai>WHAT IS A MUTANT</srai></template></category>
+    <category><pattern>WHAT IS A MUTATION</pattern><template><srai>WHAT IS A MUTANT</srai></template></category>
+
+    <category>
+        <pattern>THANKS</pattern>
+        <template><![CDATA[Anytime. Ask me anything else when you are ready.
+
+[[FOLLOWUPS]] What mutations are available? | Which mutation should I pick?]]></template>
+    </category>
+    <category><pattern>THANK YOU</pattern><template><srai>THANKS</srai></template></category>
+    <category><pattern>THANKS *</pattern><template><srai>THANKS</srai></template></category>
+    <category><pattern>THANK YOU *</pattern><template><srai>THANKS</srai></template></category>
+
+    <category>
+        <pattern>BYE</pattern>
+        <template><![CDATA[Goodbye. Close the panel whenever you want — your chat history stays available until you close the app.]]></template>
+    </category>
+    <category><pattern>GOODBYE</pattern><template><srai>BYE</srai></template></category>
+    <category><pattern>SEE YOU</pattern><template><srai>BYE</srai></template></category>
+
+    <category>
+        <pattern>HOW ARE YOU</pattern>
+        <template><![CDATA[Running fine and ready to help. What can I dig into for you?
+
+[[FOLLOWUPS]] What mutations are available? | Which mutation should I pick? | What is the difference between limited and infinite depth?]]></template>
+    </category>
+    <category><pattern>HOW IS IT GOING</pattern><template><srai>HOW ARE YOU</srai></template></category>
+    <category><pattern>HOW DO YOU DO</pattern><template><srai>HOW ARE YOU</srai></template></category>
+    <category><pattern>ARE YOU OK</pattern><template><srai>HOW ARE YOU</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS THE DIFFERENCE BETWEEN LIMITED AND INFINITE DEPTH</pattern>
+        <template><![CDATA[The choice controls how exhaustively X-Men searches for a replacement when running Forget mutation.
+
+- **Infinite** — no cap on the derivation depth. X-Men keeps unfolding rule applications until either a valid replacement is found or the search exhausts. Use this when you want the most thorough answer and can wait.
+- **Limited Depth** — a sensible built-in cap (set by the bundled algorithm) that stops runaway searches on large theories. Pick this for quick iteration.
+- **Specified Depth** — you supply the integer cap yourself in the Depth box. Useful when you have a known budget.
+
+If in doubt, start with Infinite. Swap to Limited or Specified only if the run takes too long.
+
+[[FOLLOWUPS]] How does the Forget mutation work? | What is a derivation tree? | Why would I cap the depth?]]></template>
+    </category>
+    <category><pattern>DIFFERENCE LIMITED INFINITE</pattern><template><srai>WHAT IS THE DIFFERENCE BETWEEN LIMITED AND INFINITE DEPTH</srai></template></category>
+    <category><pattern>LIMITED VS INFINITE</pattern><template><srai>WHAT IS THE DIFFERENCE BETWEEN LIMITED AND INFINITE DEPTH</srai></template></category>
+    <category><pattern>INFINITE VS LIMITED</pattern><template><srai>WHAT IS THE DIFFERENCE BETWEEN LIMITED AND INFINITE DEPTH</srai></template></category>
+    <category><pattern>WHAT IS LIMITED DEPTH</pattern><template><srai>WHAT IS THE DIFFERENCE BETWEEN LIMITED AND INFINITE DEPTH</srai></template></category>
+    <category><pattern>WHAT IS INFINITE DEPTH</pattern><template><srai>WHAT IS THE DIFFERENCE BETWEEN LIMITED AND INFINITE DEPTH</srai></template></category>
+    <category><pattern>WHAT IS SPECIFIED DEPTH</pattern><template><srai>WHAT IS THE DIFFERENCE BETWEEN LIMITED AND INFINITE DEPTH</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS A DERIVATION TREE</pattern>
+        <template><![CDATA[A derivation tree records how X-Men proved that a given term can (or cannot) be replaced for a Forget mutation. Each node is an inference step; the root is the goal term and the leaves are facts the attacker already knows. When the tree closes, X-Men has found a derivation; otherwise the term is unreachable and the rule must be skipped or neglected.
+
+Turn on "Show derivation tree on screen" to see it for the Forget mutation you ran — you can also save the tree as a .txt or download the full result zip.
+
+[[FOLLOWUPS]] How does the Forget mutation work? | What is the difference between limited and infinite depth? | Why would I cap the depth?]]></template>
+    </category>
+    <category><pattern>DERIVATION TREE</pattern><template><srai>WHAT IS A DERIVATION TREE</srai></template></category>
+    <category><pattern>WHAT IS DERIVATION</pattern><template><srai>WHAT IS A DERIVATION TREE</srai></template></category>
+
+    <category>
+        <pattern>WHY WOULD I CAP THE DEPTH</pattern>
+        <template><![CDATA[Two practical reasons:
+
+- **Speed.** Each extra level of unfolding can multiply the search space. On a large theory, infinite depth might still terminate but take noticeably longer; capping bounds the runtime.
+- **Reproducibility.** A fixed cap makes runs comparable across machines and across protocol revisions.
+
+Use Infinite when correctness matters more than speed; cap when iterating or running batches.
+
+[[FOLLOWUPS]] What is the difference between limited and infinite depth? | How does the Forget mutation work? | What is a derivation tree?]]></template>
+    </category>
+
+    <category>
+        <pattern>WHAT IS TAMARIN</pattern>
+        <template><![CDATA[Tamarin is an open-source symbolic-analysis tool for security protocols. You describe a protocol as multiset rewriting rules; Tamarin then either proves that your security goals hold against the symbolic Dolev–Yao attacker or returns an attack trace. X-Men plugs into Tamarin: it generates mutated theories, then hands them off to Tamarin to verify whether each mutation still satisfies the goals.
+
+[[FOLLOWUPS]] How does the analysis pipeline work? | What is a mutant? | What mutations are available?]]></template>
+    </category>
+    <category><pattern>TAMARIN PROVER</pattern><template><srai>WHAT IS TAMARIN</srai></template></category>
+    <category><pattern>WHAT IS THE TAMARIN PROVER</pattern><template><srai>WHAT IS TAMARIN</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS SPTHY</pattern>
+        <template><![CDATA[`.spthy` is Tamarin's theory file format. A `.spthy` file declares the protocol's roles, the rewriting rules each role obeys, the equational theory (free term algebra plus operators), and the lemmas you want Tamarin to prove. X-Men reads `.spthy`, applies a mutation, and writes a new `.spthy` Tamarin can analyse.
+
+[[FOLLOWUPS]] What is Tamarin? | How does the analysis pipeline work? | What case studies do you support?]]></template>
+    </category>
+    <category><pattern>WHAT IS A SPTHY FILE</pattern><template><srai>WHAT IS SPTHY</srai></template></category>
+    <category><pattern>SPTHY FORMAT</pattern><template><srai>WHAT IS SPTHY</srai></template></category>
+    <category><pattern>SPTHY FILE</pattern><template><srai>WHAT IS SPTHY</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS A CEREMONY</pattern>
+        <template><![CDATA[A ceremony is a security protocol that explicitly models the humans, devices and out-of-band channels surrounding it — not just the wire-format messages. X-Men is tuned for ceremonies because the failure modes that matter most (forgetting a step, mistyping a value, slipping into the wrong sub-protocol) live in the human layer, not the crypto layer.
+
+[[FOLLOWUPS]] What is Tamarin? | What mutations are available? | Which mutation should I pick?]]></template>
+    </category>
+    <category><pattern>CEREMONY DEFINITION</pattern><template><srai>WHAT IS A CEREMONY</srai></template></category>
+
+    <category>
+        <pattern>WHAT IS DOLEV YAO</pattern>
+        <template><![CDATA[Dolev–Yao is the standard symbolic attacker model. The attacker:
+
+- sees every message sent on a public network,
+- can compose, decompose, encrypt and decrypt messages with keys it has learned,
+- cannot break cryptography (encryption is treated as a black-box term).
+
+X-Men's Forget mutation uses Dolev–Yao reasoning to decide whether a missing term can still be derived from the agent's current knowledge.
+
+[[FOLLOWUPS]] How does the Forget mutation work? | What is a derivation tree? | What is Tamarin?]]></template>
+    </category>
+    <category><pattern>WHAT IS DOLEV-YAO</pattern><template><srai>WHAT IS DOLEV YAO</srai></template></category>
+    <category><pattern>WHAT IS THE ATTACKER MODEL</pattern><template><srai>WHAT IS DOLEV YAO</srai></template></category>
+
+    <category>
+        <pattern>WHAT MUTATIONS ARE THERE</pattern>
+        <template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template>
+    </category>
+    <category>
+        <pattern>LIST MUTATIONS</pattern>
+        <template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template>
+    </category>
+    <category>
+        <pattern>HOW MANY MUTATIONS</pattern>
+        <template><srai>WHAT MUTATIONS ARE AVAILABLE</srai></template>
+    </category>
+
+    <category>
+        <pattern>WHAT IS A SETUP RULE</pattern>
+        <template><![CDATA[A Setup rule initialises the protocol state — agent identities, fresh keys, shared secrets — before any role takes its first step. In Tamarin theories, Setup typically appears once at the top of the rules section, and downstream rules consume the state facts Setup created.
+
+X-Men leaves Setup rules untouched on purpose: mutating initial knowledge would change the threat model rather than test the protocol logic.
+
+[[FOLLOWUPS]] What is a fresh fact? | What is a state fact? | What mutations are available?]]></template>
+    </category>
+
+    <category>
+        <pattern>WHAT IS A FRESH FACT</pattern>
+        <template><![CDATA[A Fresh fact (often written `Fr(~x)` in Tamarin) declares that the term `~x` was newly generated — nobody else has it yet. Fresh values stand in for nonces, random session keys, and any other "just generated" data. The tilde marks the value as a fresh-name.
+
+[[FOLLOWUPS]] What is a state fact? | What is a setup rule? | What is Tamarin?]]></template>
+    </category>
+
+    <category>
+        <pattern>WHAT IS A STATE FACT</pattern>
+        <template><![CDATA[A State fact is Tamarin's way of carrying a role's local memory from one rule to the next. Each State fact records who you are, what step you are at, and what values you have learned so far. Rules consume one State fact and produce the next — that is how protocol execution is modelled symbolically.
+
+[[FOLLOWUPS]] What is a fresh fact? | What is a setup rule? | What is Tamarin?]]></template>
+    </category>
+
+    <category>
+        <pattern>WHAT IS A VOCABULARY</pattern>
+        <template><![CDATA[The vocabulary tells X-Men which symbolic names your theory uses for the standard concepts (Send, Receive, State, Forget, Fr, …). The defaults match the bundled examples, but you can detect a vocabulary directly from a `.spthy` file or import one as YAML — saved profiles let you keep one configuration per case study.
+
+[[FOLLOWUPS]] What case studies do you support? | What is sptyh? | What mutations are available?]]></template>
+    </category>
+    <category><pattern>VOCABULARY PROFILE</pattern><template><srai>WHAT IS A VOCABULARY</srai></template></category>
+    <category><pattern>WHAT IS VOCABULARY</pattern><template><srai>WHAT IS A VOCABULARY</srai></template></category>
+
+    <category>
+        <pattern>HOW DO I IMPORT A YAML</pattern>
+        <template><![CDATA[Open Settings → Vocabulary → "Import YAML". X-Men parses the file, validates the shape, and applies it as the live vocabulary. If parsing succeeds, you will be prompted to save it as a named profile (Bank, Oyster, etc.) so you can switch back later from the Profile dropdown.
+
+[[FOLLOWUPS]] What is a vocabulary? | What case studies do you support? | What is sptyh?]]></template>
+    </category>
+    <category><pattern>IMPORT YAML</pattern><template><srai>HOW DO I IMPORT A YAML</srai></template></category>
+
+    <category>
+        <pattern>WHAT THEMES ARE THERE</pattern>
+        <template><![CDATA[The Settings → Themes tab ships with 28 palettes, ranging from the default SERMAS Classic to high-contrast options like Charcoal Mono and Paper Light. Click any tile to preview the theme live; click Save to keep it. Every screen — the main UI, settings, chat, popups — picks up the chosen palette.
+
+[[FOLLOWUPS]] What is a vocabulary? | How do I import a YAML? | What is X-Men?]]></template>
+    </category>
+    <category><pattern>WHAT IS THE THEME</pattern><template><srai>WHAT THEMES ARE THERE</srai></template></category>
+
+    <category>
+        <pattern>HOW DO I DOWNLOAD THE RESULT</pattern>
+        <template><![CDATA[After a successful run a Download button appears next to Start Mutation and inside the derivation-tree panel. Clicking it opens a Save dialog so you can store the generated zip anywhere — the zip contains the mutated `.spthy` files and, when enabled, the derivation tree text.
+
+[[FOLLOWUPS]] What is a derivation tree? | How does the analysis pipeline work? | What mutations are available?]]></template>
+    </category>
+    <category><pattern>DOWNLOAD RESULT</pattern><template><srai>HOW DO I DOWNLOAD THE RESULT</srai></template></category>
+    <category><pattern>SAVE OUTPUT</pattern><template><srai>HOW DO I DOWNLOAD THE RESULT</srai></template></category>
+    <category><pattern>WHERE IS THE OUTPUT</pattern><template><srai>HOW DO I DOWNLOAD THE RESULT</srai></template></category>
+
+</aiml>

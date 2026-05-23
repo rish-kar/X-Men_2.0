@@ -136,14 +136,24 @@ public class SettingsController {
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(
       summary =
-          "Detect a likely vocabulary from a .spthy file. Validates first; returns the "
-              + "detected vocabulary without overwriting the live one (the UI applies it on "
-              + "Save).")
+          "Detect a likely vocabulary from a .spthy file. Detection is best-effort and runs "
+              + "even when full grammar validation fails — only an empty/missing upload is "
+              + "rejected.")
   public ResponseEntity<?> detectVocabulary(@RequestParam("file") MultipartFile file)
       throws Exception {
+    // Run validation purely for logging/feedback — we do NOT block detection on it because
+    // many real-world .spthy files use vendor-specific extensions that the bundled ANTLR
+    // grammar trips on, yet the regex-based detector can still pull useful vocabulary from
+    // them. Only an empty / missing upload is hard-failed.
+    if (file == null || file.isEmpty()) {
+      return ResponseEntity.badRequest()
+          .body(java.util.Map.of("error", "Upload is empty or missing"));
+    }
     ValidationReport report = validator.validate(file);
     if (!report.isValid()) {
-      return ResponseEntity.badRequest().body(report);
+      log.info(
+          "Vocabulary detect: validation flagged the file but detection will still run ({} issues).",
+          report.getIssues().size());
     }
     String content = new String(file.getBytes());
     return ResponseEntity.ok(vocabularyDetector.detectFrom(content));

@@ -50,6 +50,10 @@ public class VocabularyDetector {
       return v;
     }
 
+    // Scan the whole file — earlier versions only swept action labels inside
+    // --[ ... ]-> blocks, which missed files (e.g. coach-service style) that
+    // declare their action names elsewhere in the theory body. The regexes
+    // are anchored on the upper-case identifier shape so noise is rare.
     Set<String> actions = collect(ACTION_PAT, spthyContent);
     Set<String> facts = collect(FACT_PAT, spthyContent);
 

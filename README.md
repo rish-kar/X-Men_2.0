@@ -564,12 +564,15 @@ runtime.
 | `GET /api/settings/vocabulary/export` | Download the active vocabulary as `vocabulary.yaml`. |
 | `POST /api/settings/vocabulary/import` | Upload a YAML file (`multipart/form-data` field `file`). |
 
-### 🎨 Themes (15 built-in palettes)
+### 🎨 Themes (28 built-in palettes)
 
-[`src/main/resources/themes.yaml`](src/main/resources/themes.yaml) ships fifteen named
-themes — Garden Mint, Midnight Violet, Ocean Cobalt, Sunset Coral, Amber Grove, Rose
-Quartz, Forest Emerald, Cyber Teal, Solar Yellow, Indigo Night, Lavender Mist, Charcoal
-Mono, Paper Light, SERMAS Classic, Arctic Ice.
+[`src/main/resources/themes.yaml`](src/main/resources/themes.yaml) ships twenty-eight named
+themes — SERMAS Classic (default), Garden Mint, Midnight Violet, Ocean Cobalt, Sunset
+Coral, Amber Grove, Rose Quartz, Forest Emerald, Cyber Teal, Solar Yellow, Indigo Night,
+Lavender Mist, Charcoal Mono, Paper Light, Arctic Ice, Volcanic Red, Mocha Brown, Slate
+Blue, Neon Pink, Sage Green, Copper Bronze, Crimson Wine, Powder Blue, Sandstone, Magenta
+Storm, Pine Forest, Royal Purple, Tangerine. Each tile in the Settings dialog renders the
+theme's name beneath a small classy preview card.
 
 Each theme controls the accent colour, glass-panel shade, overlay tone, and text colour
 all at once. Switching a theme is a single HTTP call:
@@ -582,7 +585,7 @@ curl -X POST http://localhost:8081/api/settings/themes/active \
 
 | Endpoint | What it does |
 | --- | --- |
-| `GET /api/settings/themes` | List all 15 themes + the active id. |
+| `GET /api/settings/themes` | List all 28 themes + the active id. |
 | `GET /api/settings/themes/active` | Resolve the active theme. |
 | `POST /api/settings/themes/active` | Switch the active theme by id. |
 | `GET /api/settings/themes/{id}` | Look up one theme. |
@@ -602,14 +605,23 @@ curl -X POST http://localhost:8081/api/settings/validate \
 ### 🖥️ Native UI
 
 The JavaFX UI exposes all of the above through a redesigned hero scene (glass panels +
-gradient CTAs + pill nav) plus a dedicated **Settings** dialog (gear icon, top-right).
+gradient CTAs + pill nav) plus a dedicated **Settings** dialog (gear icon, bottom-left).
 The dialog has three tabs:
 
 | Tab | Contents |
 | --- | --- |
-| **Vocabulary** | Editable table of every key/value, with **Save · Reset · Export YAML · Import YAML**. |
-| **Themes** | The 15 palette swatches; clicking one re-tints the whole UI instantly. |
-| **Preferences** | UI toggles — validate on upload, animations, derivation overlay, log trimming. |
+| **Vocabulary** | Editable table of every key/value, with **Detect · Reset · Export YAML · Import YAML**. Importing a YAML prompts you to save it as a named profile. Profile dropdown · **Load** · **Delete**. |
+| **Themes** | The 28 palette tiles — preview + name under each. Clicking one re-tints the whole UI instantly. |
+| **Preferences** | UI toggles — validate on upload, animations, derivation overlay. |
+
+Behavioural notes that ship with the redesigned UI:
+
+- **Multi-monitor aware** — the app sizes itself to whichever monitor it is launched on; popups, toasts, settings, and chat panels all stay on that monitor.
+- **Dark window chrome** — the OS title bar is requested in dark mode on Windows, macOS, and (best-effort) Linux so it matches the active theme.
+- **Themed popups** — Success, Error, and Confirm dialogs render as themed cards with no white wrapper. Non-confirm popups auto-dismiss after 5 seconds.
+- **Forget mutation defaults** — selecting Forget enables **Infinite** by default; the radio order is Infinite · Specified Depth · Limited Depth.
+- **Download after success** — once a mutation run completes, a Download button appears next to Start Mutation (and inside the derivation-tree panel) so the generated zip can be saved anywhere.
+- **Chat with X-Men** — bot answers render with markdown-lite bullets/bold; conversations can be deleted from the sidebar. The bot knows about every mutation, depth modes, derivation trees, vocabularies, themes, the Tamarin/Dolev–Yao backdrop, and how to drive the UI.
 
 ### Snapshot in one call
 
