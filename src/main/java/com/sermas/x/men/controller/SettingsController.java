@@ -185,6 +185,15 @@ public class SettingsController {
     return vocabularyProfileStore.activate(name);
   }
 
+  @PostMapping("/vocabulary/profiles/{name}/rename")
+  @Operation(summary = "Rename the saved profile named {name}. Protected profiles cannot be renamed.")
+  public Map<String, Object> renameProfile(
+      @PathVariable("name") String name, @RequestBody RenameProfileRequest body)
+      throws Exception {
+    String renamed = vocabularyProfileStore.rename(name, body == null ? null : body.name());
+    return Map.of("renamed", renamed, "profiles", vocabularyProfileStore.list());
+  }
+
   @DeleteMapping("/vocabulary/profiles/{name}")
   @Operation(summary = "Delete the saved profile named {name}.")
   public Map<String, Object> deleteProfile(@PathVariable("name") String name) throws Exception {
@@ -237,4 +246,7 @@ public class SettingsController {
 
   /** Body shape for {@code POST /themes/active}. */
   public record ThemeSelection(String id) {}
+
+  /** Body shape for {@code POST /vocabulary/profiles/{name}/rename}. */
+  public record RenameProfileRequest(String name) {}
 }

@@ -10,7 +10,6 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.animation.PauseTransition;
-import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -41,6 +40,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -193,6 +193,39 @@ public class XMenInterface extends Application {
     disposeMediaOnly();
   }
 
+  public static void shutdownUi() {
+    try {
+      if (Platform.isFxApplicationThread()) {
+        closeWindowsAndExitFx();
+        return;
+      }
+      CountDownLatch closed = new CountDownLatch(1);
+      Platform.runLater(
+          () -> {
+            try {
+              closeWindowsAndExitFx();
+            } finally {
+              closed.countDown();
+            }
+          });
+      closed.await(3, TimeUnit.SECONDS);
+    } catch (IllegalStateException ignored) {
+      // JavaFX was never started.
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private static void closeWindowsAndExitFx() {
+    for (javafx.stage.Window window : javafx.stage.Window.getWindows()) {
+      try {
+        window.hide();
+      } catch (Exception ignored) {
+      }
+    }
+    Platform.exit();
+  }
+
   private void disposeMediaOnly() {
     try {
       if (mediaPlayer != null) {
@@ -206,7 +239,7 @@ public class XMenInterface extends Application {
 
   private void shutdownEverything() {
     disposeMediaOnly();
-    Platform.exit();
+    shutdownUi();
     System.exit(0);
   }
 
@@ -307,6 +340,10 @@ public class XMenInterface extends Application {
     panelTitle.getStyleClass().add("x-control-title");
     Label panelSub = new Label("Pick the mutations to generate, then hit Start.");
     panelSub.getStyleClass().add("x-control-sub");
+    panelTitle.setWrapText(true);
+    panelSub.setWrapText(true);
+    panelTitle.setTextOverrun(OverrunStyle.CLIP);
+    panelSub.setTextOverrun(OverrunStyle.CLIP);
     VBox panelHeader = new VBox(4, panelTitle, panelSub);
 
     VBox.setMargin(checkboxPanel, new Insets(52, 0, 0, 0));
@@ -326,6 +363,8 @@ public class XMenInterface extends Application {
 
     Label chatButtonText = new Label("Chat with X-Men");
     chatButtonText.getStyleClass().add("x-chat-trigger-label");
+    chatButtonText.setWrapText(true);
+    chatButtonText.setTextOverrun(OverrunStyle.CLIP);
 
     VBox chatButtonGroup = new VBox(6, howItWorks, chatButtonText);
     chatButtonGroup.setAlignment(Pos.CENTER);
@@ -549,6 +588,7 @@ public class XMenInterface extends Application {
           File file = fileChooser.showOpenDialog(stage);
           if (file != null) {
             selectedFile = file;
+            clearGeneratedOutput();
             log.debug("Selected file: {}", file.getAbsolutePath());
           }
         });
@@ -556,18 +596,16 @@ public class XMenInterface extends Application {
     buttonStart.setOnAction(
         e -> {
           if (selectedFile == null) {
-            FileChooser chooser = new FileChooser();
-            chooser.setTitle("Select a .spthy file to mutate");
-            chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Tamarin SPTHY", "*.spthy"));
-            chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("All files", "*.*"));
-            File picked = chooser.showOpenDialog(stage);
-            if (picked == null) {
-              return;
-            }
-            selectedFile = picked;
-            log.debug("Selected file via Start CTA: {}", picked.getAbsolutePath());
+            showMutationInputError(
+                "File Required",
+                "Please upload a .spthy file before starting mutation generation.");
+            return;
+          }
+          if (!hasSelectedMutation()) {
+            showMutationInputError(
+                "Mutation Required",
+                "Please select at least one mutation before starting generation.");
+            return;
           }
           // Mutation runs FIRST. The profile auto-switch is best-effort and happens in
           // parallel — never blocking the mutation request. (The previous flow chained
@@ -583,7 +621,8 @@ public class XMenInterface extends Application {
           t.start();
         });
 
-    String checkboxStyle = "-fx-font-weight: 600; -fx-font-size: 14px;";
+    String checkboxStyle =
+        "-fx-font-weight: 600; -fx-font-size: 17.71px; -fx-wrap-text: true;";
     cbSkipS = new CheckBox("Send");
     cbSkipS.setId("cbSkipS");
 
@@ -624,7 +663,10 @@ public class XMenInterface extends Application {
     cbForgetHaskell.setId("cbForgetHaskell");
     cbForgetHaskell.setDisable(true);
     cbForgetHaskell.setWrapText(true);
-    cbForgetHaskell.setMaxWidth(220);
+    cbForgetHaskell.setTextOverrun(OverrunStyle.CLIP);
+    cbForgetHaskell.setMinHeight(Region.USE_PREF_SIZE);
+    cbForgetHaskell.setPrefWidth(620);
+    cbForgetHaskell.setMaxWidth(Double.MAX_VALUE);
 
     derivationTypeGroup = new ToggleGroup();
     rbDerivationInfinite = new RadioButton("Infinite");
@@ -716,7 +758,23 @@ public class XMenInterface extends Application {
     rbDerivationInfinite.setStyle(checkboxStyle);
     cbShowDerivationTree.setStyle(checkboxStyle);
 
-    String labelStyle = "-fx-font-weight: 700; -fx-font-size: 15px; -fx-letter-spacing: 0.04em;"
+    java.util.List<javafx.scene.control.Labeled> mutationTextControls = java.util.List.of(
+            cbSkipS, cbSkipSR, cbSkipR, cbSkipRS, cbSkipRSR, cbAdd, cbSubmessages, cbType,
+            cbCombineAddition, cbCombineOnly, cbForget, cbNeglect, cbForgetHaskell,
+            rbDerivationLimited, rbDerivationSpecified, rbDerivationInfinite, cbShowDerivationTree);
+    mutationTextControls.forEach(
+        control -> {
+          control.setWrapText(true);
+          control.setTextOverrun(OverrunStyle.CLIP);
+          control.setMaxWidth(300);
+        });
+    cbForgetHaskell.setText("Forget Mutation using external Haskell Script");
+    cbForgetHaskell.setMinHeight(Region.USE_PREF_SIZE);
+    cbForgetHaskell.setPrefWidth(620);
+    cbForgetHaskell.setMaxWidth(Double.MAX_VALUE);
+
+    String labelStyle = "-fx-font-weight: 700; -fx-font-size: 18.98px; -fx-wrap-text: true;"
+        + "-fx-letter-spacing: 0;"
         + "-fx-font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;";
     Label lblSkip = new Label("Skip Mutation:");
     lblSkip.setStyle(labelStyle);
@@ -732,10 +790,21 @@ public class XMenInterface extends Application {
     Label lblForgetHaskell = new Label("Forget Mutation (Haskell Derivation):");
     lblForgetHaskell.setStyle(labelStyle);
     lblForgetHaskell.setWrapText(true);
-    lblForgetHaskell.setMaxWidth(220);
+    lblForgetHaskell.setTextOverrun(OverrunStyle.CLIP);
+    lblForgetHaskell.setMinHeight(Region.USE_PREF_SIZE);
+    lblForgetHaskell.setMaxWidth(260);
 
     Label lblNeglect = new Label("Neglect Mutation:");
     lblNeglect.setStyle(labelStyle);
+    java.util.List<javafx.scene.control.Label> mutationLabels =
+        java.util.List.of(lblSkip, lblReplace, lblAdd, lblCombine, lblForget, lblForgetHaskell, lblNeglect);
+    mutationLabels.forEach(
+        label -> {
+          label.setWrapText(true);
+          label.setTextOverrun(OverrunStyle.CLIP);
+          label.setMaxWidth(220);
+        });
+    lblForgetHaskell.setMaxWidth(260);
 
     checkboxPanel.addRow(0, lblSkip, cbSkipS, cbSkipSR, cbSkipR);
     checkboxPanel.addRow(1, new Label(""), cbSkipRS, cbSkipRSR);
@@ -779,6 +848,8 @@ public class XMenInterface extends Application {
     GridPane.setColumnSpan(cbShowDerivationTree, 4);
 
     checkboxPanel.addRow(9, lblForgetHaskell, cbForgetHaskell);
+    GridPane.setColumnSpan(cbForgetHaskell, 3);
+    GridPane.setHgrow(cbForgetHaskell, Priority.ALWAYS);
 
     checkboxPanel.addRow(10, lblNeglect, cbNeglect);
 
@@ -959,7 +1030,9 @@ public class XMenInterface extends Application {
         (java.util.Map<String, Object>) a.getOrDefault("actions", java.util.Map.of());
     java.util.Map<String, Object> actB =
         (java.util.Map<String, Object>) b.getOrDefault("actions", java.util.Map.of());
-    return asSet(actA.get("core-actions")).equals(asSet(actB.get("core-actions")));
+    java.util.Set<String> coreA = asSet(actA.get("core-actions"));
+    java.util.Set<String> coreB = asSet(actB.get("core-actions"));
+    return coreA.equals(coreB) || coreA.containsAll(coreB) || coreB.containsAll(coreA);
   }
 
   @SuppressWarnings("unchecked")
@@ -979,7 +1052,36 @@ public class XMenInterface extends Application {
     return base.replaceAll("[^A-Za-z0-9._ -]", "_");
   }
 
+  private boolean hasSelectedMutation() {
+    return (cbSkipS != null && cbSkipS.isSelected())
+        || (cbSkipR != null && cbSkipR.isSelected())
+        || (cbSkipSR != null && cbSkipSR.isSelected())
+        || (cbSkipRS != null && cbSkipRS.isSelected())
+        || (cbSkipRSR != null && cbSkipRSR.isSelected())
+        || (cbAdd != null && cbAdd.isSelected())
+        || (cbSubmessages != null && cbSubmessages.isSelected())
+        || (cbType != null && cbType.isSelected())
+        || (cbForget != null && cbForget.isSelected())
+        || (cbNeglect != null && cbNeglect.isSelected());
+  }
+
+  private void clearGeneratedOutput() {
+    lastGeneratedZip = null;
+    lastGeneratedZipName = "X-Men-Mutations.zip";
+    if (heroDownloadBtn != null) {
+      heroDownloadBtn.setVisible(false);
+      heroDownloadBtn.setManaged(false);
+    }
+  }
+
+  private void showMutationInputError(String title, String body) {
+    clearGeneratedOutput();
+    ThemedDialog.show(primaryStage, ThemedDialog.Kind.ERROR, title, body);
+  }
+
   private void sendMutationRequest() {
+    clearGeneratedOutput();
+
     OkHttpClient client =
         new OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.MINUTES)
@@ -1020,6 +1122,7 @@ public class XMenInterface extends Application {
     if (cbAdd.isSelected()) requestBuilder.addHeader("Add-Mutation", "true");
     if (cbSubmessages.isSelected()) requestBuilder.addHeader("Replace-Sub-Messages", "true");
     if (cbType.isSelected()) requestBuilder.addHeader("Replace-Type", "true");
+    if (cbNeglect.isSelected()) requestBuilder.addHeader("Neglect-Mutation", "true");
     if (cbForget.isSelected()) {
       requestBuilder.addHeader("Forget-Mutation", "true");
 
@@ -1051,12 +1154,14 @@ public class XMenInterface extends Application {
               public void onFailure(@NotNull Call call, @NotNull IOException ex) {
                 log.error("Error while performing mutation: {}", ex.getMessage());
                 Platform.runLater(
-                    () ->
-                        ThemedDialog.show(
-                            primaryStage,
-                            ThemedDialog.Kind.ERROR,
-                            "Mutation Request Failed",
-                            "Error: " + message));
+                    () -> {
+                      clearGeneratedOutput();
+                      ThemedDialog.show(
+                          primaryStage,
+                          ThemedDialog.Kind.ERROR,
+                          "Mutation Request Failed",
+                          "Error: " + message);
+                    });
               }
 
               @Override
@@ -1064,6 +1169,15 @@ public class XMenInterface extends Application {
                   throws IOException {
                 if (response.isSuccessful()) {
                   byte[] bodyBytes = response.body() != null ? response.body().bytes() : new byte[0];
+                  if (bodyBytes.length == 0) {
+                    Platform.runLater(
+                        () ->
+                            showMutationInputError(
+                                "No Mutations Generated",
+                                "No mutation files were generated for this request."));
+                    response.close();
+                    return;
+                  }
 
                   String derivationTreeText = null;
                   if (bodyBytes.length > 0 && cbForget.isSelected() && cbShowDerivationTree.isSelected()) {
@@ -1093,6 +1207,7 @@ public class XMenInterface extends Application {
                       });
                 } else {
                   log.error("Error: {} {}", response.code(), response.message());
+                  Platform.runLater(() -> clearGeneratedOutput());
 
                   String responseBodyStr = response.body() != null ? response.body().string() : "";
 

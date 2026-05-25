@@ -1,7 +1,6 @@
 package com.sermas.x.men;
 
 import com.sermas.x.men.user_interface.XMenInterface;
-import javafx.application.Platform;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,26 +24,28 @@ public class Application implements CommandLineRunner {
     System.out.println("java.awt.headless=" + System.getProperty("java.awt.headless"));
     SPRING_CONTEXT = SpringApplication.run(Application.class, args);
 
-    // JVM-wide safety net: if anything (an OS signal, a sibling exit() call,
-    // an Actuator /shutdown, etc.) starts tearing the JVM down, make sure the
-    // JavaFX runtime also exits so we don't leak windows.
-    Runtime.getRuntime()
-            .addShutdownHook(
-                    new Thread(
-                            () -> {
-                              try {
-                                Platform.exit();
-                              } catch (Throwable ignored) {
-                              }
-
-                              try {
-                                if (SPRING_CONTEXT != null && SPRING_CONTEXT.isActive()) {
-                                  SPRING_CONTEXT.close();
+    if (!isTestRuntime()) {
+      // JVM-wide safety net: if anything (an OS signal, a sibling exit() call,
+      // an Actuator /shutdown, etc.) starts tearing the JVM down, make sure the
+      // JavaFX runtime also exits so we don't leak windows.
+      Runtime.getRuntime()
+              .addShutdownHook(
+                      new Thread(
+                              () -> {
+                                try {
+                                  XMenInterface.shutdownUi();
+                                } catch (Throwable ignored) {
                                 }
-                              } catch (Throwable ignored) {
-                              }
-                            },
-                            "xmen-force-shutdown"));
+
+                                try {
+                                  if (SPRING_CONTEXT != null && SPRING_CONTEXT.isActive()) {
+                                    SPRING_CONTEXT.close();
+                                  }
+                                } catch (Throwable ignored) {
+                                }
+                              },
+                              "xmen-force-shutdown"));
+    }
   }
 
   /**
@@ -62,7 +63,7 @@ public class Application implements CommandLineRunner {
 
       // Belt-and-braces: when launch() returns, force a JVM exit so the
       // embedded web server doesn't keep the process alive forever.
-      System.exit(0);
+      if (!isTestRuntime()) System.exit(0);
     } else {
       System.err.println("Cannot run GUI in a headless environment");
     }
@@ -76,9 +77,15 @@ public class Application implements CommandLineRunner {
   @EventListener
   public void onContextClosed(ContextClosedEvent event) {
     try {
-      Platform.exit();
+      XMenInterface.shutdownUi();
     } catch (Throwable ignored) {
       // already gone
     }
+  }
+
+  private static boolean isTestRuntime() {
+    return System.getProperty("surefire.test.class.path") != null
+        || System.getProperty("org.gradle.test.worker") != null
+        || System.getProperty("java.class.path", "").contains("surefire");
   }
 }

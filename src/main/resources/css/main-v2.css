@@ -251,25 +251,29 @@
 
 .x-control-title {
     -fx-text-fill: -text;
-    -fx-font-size: 22px;
+    -fx-font-size: 27.83px;
     -fx-font-weight: 700;
+    -fx-wrap-text: true;
 }
 .x-control-sub {
     -fx-text-fill: -text-muted;
-    -fx-font-size: 13px;
+    -fx-font-size: 16.5px;
+    -fx-wrap-text: true;
 }
 
 .x-section-label {
     -fx-text-fill: -accent-soft;
-    -fx-font-size: 11px;
+    -fx-font-size: 13.92px;
     -fx-font-weight: 800;
-    -fx-letter-spacing: 0.18em;
+    -fx-letter-spacing: 0;
 }
 
 /* Labels inside the panel — theme colour, no shadow. */
 .x-control-panel .label {
     -fx-text-fill: -text;
     -fx-effect: null;
+    -fx-wrap-text: true;
+    -fx-text-overrun: clip;
 }
 
 /* GridPane carrying the mutation toggles is just a layout — no background. */
@@ -291,9 +295,11 @@
 .x-control-panel .check-box,
 .x-control-panel .radio-button {
     -fx-text-fill: -text;
-    -fx-font-size: 14px;
+    -fx-font-size: 17.71px;
     -fx-font-weight: 500;
     -fx-effect: null;
+    -fx-wrap-text: true;
+    -fx-text-overrun: clip;
 }
 .x-control-panel .check-box > .box,
 .x-control-panel .radio-button > .radio {
@@ -329,6 +335,7 @@
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 10;
     -fx-border-width: 1;
+    -fx-font-size: 17.71px;
     -fx-padding: 8 12 8 12;
 }
 
@@ -380,13 +387,14 @@
     -fx-opacity: 1.55;  /* compensate for the parent's 0.65 → ~1.0 effective */
 }
 
-/* Panel: ~60% opaque overall — the theme overlay (single layer, typically
+/* Panel: ~70% opaque overall — the theme overlay (single layer, typically
  * 0.65–0.78 alpha) provides the see-through tint while the glass gradient
  * on top adds a faint accent wash. -fx-opacity is intentionally NOT used
  * because it cascades to children and would dim the text. */
 .x-settings-pane {
     -fx-background-color:
         linear-gradient(to bottom right, derive(-glass-fill, 18%), -glass-fill),
+        rgba(12, 12, 20, 0.10),
         -overlay;
     -fx-background-radius: 26;
     -fx-padding: 30 34 30 34;
@@ -1198,7 +1206,13 @@
     -fx-effect: dropshadow(gaussian, -shadow, 40, 0.50, 0, 12);
 }
 .x-dialog-success { -fx-border-color: -accent-soft; }
-.x-dialog-error   { -fx-border-color: #FF7A7A; }
+.x-dialog-error {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-accent, 18%), derive(-glass-fill, 12%)),
+        rgba(24, 6, 14, 0.30),
+        -overlay;
+    -fx-border-color: #FF7A7A;
+}
 .x-dialog-title {
     -fx-text-fill: -text;
     -fx-font-size: 20px;
@@ -1330,8 +1344,10 @@
 
 .x-chat-trigger-label {
     -fx-text-fill: -text;
-    -fx-font-size: 13px;
+    -fx-font-size: 16.5px;
     -fx-font-weight: 700;
+    -fx-wrap-text: true;
+    -fx-text-overrun: clip;
     -fx-padding: 2 0 0 0;
     -fx-effect: dropshadow(gaussian, -shadow, 8, 0.35, 0, 2);
 }

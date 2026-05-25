@@ -251,8 +251,17 @@ public class XMenInterfaceTest extends ApplicationTest {
 
       server.enqueue(new MockResponse().setResponseCode(200).setBody("Success"));
 
-      Button startButton = lookup("#buttonStart").queryAs(Button.class);
-      interact(startButton::fire);
+      Method sendMutationRequest =
+          XMenInterface.class.getDeclaredMethod("sendMutationRequest");
+      sendMutationRequest.setAccessible(true);
+      interact(
+          () -> {
+            try {
+              sendMutationRequest.invoke(app);
+            } catch (Exception e) {
+              throw new RuntimeException("Failed to invoke sendMutationRequest", e);
+            }
+          });
       waitForFxEvents();
 
       RecordedRequest request = server.takeRequest(5, TimeUnit.SECONDS);

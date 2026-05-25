@@ -15,6 +15,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 /**
  * Small theme-aware toast popup used in place of the default JavaFX {@link
@@ -28,9 +30,12 @@ public final class ThemedToast {
 
   private ThemedToast() {}
 
+  private static final Queue<ToastRequest> QUEUE = new ArrayDeque<>();
+  private static boolean showing;
+
   /** Show a transient toast centered-bottom over {@code owner}. Auto-closes in 5 s. */
   public static void show(Window owner, String message) {
-    Platform.runLater(() -> showInternal(resolveOwner(owner), message, 5000));
+    Platform.runLater(() -> enqueue(resolveOwner(owner), message, 5000));
   }
 
   /** Backwards-compat: Stage-typed overload. */
@@ -40,7 +45,22 @@ public final class ThemedToast {
 
   /** Show a transient toast with a custom dismiss delay (millis). */
   public static void show(Window owner, String message, long autoCloseMillis) {
-    Platform.runLater(() -> showInternal(resolveOwner(owner), message, autoCloseMillis));
+    Platform.runLater(() -> enqueue(resolveOwner(owner), message, autoCloseMillis));
+  }
+
+  private static void enqueue(Window owner, String message, long autoCloseMillis) {
+    QUEUE.offer(new ToastRequest(owner, message, autoCloseMillis));
+    if (!showing) showNext();
+  }
+
+  private static void showNext() {
+    ToastRequest next = QUEUE.poll();
+    if (next == null) {
+      showing = false;
+      return;
+    }
+    showing = true;
+    showInternal(next.owner(), next.message(), next.autoCloseMillis());
   }
 
   private static Window resolveOwner(Window owner) {
@@ -109,6 +129,7 @@ public final class ThemedToast {
         });
 
     card.setOnMouseClicked(e -> stage.close());
+    stage.setOnHidden(e -> showNext());
     stage.show();
 
     long delay = autoCloseMillis <= 0 ? 5000 : autoCloseMillis;
@@ -116,6 +137,8 @@ public final class ThemedToast {
     timeout.setOnFinished(e -> stage.close());
     timeout.play();
   }
+
+  private record ToastRequest(Window owner, String message, long autoCloseMillis) {}
 
   /** Pick the screen that contains the owner window's centre. Falls back to primary. */
   static Rectangle2D screenFor(Window owner) {

@@ -169,9 +169,25 @@ public class VocabularyProfileStore {
     return Files.deleteIfExists(file);
   }
 
+  /** Rename a saved profile. Protected built-ins (Oyster, Bank) cannot be renamed. */
+  public String rename(String oldName, String newName) throws IOException {
+    String targetName = sanitize(newName);
+    if (isProtected(oldName) || isProtected(targetName)) {
+      throw new IOException("protected profile cannot be renamed");
+    }
+    Path source = pathFor(oldName);
+    Path target = pathFor(targetName);
+    if (!Files.exists(source)) throw new IOException("profile not found: " + oldName);
+    if (Files.exists(target)) throw new IOException("profile already exists: " + targetName);
+    Files.move(source, target);
+    log.info("Renamed vocabulary profile '{}' to '{}'.", oldName, targetName);
+    return targetName;
+  }
+
   /** True if {@code name} refers to one of the protected built-in profiles. */
   public boolean isProtected(String name) {
-    return name != null && PROTECTED_PROFILES.contains(name.trim());
+    return name != null
+        && PROTECTED_PROFILES.stream().anyMatch(p -> p.equalsIgnoreCase(name.trim()));
   }
 
   /* ------------------------------------------------------------------ */

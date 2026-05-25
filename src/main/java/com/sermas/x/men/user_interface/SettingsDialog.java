@@ -528,12 +528,16 @@ public class SettingsDialog {
     loadProfile.getStyleClass().add("x-cta-secondary");
     loadProfile.setOnAction(e -> loadProfile(owner));
 
+    Button renameProfile = new Button("Rename");
+    renameProfile.getStyleClass().add("x-cta-secondary");
+    renameProfile.setOnAction(e -> renameProfile(owner));
+
     Button deleteProfile = new Button("Delete");
     deleteProfile.getStyleClass().add("x-cta-secondary");
     deleteProfile.setOnAction(e -> deleteProfile(owner));
 
     HBox profileRow =
-        new HBox(8, profileLabel, profilePicker, loadProfile, deleteProfile);
+        new HBox(8, profileLabel, profilePicker, loadProfile, renameProfile, deleteProfile);
     profileRow.setAlignment(Pos.CENTER_LEFT);
 
     // ----- Actions row -----
@@ -1034,13 +1038,140 @@ public class SettingsDialog {
         "preview profile " + name);
   }
 
+  private void renameProfile(Stage owner) {
+    String name = profilePicker.getValue();
+    if (name == null || name.isBlank()) {
+      ThemedToast.show(owner, "Pick a profile from the dropdown first.");
+      return;
+    }
+    if (isProtectedProfileName(name)) {
+      ThemedDialog.show(
+          owner,
+          ThemedDialog.Kind.INFO,
+          "Protected profile",
+          "'" + name + "' is a built-in profile and cannot be renamed.");
+      return;
+    }
+    promptRenameProfile(owner, name);
+  }
+
+  private void promptRenameProfile(Stage owner, String currentName) {
+    Stage stage = new Stage();
+    if (owner != null) stage.initOwner(owner);
+    stage.initModality(Modality.APPLICATION_MODAL);
+    stage.initStyle(StageStyle.TRANSPARENT);
+    stage.setAlwaysOnTop(true);
+
+    Label title = new Label("Rename profile");
+    title.getStyleClass().add("x-dialog-title");
+    Label body = new Label("Choose a new name for '" + currentName + "'.");
+    body.getStyleClass().add("x-dialog-body");
+    body.setWrapText(true);
+    body.setMaxWidth(420);
+
+    TextField nameField = new TextField(currentName);
+    nameField.getStyleClass().add("x-input");
+
+    Button save = new Button("Rename");
+    save.getStyleClass().add("x-cta-primary");
+    Button cancel = new Button("Cancel");
+    cancel.getStyleClass().add("x-cta-secondary");
+
+    save.setOnAction(
+        e -> {
+          String newName = nameField.getText() == null ? "" : nameField.getText().trim();
+          if (newName.isEmpty()) {
+            ThemedToast.show(stage, "Pick a name first.");
+            return;
+          }
+          if (isProtectedProfileName(newName)) {
+            ThemedToast.show(stage, "Oyster and Bank are locked.");
+            return;
+          }
+          if (newName.equals(currentName)) {
+            stage.close();
+            return;
+          }
+          stage.close();
+          runHttp(
+              () -> {
+                boolean ok =
+                    postJson(
+                        "/api/settings/vocabulary/profiles/"
+                            + java.net.URLEncoder.encode(currentName, "UTF-8")
+                            + "/rename",
+                        Map.of("name", newName));
+                Platform.runLater(
+                    () -> {
+                      if (ok) {
+                        loadProfiles();
+                        if (profilePicker != null) profilePicker.getSelectionModel().select(newName);
+                        ThemedToast.show(owner, "Renamed profile to '" + newName + "'.");
+                      } else {
+                        ThemedDialog.show(
+                            owner,
+                            ThemedDialog.Kind.ERROR,
+                            "Rename failed",
+                            "Could not rename profile '" + currentName + "'.");
+                      }
+                    });
+              },
+              "rename profile");
+        });
+    cancel.setOnAction(e -> stage.close());
+
+    Region spacer = new Region();
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+    StackPane cancelWrap = new StackPane(cancel);
+    cancelWrap.getStyleClass().add("x-shadow-room");
+    StackPane saveWrap = new StackPane(save);
+    saveWrap.getStyleClass().add("x-shadow-room");
+    HBox buttons = new HBox(10, spacer, cancelWrap, saveWrap);
+
+    VBox card = new VBox(14, title, body, nameField, buttons);
+    card.getStyleClass().addAll("x-dialog-card", "x-dialog-info");
+    card.setPadding(new Insets(22, 24, 18, 24));
+    card.setMaxWidth(520);
+
+    StackPane wrap = new StackPane(card);
+    wrap.getStyleClass().add("x-shadow-room");
+
+    StackPane root = new StackPane(wrap);
+    root.getStyleClass().add("x-root");
+    root.setStyle(ThemedToast.transparentPopupStyleFrom(owner));
+
+    Scene scene = new Scene(root);
+    scene.setFill(Color.TRANSPARENT);
+    scene.getStylesheets().add(getClass().getResource("/css/main-v2.css").toExternalForm());
+    stage.setScene(scene);
+
+    stage.setOnShown(
+        e -> {
+          Rectangle2D screen = ThemedToast.screenFor(owner);
+          double w = stage.getWidth();
+          double h = stage.getHeight();
+          double x =
+              owner != null ? owner.getX() + (owner.getWidth() - w) / 2.0 : screen.getMinX() + 40;
+          double y =
+              owner != null ? owner.getY() + (owner.getHeight() - h) / 2.0 : screen.getMinY() + 40;
+          stage.setX(Math.max(screen.getMinX() + 8, Math.min(x, screen.getMaxX() - w - 8)));
+          stage.setY(Math.max(screen.getMinY() + 8, Math.min(y, screen.getMaxY() - h - 8)));
+        });
+
+    stage.show();
+  }
+
+  private boolean isProtectedProfileName(String name) {
+    return name != null && protectedProfiles.stream().anyMatch(p -> p.equalsIgnoreCase(name.trim()));
+  }
+
   private void deleteProfile(Stage owner) {
     String name = profilePicker.getValue();
     if (name == null || name.isBlank()) {
       ThemedToast.show(owner, "Pick a profile from the dropdown first.");
       return;
     }
-    if (protectedProfiles.contains(name)) {
+    if (isProtectedProfileName(name)) {
       ThemedDialog.show(
           owner,
           ThemedDialog.Kind.INFO,
