@@ -231,7 +231,7 @@
  * and bottom padding shrinks the visible panel ~10% so it stops touching the
  * top/bottom edge of the screen. */
 .x-controls-wrap {
-    -fx-padding: 80 60 80 12;
+    -fx-padding: 90 60 110 12;
     -fx-alignment: CENTER;
 }
 
@@ -245,25 +245,25 @@
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 24;
     -fx-border-width: 1.5;
-    -fx-padding: 28 30 24 30;
+    -fx-padding: 18 30 16 30;
     -fx-effect: dropshadow(gaussian, -shadow, 32, 0.35, 0, 10);
 }
 
 .x-control-title {
     -fx-text-fill: -text;
-    -fx-font-size: 27.83px;
+    -fx-font-size: 25.3px;
     -fx-font-weight: 700;
     -fx-wrap-text: true;
 }
 .x-control-sub {
     -fx-text-fill: -text-muted;
-    -fx-font-size: 16.5px;
+    -fx-font-size: 15px;
     -fx-wrap-text: true;
 }
 
 .x-section-label {
     -fx-text-fill: -accent-soft;
-    -fx-font-size: 13.92px;
+    -fx-font-size: 12.65px;
     -fx-font-weight: 800;
     -fx-letter-spacing: 0;
 }
@@ -295,7 +295,7 @@
 .x-control-panel .check-box,
 .x-control-panel .radio-button {
     -fx-text-fill: -text;
-    -fx-font-size: 17.71px;
+    -fx-font-size: 16.1px;
     -fx-font-weight: 500;
     -fx-effect: null;
     -fx-wrap-text: true;
@@ -335,7 +335,7 @@
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 10;
     -fx-border-width: 1;
-    -fx-font-size: 17.71px;
+    -fx-font-size: 16.1px;
     -fx-padding: 8 12 8 12;
 }
 

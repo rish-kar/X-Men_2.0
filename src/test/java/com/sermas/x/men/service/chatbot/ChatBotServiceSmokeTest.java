@@ -45,4 +45,27 @@ class ChatBotServiceSmokeTest {
     assertThat(out).contains("Hi &lt;b&gt;there&lt;/b&gt; &amp; welcome");
     assertThat(out).doesNotContain("CDATA");
   }
+
+  @Test
+  void unknown_answers_keep_suggestion_chips_available() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply = bot.respondReply("zqxw impossible unknown topic");
+
+    assertThat(reply.text).contains("not have enough signal");
+    assertThat(reply.followups)
+        .contains("What can you help me with?", "Which mutation should I pick?");
+  }
+
+  @Test
+  void smart_conversation_training_answers_domain_adjacent_questions() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply = bot.respondReply("what is formal verification");
+
+    assertThat(reply.text)
+        .containsIgnoringCase("mathematical model")
+        .containsIgnoringCase("Tamarin");
+    assertThat(reply.followups).contains("Why use mutation testing?");
+  }
 }

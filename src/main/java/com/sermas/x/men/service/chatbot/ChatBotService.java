@@ -61,8 +61,15 @@ public final class ChatBotService {
           + "walk you through the analysis pipeline. What would you like to "
           + "start with?";
   private static final String FALLBACK_REPLY =
-      "I'm not sure I follow — could you rephrase that, or pick one of the "
-          + "suggestions below?";
+      "I do not have enough signal to answer that exact question well. "
+          + "The useful next move is to narrow it to a mutation, a protocol step, "
+          + "a generated file, or the analysis pipeline. Pick one of these and I "
+          + "can give you a cleaner answer.";
+  private static final List<String> FALLBACK_FOLLOWUPS = List.of(
+      "What can you help me with?",
+      "What mutations are available?",
+      "Which mutation should I pick?",
+      "How does the analysis pipeline work?");
 
   /** Marker that ends every authored template. Everything after it is parsed
    *  as a pipe-delimited list of suggested follow-up questions. */
@@ -172,7 +179,7 @@ public final class ChatBotService {
       String guess = bestKnowledgeMatch(userMessage);
       if (guess != null) return splitReply(guess);
       return new Reply("(Assistant offline — " + loadStatus + ")\n\n"
-          + FALLBACK_REPLY, List.of());
+          + FALLBACK_REPLY, FALLBACK_FOLLOWUPS);
     }
     try {
       String reply = bot.getRespond(userMessage);
@@ -184,15 +191,19 @@ public final class ChatBotService {
           || trimmed.equalsIgnoreCase("I have no answer for that.")) {
         // Fall through to the keyword-search index — the bot's intelligence
         // layer. If it cannot find a strong-enough match, surface the
-        // friendly fallback with no follow-up chips.
+        // friendly fallback with follow-up chips so suggestions keep showing.
         String guess = bestKnowledgeMatch(userMessage);
-        return guess != null ? splitReply(guess) : new Reply(FALLBACK_REPLY, List.of());
+        return guess != null ? splitReply(guess) : fallbackReply();
       }
       return splitReply(trimmed);
     } catch (Exception e) {
       log.warn("AIML respond() threw", e);
-      return new Reply(FALLBACK_REPLY, List.of());
+      return fallbackReply();
     }
+  }
+
+  private static Reply fallbackReply() {
+    return new Reply(FALLBACK_REPLY, FALLBACK_FOLLOWUPS);
   }
 
   /**

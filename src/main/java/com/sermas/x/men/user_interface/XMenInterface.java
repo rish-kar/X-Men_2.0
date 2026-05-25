@@ -217,9 +217,13 @@ public class XMenInterface extends Application {
   }
 
   private static void closeWindowsAndExitFx() {
-    for (javafx.stage.Window window : javafx.stage.Window.getWindows()) {
+    java.util.List<javafx.stage.Window> windows =
+        new java.util.ArrayList<>(javafx.stage.Window.getWindows());
+    for (javafx.stage.Window window : windows) {
       try {
-        window.hide();
+        if (window != null && window.isShowing()) {
+          window.hide();
+        }
       } catch (Exception ignored) {
       }
     }
@@ -346,7 +350,7 @@ public class XMenInterface extends Application {
     panelSub.setTextOverrun(OverrunStyle.CLIP);
     VBox panelHeader = new VBox(4, panelTitle, panelSub);
 
-    VBox.setMargin(checkboxPanel, new Insets(52, 0, 0, 0));
+    VBox.setMargin(checkboxPanel, new Insets(30, 0, 0, 0));
 
     Button howItWorks = new Button();
     this.howItWorksButton = howItWorks;
@@ -375,10 +379,16 @@ public class XMenInterface extends Application {
     HBox panelFooter = new HBox(howItWorksWrap);
     panelFooter.getStyleClass().add("x-control-footer");
 
-    VBox panelWrap = new VBox(14, panelHeader, checkboxPanel, panelFooter);
+    VBox panelContent = new VBox(10, panelHeader, checkboxPanel);
+    panelContent.setTranslateY(MAIN_HEIGHT * 0.05);
+
+    VBox panelWrap = new VBox(8, panelContent, panelFooter);
     panelWrap.getStyleClass().add("x-control-panel");
     panelWrap.setMaxWidth(Double.MAX_VALUE);
+    panelWrap.setPrefHeight(MAIN_HEIGHT * 0.82);
+    panelWrap.setMaxHeight(MAIN_HEIGHT * 0.82);
     VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
+    VBox.setVgrow(panelContent, Priority.ALWAYS);
     built.controlsHost().getChildren().add(panelWrap);
 
     Node heroStart = built.root().lookup("#heroStart");
@@ -567,7 +577,7 @@ public class XMenInterface extends Application {
   private GridPane setupGridPane(Stage stage) {
     GridPane checkboxPanel = new GridPane();
     checkboxPanel.setHgap(20);
-    checkboxPanel.setVgap(30);
+    checkboxPanel.setVgap(22);
     checkboxPanel.setAlignment(Pos.CENTER);
 
     buttonUpload = new Button("Upload File");
@@ -622,7 +632,7 @@ public class XMenInterface extends Application {
         });
 
     String checkboxStyle =
-        "-fx-font-weight: 600; -fx-font-size: 17.71px; -fx-wrap-text: true;";
+        "-fx-font-weight: 600; -fx-font-size: 16.1px; -fx-wrap-text: true;";
     cbSkipS = new CheckBox("Send");
     cbSkipS.setId("cbSkipS");
 
@@ -773,7 +783,7 @@ public class XMenInterface extends Application {
     cbForgetHaskell.setPrefWidth(620);
     cbForgetHaskell.setMaxWidth(Double.MAX_VALUE);
 
-    String labelStyle = "-fx-font-weight: 700; -fx-font-size: 18.98px; -fx-wrap-text: true;"
+    String labelStyle = "-fx-font-weight: 700; -fx-font-size: 17.25px; -fx-wrap-text: true;"
         + "-fx-letter-spacing: 0;"
         + "-fx-font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;";
     Label lblSkip = new Label("Skip Mutation:");
@@ -1102,7 +1112,7 @@ public class XMenInterface extends Application {
             "API_BASE_URL", System.getenv().getOrDefault("API_BASE_URL", "http://localhost:8081"));
 
     String apiEndpoint;
-    if (cbForget.isSelected()) {
+    if (isSelected(cbForget)) {
       apiEndpoint = "/api/forget/mutations";
     } else {
       apiEndpoint =
@@ -1114,19 +1124,19 @@ public class XMenInterface extends Application {
     String apiUrl = apiBaseUrl + apiEndpoint;
     Request.Builder requestBuilder = new Request.Builder().url(apiUrl);
 
-    if (cbSkipS.isSelected()) requestBuilder.addHeader("Skip-Send", "true");
-    if (cbSkipR.isSelected()) requestBuilder.addHeader("Skip-Receive", "true");
-    if (cbSkipSR.isSelected()) requestBuilder.addHeader("Skip-Send-Receive", "true");
-    if (cbSkipRS.isSelected()) requestBuilder.addHeader("Skip-Receive-Send", "true");
-    if (cbSkipRSR.isSelected()) requestBuilder.addHeader("Skip-Receive-Send-Receive", "true");
-    if (cbAdd.isSelected()) requestBuilder.addHeader("Add-Mutation", "true");
-    if (cbSubmessages.isSelected()) requestBuilder.addHeader("Replace-Sub-Messages", "true");
-    if (cbType.isSelected()) requestBuilder.addHeader("Replace-Type", "true");
-    if (cbNeglect.isSelected()) requestBuilder.addHeader("Neglect-Mutation", "true");
-    if (cbForget.isSelected()) {
+    if (isSelected(cbSkipS)) requestBuilder.addHeader("Skip-Send", "true");
+    if (isSelected(cbSkipR)) requestBuilder.addHeader("Skip-Receive", "true");
+    if (isSelected(cbSkipSR)) requestBuilder.addHeader("Skip-Send-Receive", "true");
+    if (isSelected(cbSkipRS)) requestBuilder.addHeader("Skip-Receive-Send", "true");
+    if (isSelected(cbSkipRSR)) requestBuilder.addHeader("Skip-Receive-Send-Receive", "true");
+    if (isSelected(cbAdd)) requestBuilder.addHeader("Add-Mutation", "true");
+    if (isSelected(cbSubmessages)) requestBuilder.addHeader("Replace-Sub-Messages", "true");
+    if (isSelected(cbType)) requestBuilder.addHeader("Replace-Type", "true");
+    if (isSelected(cbNeglect)) requestBuilder.addHeader("Neglect-Mutation", "true");
+    if (isSelected(cbForget)) {
       requestBuilder.addHeader("Forget-Mutation", "true");
 
-      if (cbForgetHaskell != null && cbForgetHaskell.isSelected()) {
+      if (isSelected(cbForgetHaskell)) {
         requestBuilder.addHeader("Haskell-Activate", "true");
       }
 
@@ -1136,7 +1146,7 @@ public class XMenInterface extends Application {
       }
 
       if ("DEPTH_SPECIFIED".equals(derivationTypeHeader)) {
-        Integer depth = parseDepthOrNull(tfDerivationDepth.getText());
+        Integer depth = parseDepthOrNull(tfDerivationDepth == null ? null : tfDerivationDepth.getText());
         if (depth != null) {
           requestBuilder.addHeader("Derivation-Depth", depth.toString());
         }
@@ -1180,7 +1190,7 @@ public class XMenInterface extends Application {
                   }
 
                   String derivationTreeText = null;
-                  if (bodyBytes.length > 0 && cbForget.isSelected() && cbShowDerivationTree.isSelected()) {
+                  if (bodyBytes.length > 0 && isSelected(cbForget) && isSelected(cbShowDerivationTree)) {
                     derivationTreeText = extractDerivationTreeFromZip(bodyBytes);
                   }
 
@@ -1246,6 +1256,14 @@ public class XMenInterface extends Application {
       return "INFINITE";
     }
     return null;
+  }
+
+  private static boolean isSelected(Toggle toggle) {
+    return toggle != null && toggle.isSelected();
+  }
+
+  private static boolean isSelected(CheckBox checkBox) {
+    return checkBox != null && checkBox.isSelected();
   }
 
   private Integer parseDepthOrNull(String raw) {
