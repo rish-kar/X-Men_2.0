@@ -166,7 +166,10 @@ public class SettingsController {
   @GetMapping("/vocabulary/profiles")
   @Operation(summary = "List all saved vocabulary profiles by name.")
   public Map<String, Object> listProfiles() {
-    return Map.of("profiles", vocabularyProfileStore.list());
+    return Map.of(
+        "profiles", vocabularyProfileStore.list(),
+        "protected", java.util.List.copyOf(
+            com.sermas.x.men.service.VocabularyProfileStore.PROTECTED_PROFILES));
   }
 
   @PostMapping("/vocabulary/profiles/{name}")

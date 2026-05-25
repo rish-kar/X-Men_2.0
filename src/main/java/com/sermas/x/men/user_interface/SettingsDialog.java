@@ -85,6 +85,8 @@ public class SettingsDialog {
   private CheckBox cbKeepDerivationTree;
 
   private final ObservableList<String> profileNames = FXCollections.observableArrayList();
+  private final java.util.Set<String> protectedProfiles =
+      java.util.concurrent.ConcurrentHashMap.newKeySet();
   private ComboBox<String> profilePicker;
 
   private StackPane dialogRoot;
@@ -109,9 +111,17 @@ public class SettingsDialog {
 
     VBox panel = new VBox(18);
     panel.getStyleClass().add("x-settings-pane");
-    panel.setPadding(new Insets(28));
+    // Generous bottom padding so the footer (Save/Close) and the action buttons under the
+    // vocabulary table always have visible breathing room beneath them — earlier the panel
+    // hugged the screen edge and looked like it was clipping content.
+    panel.setPadding(new Insets(24, 24, 32, 24));
     panel.setPrefWidth(980);
-    panel.setPrefHeight(860);
+    // Cap the dialog at ~85% of the active screen height so the footer and action buttons
+    // are always visible even on a 768-px screen.
+    javafx.geometry.Rectangle2D screenForSize = ThemedToast.screenFor(owner);
+    double maxH = Math.max(540, screenForSize.getHeight() * 0.85);
+    panel.setPrefHeight(Math.min(780, maxH));
+    panel.setMaxHeight(maxH);
 
     Label title = new Label("Settings");
     title.getStyleClass().add("x-settings-title");
@@ -193,6 +203,15 @@ public class SettingsDialog {
   private void saveAll(Stage hostStage, Stage thisStage) {
     Map<String, Object> vocabBody = unflatten(vocabRows);
     String themeId = selectedThemeId.get();
+    // If a profile is currently selected, save the vocabulary back into THAT profile file
+    // so descriptions and edits persist across activations. Without this step the next
+    // profile switch would overwrite the live vocab with the unmodified profile JSON, and
+    // any descriptions the user typed would be silently lost.
+    String activeProfile =
+        profilePicker != null && profilePicker.getValue() != null
+                && !profilePicker.getValue().isBlank()
+            ? profilePicker.getValue()
+            : null;
     Map<String, Object> prefs = new LinkedHashMap<>();
     prefs.put("validateOnUpload", cbValidateOnUpload != null && cbValidateOnUpload.isSelected());
     prefs.put("showAnimations", cbShowAnimations != null && cbShowAnimations.isSelected());
@@ -208,19 +227,35 @@ public class SettingsDialog {
           }
           ok &= postJson("/api/settings/preferences", prefs);
 
+          // Persist into the active profile file so descriptions survive switching.
+          if (activeProfile != null) {
+            try {
+              http.newCall(
+                      new Request.Builder()
+                          .url(
+                              BASE
+                                  + serverPort
+                                  + "/api/settings/vocabulary/profiles/"
+                                  + java.net.URLEncoder.encode(activeProfile, "UTF-8"))
+                          .post(RequestBody.create(new byte[0]))
+                          .build())
+                  .execute()
+                  .close();
+            } catch (Exception e) {
+              log.warn("Could not auto-save profile '{}': {}", activeProfile, e.getMessage());
+            }
+          }
+
           final boolean success = ok;
           Platform.runLater(
               () -> {
                 if (success) {
                   if (themeId != null && onThemeApplied != null) onThemeApplied.accept(themeId);
                   if (onPreferencesChanged != null) onPreferencesChanged.accept(prefs);
+                  // Close the dialog FIRST, then show the toast on the parent window so
+                  // the confirmation isn't competing with the modal that's about to vanish.
+                  if (thisStage != null) thisStage.close();
                   ThemedToast.show(hostStage, "Settings saved.");
-                  javafx.animation.PauseTransition wait =
-                      new javafx.animation.PauseTransition(javafx.util.Duration.millis(900));
-                  wait.setOnFinished(ev -> {
-                    if (thisStage != null) thisStage.close();
-                  });
-                  wait.play();
                 } else {
                   ThemedToast.show(hostStage, "Some settings failed to save.");
                 }
@@ -248,27 +283,168 @@ public class SettingsDialog {
   private Tab buildVocabularyTab(Stage owner) {
     Tab tab = new Tab("Vocabulary");
 
+    // Two sub-tabs: a read-only Tamarin reference (what THIS tool recognises) and the
+    // editable custom-vocabulary section (profiles, import, detect-from-.spthy).
+    TabPane sub = new TabPane();
+    sub.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+    sub.getTabs().addAll(buildTamarinReferenceSubTab(), buildCustomVocabularySubTab(owner));
+
+    VBox wrap = new VBox(sub);
+    VBox.setVgrow(sub, Priority.ALWAYS);
+    tab.setContent(wrap);
+
+    loadVocabulary();
+    loadProfiles();
+    return tab;
+  }
+
+  /** Read-only sub-tab listing what Tamarin keywords this tool understands. */
+  private Tab buildTamarinReferenceSubTab() {
+    Tab refTab = new Tab("Tamarin Reference");
+
     Label hint =
         new Label(
-            "Map each semantic role to a single atomic value. Use Import YAML to bring in a "
-                + "configuration (you'll be asked to save it as a new profile after validation), "
-                + "or detect a vocabulary straight from a .spthy file.");
+            "These are the Tamarin keywords, theories, and built-in functions this tool "
+                + "recognises directly. Anything not listed here is still accepted in .spthy "
+                + "files as a generic identifier, but X-Men will not act on it.");
     hint.getStyleClass().add("x-settings-sub");
     hint.setWrapText(true);
+    hint.setMaxWidth(Double.MAX_VALUE);
+    hint.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
 
-    TableView<VocabRow> table = new TableView<>(vocabRows);
+    // Two-column grid: Category | Keywords. Both columns wrap.
+    javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+    grid.setHgap(20);
+    grid.setVgap(12);
+    grid.getStyleClass().add("x-ref-table");
+
+    javafx.scene.layout.ColumnConstraints col1 = new javafx.scene.layout.ColumnConstraints();
+    col1.setPercentWidth(28);
+    col1.setHalignment(javafx.geometry.HPos.LEFT);
+    javafx.scene.layout.ColumnConstraints col2 = new javafx.scene.layout.ColumnConstraints();
+    col2.setPercentWidth(72);
+    col2.setHalignment(javafx.geometry.HPos.LEFT);
+    col2.setHgrow(Priority.ALWAYS);
+    grid.getColumnConstraints().addAll(col1, col2);
+
+    Object[][] rows = new Object[][] {
+        {"Top-level keywords",
+            new String[] {"theory", "begin", "end", "rule", "builtins", "functions",
+                "equations", "let", "in"}},
+        {"Built-in message theories",
+            new String[] {"diffie-hellman", "bilinear-pairing", "multiset", "xor",
+                "symmetric-encryption", "asymmetric-encryption", "signing",
+                "revealing-signing", "hashing"}},
+        {"Built-in function symbols",
+            new String[] {"aenc", "senc", "sign", "pk"}},
+        {"Variable & atom prefixes",
+            new String[] {"$  public", "~  fresh", "#  temporal", "!  persistent",
+                "'…'  public const", "~'…'  fresh name"}},
+        {"Rule syntax",
+            new String[] {"[ premise ]", "--[ action ]->", "[ conclusion ]",
+                "-->", "[private]", "all"}},
+        {"Operators",
+            new String[] {"=", "!", "*", "^", "<", ">", "/", ":", ",", "( )", "{ }", "[ ]"}},
+        {"Reserved fact names",
+            new String[] {"In", "Out", "Fr", "KU", "KD", "K", "State"}},
+        {"Default semantic roles",
+            new String[] {"Send", "Receive", "Forget", "Setup",
+                "H  (human marker)", "Fr  (fresh decl)"}},
+        {"Accepted (parsed as identifiers, not interpreted)",
+            new String[] {"lemma", "restriction", "axiom", "process", "predicate",
+                "predicates", "tactic", "heuristic", "macros",
+                "All", "Ex", "not", "last", "F", "T",
+                "==>", "<=>", "&", "|", "@",
+                "h", "adec", "sdec", "verify", "inv", "XOR", "pmult", "em",
+                "++", "%+",
+                "new", "out", "in", "if", "then", "else", "event", "insert",
+                "delete", "lookup", "lock", "unlock",
+                "#ifdef", "#else", "#endif", "#define", "#include"}}
+    };
+
+    for (int i = 0; i < rows.length; i++) {
+      Label category = new Label((String) rows[i][0]);
+      category.getStyleClass().add("x-ref-cat");
+      category.setWrapText(true);
+      category.setMaxWidth(Double.MAX_VALUE);
+      category.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+      javafx.scene.layout.GridPane.setValignment(category, javafx.geometry.VPos.TOP);
+
+      javafx.scene.layout.FlowPane chips = new javafx.scene.layout.FlowPane(6, 6);
+      chips.getStyleClass().add("x-ref-chips");
+      for (String kw : (String[]) rows[i][1]) {
+        Label chip = new Label(kw);
+        chip.getStyleClass().add("x-ref-chip");
+        chips.getChildren().add(chip);
+      }
+
+      grid.add(category, 0, i);
+      grid.add(chips, 1, i);
+    }
+
+    javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(grid);
+    scroll.setFitToWidth(true);
+    scroll.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
+    scroll.setVbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.AS_NEEDED);
+    scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+    scroll.setPadding(new Insets(6, 8, 6, 0));
+
+    VBox content = new VBox(12, hint, scroll);
+    content.setPadding(new Insets(8, 0, 0, 0));
+    VBox.setVgrow(scroll, Priority.ALWAYS);
+    refTab.setContent(content);
+    return refTab;
+  }
+
+  /** The editable side: table + profiles + import/detect — same surface as before. */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private Tab buildCustomVocabularySubTab(Stage owner) {
+    Tab tab = new Tab("Custom Vocabulary");
+
+    Label hint =
+        new Label(
+            "Only the custom, ceremony-specific identifiers from your active profile are listed "
+                + "here — everything Tamarin and X-Men already understand is hidden (see the "
+                + "Tamarin Reference sub-tab). Add a description so you can remember what each "
+                + "keyword means.");
+    hint.getStyleClass().add("x-settings-sub");
+    hint.setWrapText(true);
+    // Explicit pref/max width so the Label has a finite width to wrap against — without
+    // this, the surrounding VBox sometimes hands the label unconstrained width and the
+    // tail of the sentence ("...what each keyword means.") gets clipped instead of wrapping.
+    hint.setMaxWidth(Double.MAX_VALUE);
+    hint.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+
+    // Filtered view: hide rows whose value is a built-in Tamarin/X-Men identifier so the
+    // user only sees their ceremony-specific additions. Edits + saves still operate on the
+    // FULL backing list so we never lose the built-ins.
+    javafx.collections.transformation.FilteredList<VocabRow> visibleRows =
+        new javafx.collections.transformation.FilteredList<>(
+            vocabRows,
+            r -> r != null
+                && r.getValue() != null
+                && !r.getValue().isBlank()
+                && !BUILTIN_VALUES.contains(r.getValue()));
+
+    TableView<VocabRow> table = new TableView<>(visibleRows);
     table.setEditable(true);
     table.getStyleClass().add("x-vocab-table");
+    table.setPlaceholder(new Label(
+        "No custom keywords yet — use 'Detect from .spthy' to discover the identifiers "
+            + "your ceremony uses, or load a built-in profile (Oyster, Bank, Library)."));
     VBox.setVgrow(table, Priority.ALWAYS);
 
-    TableColumn<VocabRow, String> keyCol = new TableColumn<>("FIELD");
-    keyCol.setCellValueFactory(new PropertyValueFactory<>("key"));
-    keyCol.setPrefWidth(320);
-    keyCol.setEditable(false);
+    // Column 1 — Category (read-only, derived from the row's key path).
+    TableColumn<VocabRow, String> catCol = new TableColumn<>("CATEGORY");
+    catCol.setCellValueFactory(
+        cd -> new javafx.beans.property.SimpleStringProperty(categoryFor(cd.getValue().getKey())));
+    catCol.setPrefWidth(180);
+    catCol.setEditable(false);
 
-    TableColumn<VocabRow, String> valCol = new TableColumn<>("VALUE (atomic)");
+    // Column 2 — Keyword (the identifier the ceremony uses).
+    TableColumn<VocabRow, String> valCol = new TableColumn<>("KEYWORD");
     valCol.setCellValueFactory(new PropertyValueFactory<>("value"));
-    valCol.setPrefWidth(540);
+    valCol.setPrefWidth(260);
     valCol.setEditable(true);
     valCol.setCellFactory(
         (Callback)
@@ -284,11 +460,30 @@ public class SettingsDialog {
           ev.getTableView().refresh();
         });
 
-    table.getColumns().addAll(keyCol, valCol);
+    // Column 3 — Description (free text, persisted with the profile).
+    TableColumn<VocabRow, String> descCol = new TableColumn<>("DESCRIPTION");
+    descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+    descCol.setPrefWidth(420);
+    descCol.setEditable(true);
+    descCol.setCellFactory(
+        (Callback)
+            (Callback<TableColumn<VocabRow, String>, TableCell<VocabRow, String>>)
+                col ->
+                    new TextFieldTableCell<>(
+                        new javafx.util.converter.DefaultStringConverter()));
+    descCol.setOnEditCommit(
+        ev -> {
+          String d = ev.getNewValue() == null ? "" : ev.getNewValue();
+          ev.getRowValue().setDescription(d);
+          ev.getTableView().refresh();
+        });
+
+    table.getColumns().addAll(catCol, valCol, descCol);
 
     // ----- Profiles row (Load + Delete) -----
     Label profileLabel = new Label("Profile:");
     profileLabel.getStyleClass().add("x-settings-sub");
+    profileLabel.setMinWidth(Region.USE_PREF_SIZE);
 
     profilePicker = new ComboBox<>(profileNames);
     profilePicker.setPrefWidth(220);
@@ -337,16 +532,30 @@ public class SettingsDialog {
     importYaml.getStyleClass().add("x-cta-secondary");
     importYaml.setOnAction(e -> importVocabulary(owner));
 
-    HBox actions = new HBox(10, detect, reset, export, importYaml);
+    // FlowPane wraps the four action buttons to a second row if the dialog is narrower
+    // than their combined width, instead of clipping the right-most ones.
+    javafx.scene.layout.FlowPane actions = new javafx.scene.layout.FlowPane(10, 10);
     actions.setAlignment(Pos.CENTER_LEFT);
+    actions.getChildren().addAll(detect, reset, export, importYaml);
+    actions.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+    // 24-px breathing room below the action row so there's a visible margin instead of
+    // the buttons sitting flush against the tab's bottom edge (which used to look like
+    // they were being clipped).
+    VBox.setMargin(actions, new Insets(0, 0, 24, 0));
+
+    // Cap the table at a sensible height. With Vgrow ALWAYS the table previously stretched
+    // far enough to push the action row off-screen on small displays. SOMETIMES + a hard
+    // max keeps the table generous while guaranteeing the buttons stay visible.
+    table.setMaxHeight(360);
+    VBox.setVgrow(table, Priority.SOMETIMES);
 
     VBox content = new VBox(12, hint, profileRow, table, actions);
-    content.setPadding(new Insets(8, 0, 0, 0));
-    VBox.setVgrow(table, Priority.ALWAYS);
+    content.setPadding(new Insets(8, 0, 12, 0));
+    content.setFillWidth(true);
 
     tab.setContent(content);
-    loadVocabulary();
-    loadProfiles();
+    // loadVocabulary / loadProfiles are kicked off once at the parent tab level so we
+    // don't double-load when the user clicks back and forth between the sub-tabs.
     return tab;
   }
 
@@ -611,10 +820,29 @@ public class SettingsDialog {
     stage.show();
   }
 
-  /** Save the current live vocabulary under {@code name}, then refresh the profile list. */
+  /**
+   * Save the current table state under {@code name}.
+   *
+   * <p>Important: the profile-save endpoint snapshots the LIVE vocabulary on the server, but
+   * Detect-from-.spthy only fills the local table without touching the server. So we push the
+   * table state up first, then ask the server to persist it as a profile — otherwise the
+   * saved profile would be the stale pre-detect state (the bug behind "Library still shows
+   * Oyster's vocabulary").
+   */
   private void persistProfile(Stage owner, String name) {
+    Map<String, Object> vocabBody = unflatten(vocabRows);
     runHttp(
         () -> {
+          if (!postJson("/api/settings/vocabulary", vocabBody)) {
+            Platform.runLater(
+                () ->
+                    ThemedDialog.show(
+                        owner,
+                        ThemedDialog.Kind.ERROR,
+                        "Save failed",
+                        "Could not push the current vocabulary to the server before saving."));
+            return;
+          }
           Response r =
               http.newCall(
                       new Request.Builder()
@@ -663,8 +891,11 @@ public class SettingsDialog {
             if (!r.isSuccessful() || r.body() == null) return;
             Map<String, Object> body = json.readValue(r.body().bytes(), Map.class);
             List<String> names = (List<String>) body.getOrDefault("profiles", List.of());
+            List<String> prot = (List<String>) body.getOrDefault("protected", List.of());
             Platform.runLater(
                 () -> {
+                  protectedProfiles.clear();
+                  protectedProfiles.addAll(prot);
                   profileNames.clear();
                   profileNames.addAll(names);
                   if (profilePicker != null) {
@@ -685,7 +916,14 @@ public class SettingsDialog {
       @Override
       protected void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);
-        setText(empty || item == null ? null : item);
+        if (empty || item == null) {
+          setText(null);
+        } else if (protectedProfiles.contains(item)) {
+          // Lock glyph hints the user this one cannot be deleted.
+          setText(item + "  🔒");
+        } else {
+          setText(item);
+        }
       }
     };
     cell.getStyleClass().add("x-glass-cell");
@@ -699,6 +937,14 @@ public class SettingsDialog {
       ThemedToast.show(owner, "Pick a profile from the dropdown first.");
       return;
     }
+    // The Load button now commits + dismisses the dialog. The picker still previews on
+    // selection change, so users can still browse without closing the dialog — only Load
+    // means "I want this one, take me back to the main scene".
+    Stage dialogStage =
+        dialogRoot != null && dialogRoot.getScene() != null
+                && dialogRoot.getScene().getWindow() instanceof Stage s
+            ? s
+            : null;
     runHttp(
         () -> {
           Response r =
@@ -719,6 +965,9 @@ public class SettingsDialog {
                 () -> {
                   if (ok) {
                     loadVocabulary();
+                    // Close the dialog first, then toast on the parent so the message is
+                    // not competing with the modal that's vanishing.
+                    if (dialogStage != null) dialogStage.close();
                     ThemedToast.show(owner, "Loaded profile '" + name + "'.");
                   } else {
                     ThemedDialog.show(
@@ -767,6 +1016,14 @@ public class SettingsDialog {
     String name = profilePicker.getValue();
     if (name == null || name.isBlank()) {
       ThemedToast.show(owner, "Pick a profile from the dropdown first.");
+      return;
+    }
+    if (protectedProfiles.contains(name)) {
+      ThemedDialog.show(
+          owner,
+          ThemedDialog.Kind.INFO,
+          "Protected profile",
+          "'" + name + "' is a built-in profile and cannot be deleted.");
       return;
     }
     ThemedDialog.confirm(
@@ -1002,7 +1259,24 @@ public class SettingsDialog {
   @SuppressWarnings("unchecked")
   private static void flatten(
       String prefix, Map<String, Object> map, ObservableList<VocabRow> rows) {
+    // Pull `descriptions` out at the top level — it is a value→note map and should not be
+    // flattened into rows like every other key. Descriptions are attached to existing rows
+    // (whose value matches a description key) after the rest of the tree is processed.
+    Map<String, String> descriptions = null;
+    if (prefix.isEmpty() && map.containsKey("descriptions")) {
+      Object raw = map.get("descriptions");
+      if (raw instanceof Map<?, ?> dm) {
+        descriptions = new java.util.LinkedHashMap<>();
+        for (Map.Entry<?, ?> e : dm.entrySet()) {
+          if (e.getKey() != null && e.getValue() != null) {
+            descriptions.put(String.valueOf(e.getKey()), String.valueOf(e.getValue()));
+          }
+        }
+      }
+    }
+
     for (Map.Entry<String, Object> e : map.entrySet()) {
+      if (prefix.isEmpty() && "descriptions".equals(e.getKey())) continue; // handled above
       String key = prefix.isEmpty() ? e.getKey() : prefix + "." + e.getKey();
       Object value = e.getValue();
       if (value instanceof Map<?, ?> nested) {
@@ -1015,14 +1289,28 @@ public class SettingsDialog {
         rows.add(new VocabRow(key, String.valueOf(value)));
       }
     }
+
+    // Second pass: attach descriptions to rows where the value matches a description key.
+    if (descriptions != null && !descriptions.isEmpty()) {
+      for (VocabRow row : rows) {
+        String d = descriptions.get(row.getValue());
+        if (d != null) row.setDescription(d);
+      }
+    }
   }
 
   @SuppressWarnings("unchecked")
   private static Map<String, Object> unflatten(ObservableList<VocabRow> rows) {
     Map<String, Object> root = new LinkedHashMap<>();
+    Map<String, String> descriptions = new LinkedHashMap<>();
     for (VocabRow row : rows) {
       String key = row.getKey();
       String value = row.getValue() == null ? "" : row.getValue();
+      // Collect descriptions keyed by VALUE — the server-side schema stores them as a
+      // sibling map under `descriptions` so they survive round-trips through Jackson.
+      if (row.getDescription() != null && !row.getDescription().isBlank() && !value.isEmpty()) {
+        descriptions.put(value, row.getDescription().trim());
+      }
       java.util.regex.Matcher m =
           java.util.regex.Pattern.compile("^(.+)\\[(\\d+)\\]$").matcher(key);
       if (m.matches()) {
@@ -1048,6 +1336,7 @@ public class SettingsDialog {
         cursor.put(parts[parts.length - 1], value);
       }
     }
+    if (!descriptions.isEmpty()) root.put("descriptions", descriptions);
     return root;
   }
 
@@ -1087,9 +1376,60 @@ public class SettingsDialog {
 
   @Getter
   @Setter
-  @AllArgsConstructor
   public static class VocabRow {
     private String key;
     private String value;
+    /** Free-text note from the user — only meaningful for ceremony-specific identifiers. */
+    private String description = "";
+
+    public VocabRow() {}
+
+    public VocabRow(String key, String value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    public VocabRow(String key, String value, String description) {
+      this.key = key;
+      this.value = value;
+      this.description = description == null ? "" : description;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Custom-vocab filter & categorisation                              */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Identifiers that Tamarin / X-Men ship with — rows whose VALUE is in this set are hidden
+   * from the Custom Vocabulary table so the user sees only the ceremony-specific additions.
+   * Mirrors the "Reserved fact names" and "Default semantic roles" sections of the
+   * Tamarin Reference sub-tab.
+   */
+  private static final java.util.Set<String> BUILTIN_VALUES = java.util.Set.of(
+      "Send", "Receive", "Forget", "Setup", "Fr", "H", "To",
+      "OnlyOnce", "Neq", "Roles", "Hfin",
+      "State", "In", "Out", "SndS", "RcvS", "ChanSndS", "ChanRcvS",
+      "KU", "KD", "K",
+      "~", "$", "!", "#",
+      "insec", "conf", "auth", "sec");
+
+  /** Human-readable category derived from a VocabRow's path. Drives the first table column. */
+  private static String categoryFor(String key) {
+    if (key == null) return "";
+    if (key.startsWith("actions.core-actions")) return "Core action";
+    if (key.startsWith("actions.send")) return "Send action";
+    if (key.startsWith("actions.receive")) return "Receive action";
+    if (key.startsWith("actions.forget")) return "Forget action";
+    if (key.startsWith("actions.setup")) return "Setup action";
+    if (key.startsWith("actions.fresh")) return "Fresh action";
+    if (key.startsWith("actions.human-marker")) return "Human marker";
+    if (key.startsWith("facts.state")) return "State fact";
+    if (key.startsWith("facts.outbound")) return "Outbound channel";
+    if (key.startsWith("facts.inbound")) return "Inbound channel";
+    if (key.startsWith("facts.fresh")) return "Fresh fact";
+    if (key.startsWith("adornments.")) return "Adornment";
+    if (key.startsWith("channels.")) return "Channel mode";
+    return "";
   }
 }

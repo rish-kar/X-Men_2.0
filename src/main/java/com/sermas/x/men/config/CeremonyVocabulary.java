@@ -30,6 +30,14 @@ public class CeremonyVocabulary {
   private Adornments adornments = new Adornments();
   private Channels channels = new Channels();
 
+  /**
+   * Optional user-supplied descriptions for ceremony-specific identifiers (typically the
+   * values that appear in {@code actions.core-actions}). Maps the identifier itself
+   * (e.g. {@code "LoginOK"}) to a short note like {@code "bank grants the session"}.
+   * Persisted with the profile so descriptions survive restarts.
+   */
+  private Map<String, String> descriptions = new LinkedHashMap<>();
+
   @Data
   @NoArgsConstructor
   public static class Actions {
@@ -160,5 +168,8 @@ public class CeremonyVocabulary {
     this.facts = other.facts != null ? other.facts : new Facts();
     this.adornments = other.adornments != null ? other.adornments : new Adornments();
     this.channels = other.channels != null ? other.channels : new Channels();
+    this.descriptions = other.descriptions != null
+        ? new LinkedHashMap<>(other.descriptions)
+        : new LinkedHashMap<>();
   }
 }

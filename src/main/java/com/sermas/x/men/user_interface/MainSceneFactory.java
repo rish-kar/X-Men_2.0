@@ -52,6 +52,26 @@ public final class MainSceneFactory {
   /** Cache the temp video file across rebuilds so we don't re-extract on every scene change. */
   private static File cachedBackgroundFile;
 
+  /**
+   * Kicks off video extraction on a background thread so the file is ready by the time
+   * {@link #buildBackground(Stage)} is called from the splash hand-off. Safe to call from any
+   * thread; safe to call multiple times (the underlying op is synchronized + idempotent).
+   *
+   * <p>This is the single most effective fix for "main-screen video stuck on startup": the
+   * MP4 extraction (~MBs of I/O) no longer happens on the FX thread during scene swap.
+   */
+  public static void preWarmBackgroundVideo() {
+    Thread t = new Thread(() -> {
+      try {
+        ensureCachedVideo();
+      } catch (IOException e) {
+        log.debug("Background video pre-warm skipped: {}", e.getMessage());
+      }
+    }, "xmen-bg-prewarm");
+    t.setDaemon(true);
+    t.start();
+  }
+
   private MainSceneFactory() {}
 
   public record Built(
@@ -102,22 +122,36 @@ public final class MainSceneFactory {
 
     body.getChildren().addAll(heroLeft, controlsHost);
 
-    // Settings button — bottom-left corner with shadow room so the drop-shadow isn't clipped.
-    // Pushed away from the hero tagline (bottom inset) so the gear button does
-    // not sit flush against the "Exploring Formal-methods" text.
+    // Bottom-left cluster: Settings gear + (when mutation succeeds) Download button.
+    // Pushed away from the hero tagline (bottom inset) so the cluster doesn't sit flush
+    // against the "Exploring Formal-methods" text.
     Button settings = buildSettingsButton(onSettingsRequested);
-    StackPane settingsHost = new StackPane(settings);
-    settingsHost.getStyleClass().add("x-shadow-room");
-    settingsHost.setAlignment(Pos.BOTTOM_LEFT);
-    settingsHost.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-    StackPane.setAlignment(settingsHost, Pos.BOTTOM_LEFT);
-    StackPane.setMargin(settingsHost, new Insets(0, 0, 2, 18));
+    StackPane settingsShadowRoom = new StackPane(settings);
+    settingsShadowRoom.getStyleClass().add("x-shadow-room");
+    settingsShadowRoom.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+    StackPane downloadShadowRoom = buildDownloadCorner(); // contains halo + #heroDownload button
+
+    HBox bottomLeftCluster = new HBox(8, settingsShadowRoom, downloadShadowRoom);
+    bottomLeftCluster.setAlignment(Pos.BOTTOM_LEFT);
+    bottomLeftCluster.setPickOnBounds(false);
+    bottomLeftCluster.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+    StackPane.setAlignment(bottomLeftCluster, Pos.BOTTOM_LEFT);
+    StackPane.setMargin(bottomLeftCluster, new Insets(0, 0, 2, 18));
 
     BorderPane content = new BorderPane();
     content.setPickOnBounds(false);
     content.setCenter(body);
 
-    root.getChildren().addAll(background, overlay, smoke, content, settingsHost);
+    root.getChildren().addAll(background, overlay, smoke, content, bottomLeftCluster);
+
+    // Pause the looping smoke/logo Timelines whenever the stage is iconified so we
+    // don't burn CPU rendering offscreen frames. Resumes automatically when restored.
+    stage.iconifiedProperty().addListener((obs, was, now) -> {
+      javafx.animation.Animation.Status target =
+          now ? javafx.animation.Animation.Status.PAUSED : javafx.animation.Animation.Status.RUNNING;
+      walkTimelines(root, target);
+    });
 
     // Entrance animation
     fadeInScene(root);
@@ -153,6 +187,8 @@ public final class MainSceneFactory {
         MediaPlayer player = new MediaPlayer(media);
         player.setCycleCount(MediaPlayer.INDEFINITE);
         player.setMute(true);
+        // autoPlay handles startup — no extra play() inside setOnReady (which used to
+        // race with stage maximize and stall the first second of playback).
         player.setAutoPlay(true);
         // Smoother loop — explicitly tell the player to start fresh on cycle.
         player.setOnEndOfMedia(() -> {
@@ -164,17 +200,9 @@ public final class MainSceneFactory {
         view.setSmooth(true);
         view.fitWidthProperty().bind(container.widthProperty());
         view.fitHeightProperty().bind(container.heightProperty());
-        player.setOnReady(
-            () -> {
-              // Size the stage to the active monitor so the video fills the
-              // screen the user actually has X-Men on (multi-monitor safe).
-              Rectangle2D current = screenForStage(stage);
-              stage.setX(current.getMinX());
-              stage.setY(current.getMinY());
-              stage.setWidth(current.getWidth());
-              stage.setHeight(current.getHeight());
-              player.play();
-            });
+        // Stage sizing is handled in the splash hand-off (XMenInterface) BEFORE the scene
+        // is shown — doing it again here triggered an extra layout pass right as the
+        // MediaPlayer transitioned to PLAYING, which is what made the video look stuck.
         // If the player ever errors out, log and fall back to the still image.
         player.setOnError(() -> log.warn("MediaPlayer error: {}", player.getError()));
         container.getChildren().add(view);
@@ -212,19 +240,26 @@ public final class MainSceneFactory {
     return primary != null ? primary.getVisualBounds() : new Rectangle2D(0, 0, 1280, 800);
   }
 
-  /** Extract the bundled MP4 to a temp file once, then reuse the file across rebuilds. */
+  /**
+   * Extract the bundled MP4 to a stable temp path. Stable filename means subsequent JVM starts
+   * reuse the already-extracted file (skip the disk write on every cold start).
+   */
   private static synchronized File ensureCachedVideo() throws IOException {
     if (cachedBackgroundFile != null && cachedBackgroundFile.exists()) {
       return cachedBackgroundFile;
     }
+    File stable = new File(System.getProperty("java.io.tmpdir"), "xmen-bg-cache.mp4");
+    // Reuse the file across JVM restarts if a previous run already wrote it AND it isn't empty.
+    if (stable.exists() && stable.length() > 0) {
+      cachedBackgroundFile = stable;
+      return stable;
+    }
     try (InputStream videoStream =
         MainSceneFactory.class.getResourceAsStream("/DNA-Background.mp4")) {
       if (videoStream == null) return null;
-      File tmp = File.createTempFile("xmen-bg", ".mp4");
-      tmp.deleteOnExit();
-      Files.copy(videoStream, tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
-      cachedBackgroundFile = tmp;
-      return tmp;
+      Files.copy(videoStream, stable.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      cachedBackgroundFile = stable;
+      return stable;
     }
   }
 
@@ -309,6 +344,9 @@ public final class MainSceneFactory {
       pulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
       pulse.play();
 
+      // Tag the glow node with its Timeline so the iconify-listener can pause it.
+      glow.setUserData(pulse);
+
       StackPane stack = new StackPane(iv);
       stack.setAlignment(Pos.CENTER);
       stack.setPickOnBounds(false);
@@ -364,35 +402,30 @@ public final class MainSceneFactory {
     Button startBtn = new Button("Start Mutation");
     startBtn.getStyleClass().add("x-cta-primary");
     startBtn.setId("heroStart");
+    startBtn.setWrapText(false);
+    startBtn.setMinWidth(Region.USE_PREF_SIZE);
     Animations.hoverLift(startBtn, 1.04);
 
     Button uploadBtn = new Button("Upload File");
     uploadBtn.getStyleClass().add("x-cta-secondary");
     uploadBtn.setId("heroUpload");
+    uploadBtn.setWrapText(false);
+    uploadBtn.setMinWidth(Region.USE_PREF_SIZE);
     Animations.hoverLift(uploadBtn, 1.03);
+
+    // Equalise the Start and Upload CTAs only — Download has been moved out of this row
+    // (it now lives at the bottom-right of the screen, mirroring the Settings gear).
     uploadBtn.prefWidthProperty().bind(startBtn.widthProperty());
     uploadBtn.prefHeightProperty().bind(startBtn.heightProperty());
     uploadBtn.minWidthProperty().bind(startBtn.widthProperty());
     uploadBtn.minHeightProperty().bind(startBtn.heightProperty());
 
-    // "Download" CTA — appears next to Start/Upload but stays hidden until a
-    // mutation succeeds (XMenInterface toggles visibility after onResponse).
-    Button downloadBtn = new Button("Download");
-    downloadBtn.getStyleClass().add("x-cta-secondary");
-    downloadBtn.setId("heroDownload");
-    downloadBtn.setGraphic(Icons.download(16, Color.WHITE));
-    Animations.hoverLift(downloadBtn, 1.03);
-
     StackPane startWrap = new StackPane(startBtn);
     StackPane uploadWrap = new StackPane(uploadBtn);
-    StackPane downloadWrap = new StackPane(downloadBtn);
     startWrap.getStyleClass().add("x-shadow-room");
     uploadWrap.getStyleClass().add("x-shadow-room");
-    downloadWrap.getStyleClass().add("x-shadow-room");
-    downloadWrap.managedProperty().bind(downloadBtn.managedProperty());
-    downloadWrap.visibleProperty().bind(downloadBtn.visibleProperty());
 
-    HBox ctas = new HBox(6, startWrap, uploadWrap, downloadWrap);
+    HBox ctas = new HBox(12, startWrap, uploadWrap);
     ctas.setAlignment(Pos.CENTER_LEFT);
     ctas.setMaxWidth(620);
     ctas.setTranslateX(-20);
@@ -445,8 +478,161 @@ public final class MainSceneFactory {
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Download corner (bottom-right, mirrors Settings on bottom-left)   */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Build a StackPane that contains:
+   *
+   * <ol>
+   *   <li>a soft, theme-coloured halo Circle (a separate node so CSS {@code -fx-effect} on the
+   *       button can't override it), and
+   *   <li>the actual Download button.
+   * </ol>
+   *
+   * <p>An indefinite Timeline pulses the halo's opacity + scale while the button is visible.
+   * Visibility is initially off; XMenInterface flips it after a successful mutation by
+   * looking up {@code #heroDownload}.
+   */
+  private static StackPane buildDownloadCorner() {
+    Button downloadBtn = new Button("Download");
+    downloadBtn.getStyleClass().add("x-cta-secondary");
+    downloadBtn.setId("heroDownload");
+    downloadBtn.setGraphic(Icons.download(16, Color.WHITE));
+    downloadBtn.setWrapText(false);
+    downloadBtn.setMinWidth(Region.USE_PREF_SIZE);
+    Animations.hoverLift(downloadBtn, 1.04);
+
+    // Halo behind the button. Sized once the button knows its real width/height.
+    javafx.scene.shape.Rectangle halo = new javafx.scene.shape.Rectangle();
+    halo.getStyleClass().add("x-download-halo");
+    halo.setMouseTransparent(true);
+    halo.setManaged(false);
+    halo.setFill(Color.web("#A56BFF"));
+    halo.setEffect(new javafx.scene.effect.GaussianBlur(28));
+    halo.setOpacity(0.0);
+
+    StackPane stack = new StackPane();
+    stack.getStyleClass().add("x-shadow-room");
+    stack.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+    stack.setPickOnBounds(false);
+    stack.getChildren().addAll(halo, downloadBtn);
+    halo.widthProperty().bind(downloadBtn.widthProperty().add(18));
+    halo.heightProperty().bind(downloadBtn.heightProperty().add(10));
+    halo.arcWidthProperty().bind(halo.heightProperty());
+    halo.arcHeightProperty().bind(halo.heightProperty());
+
+    halo.xProperty().bind(stack.widthProperty().subtract(halo.widthProperty()).multiply(0.5));
+    halo.yProperty().bind(stack.heightProperty().subtract(halo.heightProperty()).multiply(0.5));
+
+    // The whole corner mirrors the button's visibility — when XMenInterface hides
+    // the button, the halo + container disappear too.
+    stack.managedProperty().bind(downloadBtn.managedProperty());
+    stack.visibleProperty().bind(downloadBtn.visibleProperty());
+
+    // Pulse Timeline: opacity 0.25 → 0.65, scale 0.95 → 1.12 → 0.95 (about 2.8 s/cycle).
+    javafx.animation.Timeline pulse =
+        new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(
+                Duration.ZERO,
+                new javafx.animation.KeyValue(
+                    halo.opacityProperty(), 0.25, javafx.animation.Interpolator.EASE_BOTH),
+                new javafx.animation.KeyValue(
+                    halo.scaleXProperty(), 0.95, javafx.animation.Interpolator.EASE_BOTH),
+                new javafx.animation.KeyValue(
+                    halo.scaleYProperty(), 0.95, javafx.animation.Interpolator.EASE_BOTH)),
+            new javafx.animation.KeyFrame(
+                Duration.seconds(1.4),
+                new javafx.animation.KeyValue(
+                    halo.opacityProperty(), 0.65, javafx.animation.Interpolator.EASE_BOTH),
+                new javafx.animation.KeyValue(
+                    halo.scaleXProperty(), 1.12, javafx.animation.Interpolator.EASE_BOTH),
+                new javafx.animation.KeyValue(
+                    halo.scaleYProperty(), 1.12, javafx.animation.Interpolator.EASE_BOTH)),
+            new javafx.animation.KeyFrame(
+                Duration.seconds(2.8),
+                new javafx.animation.KeyValue(
+                    halo.opacityProperty(), 0.25, javafx.animation.Interpolator.EASE_BOTH),
+                new javafx.animation.KeyValue(
+                    halo.scaleXProperty(), 0.95, javafx.animation.Interpolator.EASE_BOTH),
+                new javafx.animation.KeyValue(
+                    halo.scaleYProperty(), 0.95, javafx.animation.Interpolator.EASE_BOTH)));
+    pulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
+    halo.setUserData(pulse); // picked up by walkTimelines() on stage iconify
+
+    downloadBtn
+        .visibleProperty()
+        .addListener(
+            (obs, was, now) -> {
+              if (Boolean.TRUE.equals(now)) {
+                halo.setFill(pickAccentColor(stack));
+                pulse.playFromStart();
+              } else {
+                pulse.stop();
+                halo.setOpacity(0.0);
+              }
+            });
+
+    // ThemeApplier writes the theme palette as inline style on the scene root. Track that
+    // style string and re-pick the accent any time it changes — this is what makes the
+    // halo follow live theme switches without requiring the button to hide first.
+    downloadBtn.sceneProperty().addListener((obsS, oldS, newScene) -> {
+      if (newScene == null) return;
+      javafx.scene.Parent r = newScene.getRoot();
+      if (r != null) {
+        r.styleProperty().addListener((obsStyle, oldStyle, newStyle) -> {
+          if (downloadBtn.isVisible()) halo.setFill(pickAccentColor(stack));
+        });
+      }
+    });
+
+    return stack;
+  }
+
+  /** Read the current theme's {@code -accent} CSS variable off the scene root. */
+  private static Color pickAccentColor(Node anyNode) {
+    try {
+      javafx.scene.Scene scene = anyNode.getScene();
+      if (scene != null && scene.getRoot() != null) {
+        String inline = scene.getRoot().getStyle();
+        if (inline != null) {
+          int i = inline.indexOf("-accent:");
+          if (i >= 0) {
+            int end = inline.indexOf(';', i);
+            String raw =
+                inline.substring(i + "-accent:".length(), end < 0 ? inline.length() : end).trim();
+            return Color.web(raw);
+          }
+        }
+      }
+    } catch (Exception ignored) {
+    }
+    return Color.web("#A56BFF");
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  Animations                                                        */
   /* ------------------------------------------------------------------ */
+
+  /**
+   * Walk the scene graph and pause/resume every running Timeline / Transition attached to a
+   * node's user-data list. JavaFX doesn't expose a "list of animations on a node" API, so
+   * we attach them in {@link #attachAnim(Node, javafx.animation.Animation)} and replay
+   * the list here when the stage iconifies.
+   */
+  private static void walkTimelines(Node node, javafx.animation.Animation.Status target) {
+    Object data = node.getUserData();
+    if (data instanceof javafx.animation.Animation a) {
+      if (target == javafx.animation.Animation.Status.PAUSED && a.getStatus() == javafx.animation.Animation.Status.RUNNING) {
+        a.pause();
+      } else if (target == javafx.animation.Animation.Status.RUNNING && a.getStatus() == javafx.animation.Animation.Status.PAUSED) {
+        a.play();
+      }
+    }
+    if (node instanceof javafx.scene.Parent p) {
+      for (Node child : p.getChildrenUnmodifiable()) walkTimelines(child, target);
+    }
+  }
 
   private static void fadeInScene(StackPane root) {
     FadeTransition fade = new FadeTransition(Duration.millis(420), root);
@@ -488,6 +674,7 @@ public final class MainSceneFactory {
                 javafx.animation.Interpolator.EASE_BOTH)));
     drift.setCycleCount(javafx.animation.Animation.INDEFINITE);
     drift.play();
+    smoke.setUserData(drift);
   }
 
   /* ------------------------------------------------------------------ */

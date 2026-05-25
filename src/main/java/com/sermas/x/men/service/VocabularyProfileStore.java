@@ -9,8 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +34,14 @@ public class VocabularyProfileStore {
 
   private static final Path PROFILES_DIR =
       Paths.get(System.getProperty("user.home"), ".xmen", "vocabularies");
+
+  /**
+   * Profiles that ship with the app and represent the bundled example ceremonies.
+   * They cannot be deleted, and their files are force-rewritten on startup so the user
+   * can always rely on them as a known-good baseline.
+   */
+  public static final Set<String> PROTECTED_PROFILES =
+      new LinkedHashSet<>(Arrays.asList("Oyster", "Bank"));
 
   private final VocabularyService vocabularyService;
   private final ObjectMapper json;
@@ -53,26 +64,65 @@ public class VocabularyProfileStore {
   }
 
   /**
-   * On first run, drop in two ready-to-use profiles named after the bundled examples
-   * ({@code Oyster.spthy} and {@code Bank_revised_new.spthy}). Both currently use the same
-   * default Tamarin vocabulary — they're shipped so the user can branch from them and edit
-   * each independently.
+   * On every startup, drop in ready-to-use profiles named after the bundled examples
+   * ({@code Oyster.spthy}, {@code Bank_revised_new.spthy}, {@code Library_Custom_Example.spthy}).
+   *
+   * <p>Oyster and Bank are <b>protected</b> and force-rewritten so their files always match
+   * what the sample .spthy actually uses. Library is seeded only if missing — the user is
+   * free to edit/delete it.
    */
   private void seedDefaultProfiles() {
-    seedProfileIfMissing("Oyster");
-    seedProfileIfMissing("Bank");
+    writeProfile("Oyster", oysterVocabulary(), /* force = */ true);
+    writeProfile("Bank", bankVocabulary(), /* force = */ true);
+    writeProfile("Library", libraryVocabulary(), /* force = */ false);
   }
 
-  private void seedProfileIfMissing(String name) {
+  private void writeProfile(String name, CeremonyVocabulary vocab, boolean force) {
     Path file = PROFILES_DIR.resolve(name + ".json");
-    if (Files.exists(file)) return;
+    if (!force && Files.exists(file)) return;
     try {
-      CeremonyVocabulary defaults = new CeremonyVocabulary();
-      Files.write(file, json.writeValueAsBytes(defaults));
-      log.info("Seeded default vocabulary profile '{}'.", name);
+      Files.write(file, json.writeValueAsBytes(vocab));
+      log.info("Seeded vocabulary profile '{}' (force={}).", name, force);
     } catch (IOException e) {
-      log.warn("Could not seed default profile '{}': {}", name, e.getMessage());
+      log.warn("Could not seed profile '{}': {}", name, e.getMessage());
     }
+  }
+
+  /** Oyster ceremony: SndS/RcvS channels, gate actions. */
+  private CeremonyVocabulary oysterVocabulary() {
+    CeremonyVocabulary v = new CeremonyVocabulary();
+    v.getFacts().setOutboundChannels(new ArrayList<>(List.of("SndS")));
+    v.getFacts().setInboundChannels(new ArrayList<>(List.of("RcvS")));
+    v.getActions().setCoreActions(new ArrayList<>(List.of(
+        "Send", "Receive", "To", "H", "Fr", "Setup", "OnlyOnce", "Neq",
+        "Roles", "ChanSndS", "ChanRcvS", "Hfin", "Forget",
+        "GateIn", "GateOut", "CommitGid", "Commit")));
+    return v;
+  }
+
+  /** Bank ceremony: Out/In channels, login-flow actions. */
+  private CeremonyVocabulary bankVocabulary() {
+    CeremonyVocabulary v = new CeremonyVocabulary();
+    v.getFacts().setOutboundChannels(new ArrayList<>(List.of("Out")));
+    v.getFacts().setInboundChannels(new ArrayList<>(List.of("In")));
+    v.getActions().setCoreActions(new ArrayList<>(List.of(
+        "Send", "Receive", "To", "H", "Fr", "Setup", "OnlyOnce", "Neq",
+        "Roles", "Hfin", "Forget", "Commit", "Target",
+        "U_LoginRequest", "PasswordAttempt", "B_Running",
+        "LoginOK", "LoginFail", "LoginSuccess", "LoginFailed", "RevLtk")));
+    return v;
+  }
+
+  /** Library ceremony: SndS/RcvS channels, librarian/borrow actions. */
+  private CeremonyVocabulary libraryVocabulary() {
+    CeremonyVocabulary v = new CeremonyVocabulary();
+    v.getFacts().setOutboundChannels(new ArrayList<>(List.of("SndS")));
+    v.getFacts().setInboundChannels(new ArrayList<>(List.of("RcvS")));
+    v.getActions().setCoreActions(new ArrayList<>(List.of(
+        "Send", "Receive", "To", "H", "Fr", "Setup", "OnlyOnce", "Neq",
+        "Roles", "ChanSndS", "ChanRcvS", "Hfin", "Forget", "Commit",
+        "Intends", "ConfirmRequest", "Borrowed")));
+    return v;
   }
 
   /** List the names of all stored profiles, sorted alphabetically. */
@@ -109,10 +159,19 @@ public class VocabularyProfileStore {
     return vocabularyService.update(incoming);
   }
 
-  /** Delete a saved profile. */
+  /** Delete a saved profile. Protected built-ins (Oyster, Bank) cannot be deleted. */
   public boolean delete(String name) throws IOException {
+    if (name != null && PROTECTED_PROFILES.contains(name.trim())) {
+      log.info("Refused to delete protected profile '{}'.", name);
+      return false;
+    }
     Path file = pathFor(name);
     return Files.deleteIfExists(file);
+  }
+
+  /** True if {@code name} refers to one of the protected built-in profiles. */
+  public boolean isProtected(String name) {
+    return name != null && PROTECTED_PROFILES.contains(name.trim());
   }
 
   /* ------------------------------------------------------------------ */

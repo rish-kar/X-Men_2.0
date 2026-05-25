@@ -29,16 +29,22 @@ public class Application implements CommandLineRunner {
     // an Actuator /shutdown, etc.) starts tearing the JVM down, make sure the
     // JavaFX runtime also exits so we don't leak windows.
     Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread(
-                () -> {
-                  try {
-                    Platform.exit();
-                  } catch (Throwable ignored) {
-                    // JavaFX already gone or never started — nothing to do.
-                  }
-                },
-                "javafx-shutdown-hook"));
+            .addShutdownHook(
+                    new Thread(
+                            () -> {
+                              try {
+                                Platform.exit();
+                              } catch (Throwable ignored) {
+                              }
+
+                              try {
+                                if (SPRING_CONTEXT != null && SPRING_CONTEXT.isActive()) {
+                                  SPRING_CONTEXT.close();
+                                }
+                              } catch (Throwable ignored) {
+                              }
+                            },
+                            "xmen-force-shutdown"));
   }
 
   /**

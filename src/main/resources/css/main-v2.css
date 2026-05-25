@@ -399,10 +399,54 @@
     -fx-text-fill: -text;
     -fx-font-size: 26px;
     -fx-font-weight: 800;
+    -fx-text-overrun: clip;
 }
 .x-settings-sub {
     -fx-text-fill: -text-muted;
     -fx-font-size: 13px;
+    -fx-text-overrun: clip;
+}
+
+/* No button label inside the app should ever be truncated with "...". Buttons
+ * always render at their preferred width — surrounding layouts must give them
+ * room rather than squeeze them. */
+.button.x-cta-primary,
+.button.x-cta-secondary {
+    -fx-text-overrun: clip;
+    -fx-min-width: -fx-pref-width;
+    -fx-content-display: left;
+}
+
+/* Vocabulary table: stop the value column from cropping its content. The
+ * preferred width is generous, but if the user drags the dialog narrower we
+ * want a clean clip + horizontal scrollbar rather than an ellipsis. */
+.x-vocab-table .table-cell {
+    -fx-text-overrun: clip;
+}
+
+/* Tamarin reference table — two-column scannable layout. */
+.x-ref-table {
+    -fx-padding: 8 4 8 4;
+}
+.x-ref-table .x-ref-cat {
+    -fx-text-fill: -text;
+    -fx-font-weight: 700;
+    -fx-font-size: 13px;
+    -fx-text-overrun: clip;
+    -fx-padding: 6 0 0 0;
+}
+/* Keyword chip — small pill, theme-tinted glass background. */
+.x-ref-chip {
+    -fx-text-fill: -text;
+    -fx-font-size: 12px;
+    -fx-font-family: "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+    -fx-padding: 3 10 3 10;
+    -fx-background-color: derive(-glass-fill, 8%);
+    -fx-background-radius: 999;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 999;
+    -fx-border-width: 1;
+    -fx-text-overrun: clip;
 }
 
 /* TabPane chrome — softer accent pill, no protruding shadow. */

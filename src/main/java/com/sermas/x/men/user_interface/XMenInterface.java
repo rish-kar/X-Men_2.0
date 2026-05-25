@@ -34,6 +34,7 @@ import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
+import javafx.stage.StageStyle;
 
 import java.io.*;
 import java.net.URL;
@@ -132,6 +133,11 @@ public class XMenInterface extends Application {
     stage.setIconified(false);
     stage.setAlwaysOnTop(true);
 
+    // Extract the main-scene background MP4 to a temp file off the FX thread NOW, while
+    // the splash is playing. By the time handOff() builds the main scene, the file is
+    // already on disk and the MediaPlayer initialises instantly instead of stalling.
+    MainSceneFactory.preWarmBackgroundVideo();
+
     final boolean[] handedOff = {false};
     Runnable handOff =
         () -> {
@@ -183,18 +189,23 @@ public class XMenInterface extends Application {
 
   @Override
   public void stop() {
-    shutdownEverything();
+    disposeMediaOnly();
+  }
+
+  private void disposeMediaOnly() {
+    try {
+      if (mediaPlayer != null) {
+        mediaPlayer.stop();
+        mediaPlayer.dispose();
+        mediaPlayer = null;
+      }
+    } catch (Exception ignored) {
+    }
   }
 
   private void shutdownEverything() {
-    try {
-      if (mediaPlayer != null) mediaPlayer.dispose();
-    } catch (Exception ignored) {
-    }
-    try {
-      Platform.exit();
-    } catch (Exception ignored) {
-    }
+    disposeMediaOnly();
+    Platform.exit();
     System.exit(0);
   }
 
@@ -557,7 +568,18 @@ public class XMenInterface extends Application {
             selectedFile = picked;
             log.debug("Selected file via Start CTA: {}", picked.getAbsolutePath());
           }
+          // Mutation runs FIRST. The profile auto-switch is best-effort and happens in
+          // parallel — never blocking the mutation request. (The previous flow chained
+          // detect→apply→save-profile→mutate sequentially, and any hiccup in those three
+          // calls would silently swallow the mutation. That's the regression the user hit
+          // with "Mutated files are not generating".)
           sendMutationRequest();
+          final File toMutate = selectedFile;
+          Thread t = new Thread(
+              () -> autoSwitchProfileForFile(toMutate),
+              "xmen-auto-switch-profile");
+          t.setDaemon(true);
+          t.start();
         });
 
     String checkboxStyle = "-fx-font-weight: 600; -fx-font-size: 14px;";
@@ -792,6 +814,168 @@ public class XMenInterface extends Application {
     button.setPrefSize(150, 40);
     button.getStyleClass().add("x-cta-secondary");
     GridPane.setMargin(button, new Insets(20, 0, 0, 0));
+  }
+
+  /**
+   * Best-effort profile switching driven by the uploaded file's identifiers.
+   *
+   * <p>Runs on a daemon background thread so it never blocks the mutation request. The
+   * sequence is:
+   *
+   * <ol>
+   *   <li>Detect the file's vocabulary.
+   *   <li>Fetch every existing profile, compare against the detected vocab.
+   *   <li>If a profile already matches → activate it (no duplicate profile is created).
+   *   <li>Otherwise → save a new profile named after the file basename and activate it.
+   * </ol>
+   *
+   * <p>Any error along the way is logged and swallowed; mutations keep working with
+   * whatever vocabulary is currently active.
+   */
+  @SuppressWarnings("unchecked")
+  private boolean autoSwitchProfileForFile(File file) {
+    if (file == null) return false;
+    try {
+      OkHttpClient client =
+          new OkHttpClient.Builder()
+              .connectTimeout(15, TimeUnit.SECONDS)
+              .readTimeout(15, TimeUnit.SECONDS)
+              .writeTimeout(15, TimeUnit.SECONDS)
+              .build();
+
+      // 1) Detect vocab from the uploaded file.
+      okhttp3.RequestBody fileBody =
+          okhttp3.RequestBody.create(file, okhttp3.MediaType.parse("text/plain"));
+      okhttp3.RequestBody mp =
+          new okhttp3.MultipartBody.Builder()
+              .setType(okhttp3.MultipartBody.FORM)
+              .addFormDataPart("file", file.getName(), fileBody)
+              .build();
+      String detectedJson;
+      try (okhttp3.Response detect =
+          client.newCall(
+                  new okhttp3.Request.Builder()
+                      .url("http://localhost:8081/api/settings/vocabulary/detect")
+                      .post(mp)
+                      .build())
+              .execute()) {
+        if (!detect.isSuccessful() || detect.body() == null) return false;
+        detectedJson = detect.body().string();
+      }
+
+      com.fasterxml.jackson.databind.ObjectMapper jsonMapper =
+          new com.fasterxml.jackson.databind.ObjectMapper();
+      java.util.Map<String, Object> detectedMap =
+          jsonMapper.readValue(detectedJson, java.util.Map.class);
+
+      // 2) Pull the list of saved profiles.
+      String profilesJson;
+      try (okhttp3.Response listResp =
+          client.newCall(
+                  new okhttp3.Request.Builder()
+                      .url("http://localhost:8081/api/settings/vocabulary/profiles")
+                      .build())
+              .execute()) {
+        if (!listResp.isSuccessful() || listResp.body() == null) return false;
+        profilesJson = listResp.body().string();
+      }
+      java.util.Map<String, Object> profileList = jsonMapper.readValue(profilesJson, java.util.Map.class);
+      java.util.List<String> names =
+          (java.util.List<String>) profileList.getOrDefault("profiles", java.util.List.of());
+
+      // 3) Walk profiles; activate the first one whose vocab matches the detected one.
+      for (String name : names) {
+        try (okhttp3.Response activate =
+            client.newCall(
+                    new okhttp3.Request.Builder()
+                        .url(
+                            "http://localhost:8081/api/settings/vocabulary/profiles/"
+                                + java.net.URLEncoder.encode(name, "UTF-8")
+                                + "/activate")
+                        .post(okhttp3.RequestBody.create(new byte[0]))
+                        .build())
+                .execute()) {
+          if (!activate.isSuccessful() || activate.body() == null) continue;
+          java.util.Map<String, Object> profileVocab =
+              jsonMapper.readValue(activate.body().bytes(), java.util.Map.class);
+          if (vocabsMatch(profileVocab, detectedMap)) {
+            log.info("Auto-switch: existing profile '{}' matches uploaded file.", name);
+            return true; // already activated by the GET — done.
+          }
+        }
+      }
+
+      // 4) No match — apply the detected vocab to live, then save it as a new profile.
+      String basename = stripExtension(file.getName());
+      okhttp3.RequestBody applyBody =
+          okhttp3.RequestBody.create(detectedJson, okhttp3.MediaType.parse("application/json"));
+      client
+          .newCall(
+              new okhttp3.Request.Builder()
+                  .url("http://localhost:8081/api/settings/vocabulary")
+                  .post(applyBody)
+                  .build())
+          .execute()
+          .close();
+
+      client
+          .newCall(
+              new okhttp3.Request.Builder()
+                  .url(
+                      "http://localhost:8081/api/settings/vocabulary/profiles/"
+                          + java.net.URLEncoder.encode(basename, "UTF-8"))
+                  .post(okhttp3.RequestBody.create(new byte[0]))
+                  .build())
+          .execute()
+          .close();
+      log.info("Auto-switch: created new profile '{}' for uploaded file.", basename);
+      return true;
+    } catch (Exception ex) {
+      log.warn("Auto-switch failed (mutations were not affected): {}", ex.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Shallow equality between two vocabularies based on the fields the mutation engine
+   * actually consults: outbound/inbound channels and the core-actions set. Descriptions
+   * and irrelevant fields are ignored deliberately.
+   */
+  @SuppressWarnings("unchecked")
+  private static boolean vocabsMatch(java.util.Map<String, Object> a, java.util.Map<String, Object> b) {
+    if (a == null || b == null) return false;
+    java.util.Map<String, Object> factsA =
+        (java.util.Map<String, Object>) a.getOrDefault("facts", java.util.Map.of());
+    java.util.Map<String, Object> factsB =
+        (java.util.Map<String, Object>) b.getOrDefault("facts", java.util.Map.of());
+    if (!asSet(factsA.get("outbound-channels")).equals(asSet(factsB.get("outbound-channels")))) {
+      return false;
+    }
+    if (!asSet(factsA.get("inbound-channels")).equals(asSet(factsB.get("inbound-channels")))) {
+      return false;
+    }
+    java.util.Map<String, Object> actA =
+        (java.util.Map<String, Object>) a.getOrDefault("actions", java.util.Map.of());
+    java.util.Map<String, Object> actB =
+        (java.util.Map<String, Object>) b.getOrDefault("actions", java.util.Map.of());
+    return asSet(actA.get("core-actions")).equals(asSet(actB.get("core-actions")));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static java.util.Set<String> asSet(Object o) {
+    if (o instanceof java.util.List<?> l) {
+      java.util.Set<String> s = new java.util.LinkedHashSet<>();
+      for (Object x : l) if (x != null) s.add(String.valueOf(x));
+      return s;
+    }
+    return java.util.Set.of();
+  }
+
+  private static String stripExtension(String filename) {
+    if (filename == null) return "Imported";
+    int dot = filename.lastIndexOf('.');
+    String base = dot > 0 ? filename.substring(0, dot) : filename;
+    return base.replaceAll("[^A-Za-z0-9._ -]", "_");
   }
 
   private void sendMutationRequest() {
