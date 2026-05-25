@@ -4787,3 +4787,1141 @@ This generated password is for development use only. Your security configuration
 13:38:30.427 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
 13:39:07.495 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
 13:39:07.517 [http-nio-8081-exec-6] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'sermas-classic'.
+13:47:42.492 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 9420 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+13:47:42.494 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+13:47:42.547 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+13:47:44.302 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+13:47:44.314 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+13:47:44.317 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+13:47:44.318 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+13:47:44.363 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+13:47:44.364 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1815 ms
+13:47:44.929 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+13:47:45.025 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+13:47:45.025 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'sermas-classic'.
+13:47:45.025 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+13:47:45.173 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: c4b0de1a-cf13-4adc-91e7-4252040aad79
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+13:47:45.202 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+13:47:45.578 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+13:47:45.852 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+13:47:46.118 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+13:47:46.175 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+13:47:46.200 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+13:47:46.217 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.14 seconds (process running for 4.697)
+13:47:46.336 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+13:47:47.188 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+13:47:59.636 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+13:47:59.636 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+13:47:59.640 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+13:51:32.212 [http-nio-8081-exec-9] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+13:51:35.865 [http-nio-8081-exec-1] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+13:51:35.893 [http-nio-8081-exec-2] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'slate-blue'.
+13:52:59.073 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 9692 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+13:52:59.074 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+13:52:59.131 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+13:53:00.766 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+13:53:00.778 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+13:53:00.782 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+13:53:00.783 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+13:53:00.832 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+13:53:00.834 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1702 ms
+13:53:01.355 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+13:53:01.474 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+13:53:01.474 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+13:53:01.474 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+13:53:01.651 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 8c4170a1-43ac-42cf-9749-5d38060e07a4
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+13:53:01.682 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+13:53:01.991 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+13:53:02.214 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+13:53:02.372 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+13:53:02.419 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+13:53:02.437 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+13:53:02.454 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.843 seconds (process running for 4.461)
+13:53:02.540 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+13:53:03.160 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+13:53:15.566 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+13:53:15.567 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+13:53:15.569 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+13:53:39.659 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 197 class path changes (0 additions, 197 deletions, 0 modifications)
+13:54:00.291 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 27556 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+13:54:00.293 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+13:54:00.343 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+13:54:01.868 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+13:54:01.877 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+13:54:01.880 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+13:54:01.880 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+13:54:01.925 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+13:54:01.926 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1583 ms
+13:54:02.514 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+13:54:02.645 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+13:54:02.645 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+13:54:02.646 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+13:54:02.826 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: a3141bcb-dbdf-4cca-8a84-55bb63f89c6e
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+13:54:02.857 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+13:54:03.234 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+13:54:03.475 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+13:54:03.640 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+13:54:03.689 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+13:54:03.712 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+13:54:03.728 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.903 seconds (process running for 4.477)
+13:54:03.811 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+13:54:04.350 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+13:54:16.572 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+13:54:16.572 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+13:54:16.575 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+13:54:40.254 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+13:54:43.178 [http-nio-8081-exec-10] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+13:54:43.196 [http-nio-8081-exec-1] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'cyber-teal'.
+13:55:46.139 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 12924 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+13:55:46.141 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+13:55:46.199 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+13:55:47.703 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+13:55:47.712 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+13:55:47.714 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+13:55:47.714 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+13:55:47.760 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+13:55:47.761 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1561 ms
+13:55:48.216 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+13:55:48.312 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+13:55:48.312 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'cyber-teal'.
+13:55:48.313 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+13:55:48.464 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 25eb3408-52b7-4b79-8bd5-12268278f0c6
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+13:55:48.500 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+13:55:48.866 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+13:55:49.139 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+13:55:49.293 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+13:55:49.346 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+13:55:49.362 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+13:55:49.375 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.644 seconds (process running for 4.165)
+13:55:49.454 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+13:55:50.077 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+13:56:02.107 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+13:56:02.108 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+13:56:02.110 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+13:56:25.691 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 165 class path changes (0 additions, 165 deletions, 0 modifications)
+13:57:08.148 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 9140 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+13:57:08.149 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+13:57:08.201 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+13:57:09.841 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+13:57:09.850 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+13:57:09.852 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+13:57:09.853 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+13:57:09.896 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+13:57:09.897 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1694 ms
+13:57:10.420 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+13:57:10.529 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+13:57:10.530 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'cyber-teal'.
+13:57:10.530 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+13:57:10.685 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 19e2b30b-0359-4738-b19c-4fdcd4fc1bfb
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+13:57:10.721 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+13:57:11.074 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+13:57:11.299 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+13:57:11.486 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+13:57:11.528 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+13:57:11.542 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+13:57:11.556 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.804 seconds (process running for 4.37)
+13:57:11.637 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+13:57:12.215 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+13:57:24.587 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+13:57:24.588 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+13:57:24.591 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+14:07:26.393 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-16386360062233149333\xmen
+14:07:26.394 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-16386360062233149333\xmen\
+14:07:26.659 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-16386360062233149333\xmen\
+14:08:06.229 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+14:08:25.264 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+14:08:25.290 [http-nio-8081-exec-8] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'ocean-cobalt'.
+14:25:14.263 [http-nio-8081-exec-1] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+14:29:06.221 [http-nio-8081-exec-10] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:12:16.809 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 17028 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+15:12:16.811 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+15:12:16.863 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+15:12:18.599 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+15:12:18.608 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+15:12:18.612 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+15:12:18.612 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+15:12:18.661 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+15:12:18.662 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1798 ms
+15:12:19.265 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+15:12:19.395 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+15:12:19.396 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'ocean-cobalt'.
+15:12:19.396 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+15:12:19.626 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 07480f91-9ae2-47df-a3d9-cdd7064b2a39
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+15:12:19.672 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+15:12:20.115 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+15:12:20.420 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+15:12:20.662 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+15:12:20.727 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+15:12:20.755 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+15:12:20.775 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.417 seconds (process running for 5.082)
+15:12:20.945 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+15:12:21.885 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+15:12:34.249 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+15:12:34.250 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+15:12:34.254 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+15:12:41.885 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-13313271012363550980\xmen
+15:12:41.885 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-13313271012363550980\xmen\
+15:12:42.015 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-13313271012363550980\xmen\
+15:22:18.359 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:37:08.256 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 32040 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+15:37:08.258 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+15:37:08.308 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+15:37:10.005 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+15:37:10.016 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+15:37:10.019 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+15:37:10.020 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+15:37:10.071 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+15:37:10.072 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1762 ms
+15:37:10.656 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+15:37:10.747 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+15:37:10.747 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'ocean-cobalt'.
+15:37:10.748 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+15:37:10.894 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: e91780ab-4660-4d06-b059-578760fb89cd
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+15:37:10.927 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+15:37:11.265 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+15:37:11.482 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+15:37:11.635 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+15:37:11.675 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+15:37:11.692 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+15:37:11.704 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.871 seconds (process running for 4.46)
+15:37:11.791 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+15:37:12.479 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+15:37:24.784 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+15:37:24.784 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+15:37:24.788 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+15:37:28.810 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:38:09.238 [http-nio-8081-exec-8] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:38:13.182 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:38:13.203 [http-nio-8081-exec-7] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'slate-blue'.
+15:38:15.387 [http-nio-8081-exec-5] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:38:19.190 [http-nio-8081-exec-9] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:38:19.196 [http-nio-8081-exec-2] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'arctic-ice'.
+15:39:41.684 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 21728 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+15:39:41.686 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+15:39:41.727 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+15:39:43.281 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+15:39:43.291 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+15:39:43.294 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+15:39:43.294 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+15:39:43.339 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+15:39:43.340 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1611 ms
+15:39:43.786 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+15:39:43.889 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+15:39:43.889 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'arctic-ice'.
+15:39:43.889 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+15:39:44.055 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 941e3d87-3304-44f8-a56a-1e8bf060d1c9
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+15:39:44.079 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+15:39:44.387 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+15:39:44.612 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+15:39:44.783 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+15:39:44.826 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+15:39:44.845 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+15:39:44.861 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.602 seconds (process running for 4.32)
+15:39:44.946 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+15:39:45.546 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+15:39:57.796 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+15:39:57.797 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+15:39:57.800 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+15:45:30.585 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 10368 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+15:45:30.586 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+15:45:30.643 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+15:45:32.274 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+15:45:32.284 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+15:45:32.286 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+15:45:32.288 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+15:45:32.329 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+15:45:32.330 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1686 ms
+15:45:32.886 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+15:45:32.992 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+15:45:32.993 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'arctic-ice'.
+15:45:32.993 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+15:45:33.184 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 5328128b-b278-425d-aaea-8522b4bc3517
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+15:45:33.211 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+15:45:33.589 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+15:45:33.866 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+15:45:34.076 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+15:45:34.135 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+15:45:34.159 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+15:45:34.173 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.017 seconds (process running for 4.645)
+15:45:34.290 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+15:45:34.972 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+15:45:47.361 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+15:45:47.362 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+15:45:47.365 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+15:48:00.989 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-376581193227156862\xmen
+15:48:00.989 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-376581193227156862\xmen\
+15:48:01.366 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-376581193227156862\xmen\
+15:48:07.524 [http-nio-8081-exec-9] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:48:10.454 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:48:10.473 [http-nio-8081-exec-4] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'garden-mint'.
+15:50:15.370 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 4848 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+15:50:15.372 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+15:50:15.420 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+15:50:16.812 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+15:50:16.822 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+15:50:16.825 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+15:50:16.826 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+15:50:16.875 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+15:50:16.876 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1454 ms
+15:50:17.309 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+15:50:17.404 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+15:50:17.405 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'garden-mint'.
+15:50:17.405 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+15:50:17.563 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 8106c0d6-1b51-4be7-bc42-4248cf107a00
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+15:50:17.591 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+15:50:17.907 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+15:50:18.166 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+15:50:18.314 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+15:50:18.365 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+15:50:18.382 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+15:50:18.398 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.412 seconds (process running for 3.959)
+15:50:18.491 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+15:50:18.981 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+15:50:20.377 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+15:50:20.377 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+15:50:20.380 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+15:50:23.454 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-962477798376213769\xmen
+15:50:23.454 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-962477798376213769\xmen\
+15:50:23.562 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-962477798376213769\xmen\
+15:50:58.717 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 199 class path changes (0 additions, 199 deletions, 0 modifications)
+15:50:58.733 [Thread-5] INFO  o.a.coyote.http11.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8081"]
+15:51:42.941 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 19168 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+15:51:42.943 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+15:51:43.001 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+15:51:44.716 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+15:51:44.727 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+15:51:44.730 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+15:51:44.731 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+15:51:44.779 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+15:51:44.780 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1778 ms
+15:51:45.347 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+15:51:45.462 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+15:51:45.462 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'garden-mint'.
+15:51:45.463 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+15:51:45.653 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 64376ac7-c12b-4869-850d-20de400d4fb6
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+15:51:45.681 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+15:51:46.062 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+15:51:46.337 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+15:51:46.564 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+15:51:46.623 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+15:51:46.644 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+15:51:46.662 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.13 seconds (process running for 4.661)
+15:51:46.763 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+15:51:47.551 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+15:52:00.019 [http-nio-8081-exec-5] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+15:52:00.019 [http-nio-8081-exec-5] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+15:52:00.023 [http-nio-8081-exec-5] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+15:52:00.401 [JavaFX Application Thread] WARN  c.s.x.m.u.MainSceneFactory - MediaPlayer error: {}
+javafx.scene.media.MediaException: [com.sun.media.jfxmediaimpl.platform.gstreamer.GSTMediaPlayer@5ced9ed] ERROR_MEDIA_INVALID: ERROR_MEDIA_INVALID
+	at javafx.scene.media.MediaException.getMediaException(MediaException.java:161)
+	at javafx.scene.media.MediaPlayer$_MediaErrorListener.onError(MediaPlayer.java:2624)
+	at com.sun.media.jfxmediaimpl.NativeMediaPlayer$EventQueueThread.HandleErrorEvents(NativeMediaPlayer.java:692)
+	at com.sun.media.jfxmediaimpl.NativeMediaPlayer$EventQueueThread.run(NativeMediaPlayer.java:426)
+15:52:21.652 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:54:47.010 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 30980 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+15:54:47.012 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+15:54:47.074 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+15:54:48.740 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+15:54:48.749 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+15:54:48.751 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+15:54:48.752 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+15:54:48.798 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+15:54:48.799 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1723 ms
+15:54:49.349 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+15:54:49.463 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+15:54:49.464 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'garden-mint'.
+15:54:49.464 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+15:54:49.658 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 93907f91-0123-471b-abed-24c745ed1479
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+15:54:49.693 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+15:54:50.041 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+15:54:50.306 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+15:54:50.505 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+15:54:50.552 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+15:54:50.571 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+15:54:50.588 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.04 seconds (process running for 4.602)
+15:54:50.695 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+15:54:51.275 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+15:55:03.599 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+15:55:03.600 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+15:55:03.603 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+15:55:10.719 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:55:18.567 [http-nio-8081-exec-1] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+15:55:18.586 [http-nio-8081-exec-2] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'midnight-violet'.
+15:55:26.830 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-4611051115713131800\xmen
+15:55:26.830 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-4611051115713131800\xmen\
+15:55:26.937 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-4611051115713131800\xmen\
+17:08:07.706 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 3288 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+17:08:07.711 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+17:08:07.784 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+17:08:09.669 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+17:08:09.683 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+17:08:09.687 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+17:08:09.687 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+17:08:09.747 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+17:08:09.748 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1962 ms
+17:08:10.339 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+17:08:10.487 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+17:08:10.489 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'midnight-violet'.
+17:08:10.489 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+17:08:10.659 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 93a81ec5-756e-4d6c-9c57-e7c9826f7447
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+17:08:10.700 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+17:08:11.100 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+17:08:11.366 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+17:08:11.615 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+17:08:11.667 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+17:08:11.688 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+17:08:11.709 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.512 seconds (process running for 5.18)
+17:08:11.829 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+17:08:12.690 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+17:08:14.240 [http-nio-8081-exec-3] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+17:08:14.240 [http-nio-8081-exec-3] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+17:08:14.244 [http-nio-8081-exec-3] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+17:08:14.702 [JavaFX Application Thread] WARN  c.s.x.m.u.MainSceneFactory - MediaPlayer error: {}
+javafx.scene.media.MediaException: [com.sun.media.jfxmediaimpl.platform.gstreamer.GSTMediaPlayer@1d05560d] ERROR_MEDIA_INVALID: ERROR_MEDIA_INVALID
+	at javafx.scene.media.MediaException.getMediaException(MediaException.java:161)
+	at javafx.scene.media.MediaPlayer$_MediaErrorListener.onError(MediaPlayer.java:2624)
+	at com.sun.media.jfxmediaimpl.NativeMediaPlayer$EventQueueThread.HandleErrorEvents(NativeMediaPlayer.java:692)
+	at com.sun.media.jfxmediaimpl.NativeMediaPlayer$EventQueueThread.run(NativeMediaPlayer.java:426)
+17:47:19.596 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 9492 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+17:47:19.598 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+17:47:19.657 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+17:47:21.377 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+17:47:21.393 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+17:47:21.398 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+17:47:21.398 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+17:47:21.480 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+17:47:21.481 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1823 ms
+17:47:22.186 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+17:47:22.323 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+17:47:22.323 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'midnight-violet'.
+17:47:22.323 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+17:47:22.512 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: d8246dca-f27d-4ff3-823a-ad17efcf073a
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+17:47:22.548 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+17:47:22.956 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+17:47:23.332 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+17:47:23.582 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+17:47:23.645 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+17:47:23.674 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+17:47:23.692 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.578 seconds (process running for 5.288)
+17:47:23.825 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+17:47:24.839 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+17:47:37.298 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+17:47:37.298 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+17:47:37.301 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+17:47:41.328 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-10699285233440107154\xmen
+17:47:41.328 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-10699285233440107154\xmen\
+17:47:41.491 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-10699285233440107154\xmen\
+17:50:07.128 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 30824 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+17:50:07.129 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+17:50:07.185 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+17:50:08.683 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+17:50:08.692 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+17:50:08.695 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+17:50:08.695 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+17:50:08.741 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+17:50:08.742 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1555 ms
+17:50:09.215 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+17:50:09.323 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+17:50:09.323 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'midnight-violet'.
+17:50:09.323 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+17:50:09.517 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 066269fe-166d-42e0-89a2-26195a5aaa20
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+17:50:09.544 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+17:50:09.892 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+17:50:10.130 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+17:50:10.286 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+17:50:10.331 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+17:50:10.349 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+17:50:10.365 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.699 seconds (process running for 4.294)
+17:50:10.471 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+17:50:11.206 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+17:50:23.493 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+17:50:23.494 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+17:50:23.496 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+17:50:56.454 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-2321879514441224504\xmen
+17:50:56.455 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-2321879514441224504\xmen\
+17:50:56.577 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-2321879514441224504\xmen\
+17:57:54.234 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 17520 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+17:57:54.236 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+17:57:54.283 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+17:57:55.864 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+17:57:55.874 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+17:57:55.877 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+17:57:55.878 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+17:57:55.926 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+17:57:55.927 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1642 ms
+17:57:56.440 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+17:57:56.541 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+17:57:56.541 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'midnight-violet'.
+17:57:56.541 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+17:57:56.695 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 823fc6c3-7a81-41bf-9b1c-e16adcbd7dad
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+17:57:56.726 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+17:57:57.036 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+17:57:57.273 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+17:57:57.471 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+17:57:57.515 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+17:57:57.533 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+17:57:57.545 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.739 seconds (process running for 4.372)
+17:57:57.635 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+17:57:58.613 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+17:58:11.261 [http-nio-8081-exec-3] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+17:58:11.261 [http-nio-8081-exec-3] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+17:58:11.264 [http-nio-8081-exec-3] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+17:58:19.596 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+17:58:27.756 [http-nio-8081-exec-10] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+17:58:27.778 [http-nio-8081-exec-2] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'paper-light'.
+17:58:55.311 [http-nio-8081-exec-1] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:02:35.881 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 27328 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:02:35.883 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:02:35.944 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:02:37.662 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:02:37.674 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:02:37.677 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:02:37.677 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:02:37.723 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:02:37.724 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1778 ms
+18:02:38.270 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:02:38.366 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:02:38.366 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'paper-light'.
+18:02:38.366 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:02:38.522 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 6684baf1-0c48-4d4f-8f4f-964138985233
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:02:38.557 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:02:38.889 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:02:39.157 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:02:39.330 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:02:39.373 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:02:39.392 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:02:39.403 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.012 seconds (process running for 4.676)
+18:02:39.489 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:02:40.242 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:02:52.835 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:02:52.835 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:02:52.839 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:03:07.934 [http-nio-8081-exec-8] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:05:15.225 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 31740 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:05:15.226 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:05:15.279 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:05:16.957 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:05:16.968 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:05:16.971 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:05:16.972 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:05:17.026 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:05:17.027 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1746 ms
+18:05:17.544 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:05:17.648 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:05:17.648 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'paper-light'.
+18:05:17.648 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:05:17.806 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: fd553bc6-34cf-4d08-a9d7-fb4e362da986
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:05:17.839 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:05:18.168 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:05:18.399 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:05:18.585 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:05:18.637 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:05:18.656 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:05:18.667 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.871 seconds (process running for 4.445)
+18:05:18.768 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:05:19.609 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:05:31.821 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:05:31.822 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:05:31.824 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+18:07:38.858 [http-nio-8081-exec-10] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:19:13.686 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 27556 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:19:13.688 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:19:13.753 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:19:15.588 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:19:15.597 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:19:15.601 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:19:15.601 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:19:15.648 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:19:15.648 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1894 ms
+18:19:16.157 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:19:16.265 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:19:16.265 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'paper-light'.
+18:19:16.265 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:19:16.420 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 6e41610a-46a2-45b7-9af5-1cdeabc392c1
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:19:16.451 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:19:16.785 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:19:17.030 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:19:17.251 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:19:17.297 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:19:17.317 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:19:17.332 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.194 seconds (process running for 4.978)
+18:19:17.427 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:19:18.285 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:19:30.676 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:19:30.676 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:19:30.680 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+18:19:42.830 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:21:07.980 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:21:08.031 [http-nio-8081-exec-8] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'powder-blue'.
+18:21:52.199 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 21544 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:21:52.201 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:21:52.256 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:21:53.861 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:21:53.871 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:21:53.874 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:21:53.876 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:21:53.924 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:21:53.924 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1667 ms
+18:21:54.510 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:21:54.615 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:21:54.615 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'powder-blue'.
+18:21:54.615 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:21:54.761 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: c252c0c4-ddb4-4d77-8ba4-362239c9b013
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:21:54.791 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:21:55.170 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:21:55.485 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:21:55.746 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:21:55.795 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:21:55.825 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:21:55.837 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.084 seconds (process running for 4.748)
+18:21:55.960 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:21:56.682 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:22:09.374 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:22:09.375 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:22:09.378 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:22:16.431 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:25:52.052 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 15520 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:25:52.055 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:25:52.107 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:25:53.698 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:25:53.709 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:25:53.711 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:25:53.712 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:25:53.756 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:25:53.757 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1650 ms
+18:25:54.256 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:25:54.359 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:25:54.359 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'powder-blue'.
+18:25:54.359 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:25:54.537 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 4d2b36e9-7e54-465b-b974-d3954ba7ccca
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:25:54.567 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:25:54.897 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:25:55.130 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:25:55.294 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:25:55.345 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:25:55.374 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:25:55.391 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.761 seconds (process running for 4.387)
+18:25:55.504 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:25:56.300 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:26:08.783 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:26:08.783 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:26:08.786 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:26:16.333 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:29:14.914 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 20452 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:29:14.916 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:29:14.977 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:29:16.584 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:29:16.595 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:29:16.597 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:29:16.597 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:29:16.648 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:29:16.649 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1671 ms
+18:29:17.159 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:29:17.284 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:29:17.284 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'powder-blue'.
+18:29:17.284 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:29:17.439 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: c780af9b-adb6-4fc4-be8c-d296670b032f
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:29:17.466 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:29:17.771 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:29:17.986 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:29:18.175 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:29:18.226 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:29:18.245 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:29:18.260 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.792 seconds (process running for 4.399)
+18:29:18.355 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:29:19.106 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:29:31.391 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:29:31.391 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:29:31.394 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:29:36.906 [http-nio-8081-exec-6] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:31:00.485 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 35572 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:31:00.489 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:31:00.535 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:31:02.209 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:31:02.218 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:31:02.221 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:31:02.221 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:31:02.265 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:31:02.266 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1728 ms
+18:31:02.750 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:31:02.846 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:31:02.847 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'powder-blue'.
+18:31:02.847 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:31:03.027 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 910d035c-c385-4b6a-a296-e4670fcd36b9
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:31:03.052 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:31:03.355 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:31:03.599 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:31:03.792 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:31:03.840 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:31:03.857 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:31:03.872 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.848 seconds (process running for 4.436)
+18:31:03.971 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:31:04.641 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:31:17.159 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:31:17.159 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:31:17.161 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+18:31:22.678 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:31:43.581 [http-nio-8081-exec-1] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:31:43.604 [http-nio-8081-exec-2] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'neon-pink'.
+18:33:20.718 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 17660 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:33:20.720 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:33:20.773 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:33:22.617 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:33:22.628 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:33:22.631 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:33:22.632 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:33:22.682 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:33:22.683 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1909 ms
+18:33:23.207 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:33:23.325 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:33:23.325 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'neon-pink'.
+18:33:23.325 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:33:23.507 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 4e2f239d-2d82-4cfe-a19b-19f34088b2e3
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:33:23.536 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:33:23.897 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:33:24.121 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:33:24.301 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:33:24.350 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:33:24.369 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:33:24.382 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.14 seconds (process running for 4.82)
+18:33:24.470 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:33:25.209 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:33:37.465 [http-nio-8081-exec-3] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:33:37.465 [http-nio-8081-exec-3] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:33:37.468 [http-nio-8081-exec-3] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:33:44.352 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-1031323651310302408\xmen
+18:33:44.353 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-1031323651310302408\xmen\
+18:33:44.486 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-1031323651310302408\xmen\
+18:33:51.712 [http-nio-8081-exec-2] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:33:54.846 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:33:54.866 [http-nio-8081-exec-1] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'ocean-cobalt'.
+18:34:04.908 [http-nio-8081-exec-4] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:34:15.934 [http-nio-8081-exec-9] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:34:15.941 [http-nio-8081-exec-2] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'slate-blue'.
+18:37:17.081 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 25304 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:37:17.082 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:37:17.135 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:37:18.777 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:37:18.787 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:37:18.790 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:37:18.790 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:37:18.829 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:37:18.832 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1695 ms
+18:37:19.365 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:37:19.481 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:37:19.481 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+18:37:19.481 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:37:19.654 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 8701260d-272a-4250-a39d-aa99892a8594
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:37:19.685 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:37:20.072 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:37:20.318 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:37:20.497 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:37:20.547 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:37:20.568 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:37:20.582 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.927 seconds (process running for 4.64)
+18:37:20.684 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:37:21.451 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:37:33.876 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:37:33.877 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:37:33.879 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+18:38:28.638 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 12000 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:38:28.639 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:38:28.701 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:38:30.287 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:38:30.298 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:38:30.301 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:38:30.301 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:38:30.347 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:38:30.348 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1644 ms
+18:38:30.851 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:38:30.945 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:38:30.945 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+18:38:30.945 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:38:31.084 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: c927783e-d000-4f31-aedc-b740648dc295
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:38:31.119 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:38:31.453 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:38:31.716 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:38:31.860 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:38:31.903 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:38:31.918 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:38:31.931 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.754 seconds (process running for 4.356)
+18:38:32.023 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:38:32.664 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:38:45.263 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:38:45.263 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:38:45.265 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+18:38:45.661 [JavaFX Application Thread] WARN  c.s.x.m.u.MainSceneFactory - MediaPlayer error: {}
+javafx.scene.media.MediaException: [com.sun.media.jfxmediaimpl.platform.gstreamer.GSTMediaPlayer@41b3693b] ERROR_MEDIA_INVALID: ERROR_MEDIA_INVALID
+	at javafx.scene.media.MediaException.getMediaException(MediaException.java:161)
+	at javafx.scene.media.MediaPlayer$_MediaErrorListener.onError(MediaPlayer.java:2624)
+	at com.sun.media.jfxmediaimpl.NativeMediaPlayer$EventQueueThread.HandleErrorEvents(NativeMediaPlayer.java:692)
+	at com.sun.media.jfxmediaimpl.NativeMediaPlayer$EventQueueThread.run(NativeMediaPlayer.java:426)
+18:38:57.277 [http-nio-8081-exec-6] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:40:46.031 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 14212 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:40:46.032 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:40:46.088 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:40:48.178 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:40:48.194 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:40:48.196 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:40:48.196 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:40:48.263 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:40:48.264 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2174 ms
+18:40:48.748 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:40:48.857 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:40:48.857 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+18:40:48.857 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:40:49.028 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: ffbdc190-d7c7-4a37-868a-af000f830cbf
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:40:49.049 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:40:49.411 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:40:49.633 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:40:49.824 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:40:49.871 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:40:49.893 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:40:49.905 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.361 seconds (process running for 4.986)
+18:40:50.010 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:40:50.574 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:41:02.918 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:41:02.918 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:41:02.921 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:42:15.234 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 10276 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:42:15.238 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:42:15.293 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:42:16.928 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:42:16.939 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:42:16.944 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:42:16.945 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:42:16.994 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:42:16.995 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1701 ms
+18:42:17.500 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:42:17.594 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:42:17.595 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+18:42:17.595 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:42:17.732 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: cf091c4e-1db1-49d0-be5b-05bd8188605c
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:42:17.761 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:42:18.093 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:42:18.310 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:42:18.457 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:42:18.495 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:42:18.511 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:42:18.522 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.747 seconds (process running for 4.367)
+18:42:18.607 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:42:19.315 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:42:31.705 [http-nio-8081-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:42:31.705 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:42:31.708 [http-nio-8081-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:43:29.086 [http-nio-8081-exec-2] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:45:43.327 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 28756 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:45:43.330 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:45:43.394 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:45:45.041 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:45:45.050 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:45:45.053 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:45:45.053 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:45:45.100 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:45:45.101 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1705 ms
+18:45:45.668 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:45:45.778 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:45:45.778 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+18:45:45.778 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:45:45.983 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 84693c2f-770e-4c76-959a-ff19e47d1a37
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:45:46.010 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:45:46.338 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:45:46.569 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:45:46.757 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:45:46.811 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:45:46.826 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:45:46.836 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.979 seconds (process running for 4.611)
+18:45:46.927 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:45:47.690 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:45:59.915 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:45:59.915 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:45:59.918 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+18:46:02.053 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:50:07.658 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 35260 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+18:50:07.660 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+18:50:07.712 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+18:50:09.313 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+18:50:09.322 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+18:50:09.326 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+18:50:09.327 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+18:50:09.369 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+18:50:09.370 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1657 ms
+18:50:09.864 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+18:50:09.981 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+18:50:09.981 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'slate-blue'.
+18:50:09.981 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+18:50:10.136 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 1210305e-5cf3-4a4d-89d2-b82430d9ef0b
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+18:50:10.163 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+18:50:10.496 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+18:50:10.731 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+18:50:10.887 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+18:50:10.938 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+18:50:10.959 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+18:50:10.971 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 3.77 seconds (process running for 4.467)
+18:50:11.071 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+18:50:11.860 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+18:50:24.417 [http-nio-8081-exec-5] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+18:50:24.418 [http-nio-8081-exec-5] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+18:50:24.420 [http-nio-8081-exec-5] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+18:50:32.221 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:51:01.333 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:51:01.350 [http-nio-8081-exec-2] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'ultraviolet-lagoon'.
+18:51:10.497 [http-nio-8081-exec-5] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:51:15.666 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:51:17.643 [http-nio-8081-exec-9] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+18:52:29.038 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.HybridDerivationService - Haskell derivation DISABLED - using Java implementation
+18:52:29.040 [http-nio-8081-exec-1] INFO  c.s.x.m.u.SetupKnowledgeExtractor - Extracted principal from Setup rule: $Human
+18:52:29.040 [http-nio-8081-exec-1] INFO  c.s.x.m.u.SetupKnowledgeExtractor - Extracted 4 type values for principal $Human
+18:52:29.041 [http-nio-8081-exec-1] INFO  c.s.x.m.u.ForgetMutationParser - Found Forget values for rule H_2: [pw1]
+18:52:29.041 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Extracting MONOTONIC knowledge for rule: H_1
+18:52:29.041 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Precondition State data: <$B1,$B2,nH,pw1,pw2,ltkH>
+18:52:29.042 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Postcondition State data: <$B1,$B2,nH,pw1,pw2,ltkH>
+18:52:29.042 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Full MONOTONIC knowledge K: [$B1, $B2, nH, pw1, pw2, ltkH]
+18:52:29.043 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Algorithm 1 - Processing rule H_2 with 1 forget targets
+18:52:29.043 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Knowledge K: [$B1, $B2, nH, pw1, pw2, ltkH, aenc((nH, nB), pk(ltkH))]
+18:52:29.043 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Forget set: [pw1]
+18:52:29.044 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Blocking mode: CASE1_WEAK
+18:52:29.044 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Forget triggers Neglect on rule H_2 - removing 1 internal action(s) using forgotten message pw1
+18:52:29.044 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Target message m2: senc(($Human, pw1), k(nH, nB))
+18:52:29.044 [http-nio-8081-exec-1] WARN  c.s.x.m.s.i.ForgetMutationStrategy - No derivations found for target senc(($Human, pw1), k(nH, nB)) - falling back to textual substitution
+18:52:29.047 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Applying textual substitution {pw1=pw2} to rule H_2
+18:52:29.051 [http-nio-8081-exec-1] INFO  c.s.x.m.c.ForgetMutationController - Captured derivation tree output (2523 characters)
+18:52:29.054 [http-nio-8081-exec-1] INFO  com.sermas.x.men.service.ZipService - Added derivation tree to ZIP: Bank_revised_new_DerivationTree.txt
+18:53:23.946 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.HybridDerivationService - Haskell derivation DISABLED - using Java implementation
+18:53:23.946 [http-nio-8081-exec-3] INFO  c.s.x.m.u.SetupKnowledgeExtractor - Extracted principal from Setup rule: $Human
+18:53:23.946 [http-nio-8081-exec-3] INFO  c.s.x.m.u.SetupKnowledgeExtractor - Extracted 4 type values for principal $Human
+18:53:23.946 [http-nio-8081-exec-3] INFO  c.s.x.m.u.ForgetMutationParser - Found Forget values for rule H_2: [pw1]
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Extracting MONOTONIC knowledge for rule: H_1
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Precondition State data: <$B1,$B2,nH,pw1,pw2,ltkH>
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Postcondition State data: <$B1,$B2,nH,pw1,pw2,ltkH>
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Full MONOTONIC knowledge K: [$B1, $B2, nH, pw1, pw2, ltkH]
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Algorithm 1 - Processing rule H_2 with 1 forget targets
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Knowledge K: [$B1, $B2, nH, pw1, pw2, ltkH, aenc((nH, nB), pk(ltkH))]
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Forget set: [pw1]
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Blocking mode: CASE1_WEAK
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Forget triggers Neglect on rule H_2 - removing 1 internal action(s) using forgotten message pw1
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Target message m2: senc(($Human, pw1), k(nH, nB))
+18:53:23.947 [http-nio-8081-exec-3] WARN  c.s.x.m.s.i.ForgetMutationStrategy - No derivations found for target senc(($Human, pw1), k(nH, nB)) - falling back to textual substitution
+18:53:23.947 [http-nio-8081-exec-3] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Applying textual substitution {pw1=pw2} to rule H_2
+18:53:23.949 [http-nio-8081-exec-3] INFO  c.s.x.m.c.ForgetMutationController - Captured derivation tree output (2523 characters)
+18:53:23.950 [http-nio-8081-exec-3] INFO  com.sermas.x.men.service.ZipService - Added derivation tree to ZIP: Bank_revised_new_DerivationTree.txt
+19:31:31.987 [restartedMain] INFO  com.sermas.x.men.Application - Starting Application using Java 21.0.11 with PID 31576 (R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0\target\classes started by Rish in R:\OneDrive - King's College London\Workspace\Projects\SERMAS_KCL\Repositories\X-Men(Spring-Boot)\X-Men_3.0)
+19:31:31.989 [restartedMain] INFO  com.sermas.x.men.Application - No active profile set, falling back to 1 default profile: "default"
+19:31:32.053 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+19:31:33.784 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8081 (http)
+19:31:33.796 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8081"]
+19:31:33.799 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+19:31:33.799 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+19:31:33.846 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+19:31:33.847 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1792 ms
+19:31:34.400 [restartedMain] INFO  c.s.x.m.s.HaskellDerivationFetcher - HaskellDerivationFetcher initialized with base URL: http://localhost:9091
+19:31:34.518 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted vocabulary from C:\Users\Dell\.xmen\settings.json.
+19:31:34.519 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted active theme 'ultraviolet-lagoon'.
+19:31:34.519 [restartedMain] INFO  c.sermas.x.men.service.SettingsStore - Applied persisted UI preferences.
+19:31:34.698 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: c1f5c969-6078-478f-a7d4-67c023c6444e
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+19:31:34.731 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+19:31:35.080 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+19:31:35.348 [restartedMain] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+19:31:35.521 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+19:31:35.565 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+19:31:35.587 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8081 (http) with context path '/'
+19:31:35.599 [restartedMain] INFO  com.sermas.x.men.Application - Started Application in 4.139 seconds (process running for 4.961)
+19:31:35.706 [JavaFX-Launcher] WARN  javafx - Unsupported JavaFX configuration: classes were loaded from 'unnamed module @2473b9ce'
+19:31:36.620 [JavaFX Application Thread] INFO  c.s.x.m.user_interface.XMenInterface - Splash video 'X - Men 2.0.mp4' loaded; playing at 1280.0x800.0 with audio.
+19:31:49.157 [http-nio-8081-exec-2] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+19:31:49.157 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+19:31:49.160 [http-nio-8081-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+19:33:47.363 [http-nio-8081-exec-9] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:34:09.581 [http-nio-8081-exec-2] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:34:14.589 [http-nio-8081-exec-3] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:39:08.698 [http-nio-8081-exec-6] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:39:08.760 [http-nio-8081-exec-8] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'charcoal-mono'.
+19:39:30.768 [http-nio-8081-exec-5] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:50:13.997 [http-nio-8081-exec-1] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:50:18.150 [http-nio-8081-exec-5] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:50:20.147 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:50:21.628 [http-nio-8081-exec-10] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:50:22.610 [http-nio-8081-exec-9] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:50:34.156 [http-nio-8081-exec-7] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:51:11.829 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Extracted 6 AIML brain resources into C:\Users\Dell\AppData\Local\Temp\xmen-aiml-1387510587373277876\xmen
+19:51:11.830 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - Loading X-Men AIML brain from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-1387510587373277876\xmen\
+19:51:12.128 [JavaFX Application Thread] INFO  c.s.x.m.s.chatbot.ChatBotService - ChatBotService status: AIML brain loaded from C:\Users\Dell\AppData\Local\Temp\xmen-aiml-1387510587373277876\xmen\
+19:56:00.629 [http-nio-8081-exec-8] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:56:03.139 [http-nio-8081-exec-4] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:56:03.151 [http-nio-8081-exec-3] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'toxic-orchid'.
+19:56:12.030 [http-nio-8081-exec-5] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:56:25.050 [http-nio-8081-exec-5] INFO  c.s.x.men.service.VocabularyService - Vocabulary updated via Settings API.
+19:56:25.063 [http-nio-8081-exec-9] INFO  c.sermas.x.men.service.ThemeService - Active theme switched to 'pine-forest'.
+19:56:37.325 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.HybridDerivationService - Haskell derivation DISABLED - using Java implementation
+19:56:37.329 [http-nio-8081-exec-1] INFO  c.s.x.m.u.SetupKnowledgeExtractor - Extracted principal from Setup rule: $Human
+19:56:37.332 [http-nio-8081-exec-1] INFO  c.s.x.m.u.SetupKnowledgeExtractor - Extracted 4 type values for principal $Human
+19:56:37.332 [http-nio-8081-exec-1] INFO  c.s.x.m.u.ForgetMutationParser - Found Forget values for rule H_2: [pw1]
+19:56:37.334 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Extracting MONOTONIC knowledge for rule: H_1
+19:56:37.334 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Precondition State data: <$B1,$B2,nH,pw1,pw2,ltkH>
+19:56:37.335 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Postcondition State data: <$B1,$B2,nH,pw1,pw2,ltkH>
+19:56:37.336 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.DerivationCheckServiceImpl - Full MONOTONIC knowledge K: [$B1, $B2, nH, pw1, pw2, ltkH]
+19:56:37.339 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Algorithm 1 - Processing rule H_2 with 1 forget targets
+19:56:37.340 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Knowledge K: [$B1, $B2, nH, pw1, pw2, ltkH, aenc((nH, nB), pk(ltkH))]
+19:56:37.340 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Forget set: [pw1]
+19:56:37.340 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Blocking mode: CASE1_WEAK
+19:56:37.340 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Forget triggers Neglect on rule H_2 - removing 1 internal action(s) using forgotten message pw1
+19:56:37.341 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Target message m2: senc(($Human, pw1), k(nH, nB))
+19:56:37.342 [http-nio-8081-exec-1] WARN  c.s.x.m.s.i.ForgetMutationStrategy - No derivations found for target senc(($Human, pw1), k(nH, nB)) - falling back to textual substitution
+19:56:37.348 [http-nio-8081-exec-1] INFO  c.s.x.m.s.i.ForgetMutationStrategy - Applying textual substitution {pw1=pw2} to rule H_2
+19:56:37.357 [http-nio-8081-exec-1] INFO  c.s.x.m.c.ForgetMutationController - Captured derivation tree output (2523 characters)
+19:56:37.368 [http-nio-8081-exec-1] INFO  com.sermas.x.men.service.ZipService - Added derivation tree to ZIP: Bank_revised_new_DerivationTree.txt

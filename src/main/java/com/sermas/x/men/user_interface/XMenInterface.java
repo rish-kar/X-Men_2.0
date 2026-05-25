@@ -1,6 +1,16 @@
 package com.sermas.x.men.user_interface;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.animation.Animation;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -70,6 +80,7 @@ public class XMenInterface extends Application {
 
   private Button buttonUpload;
   private Button buttonStart;
+  private Timeline chatIconPulse;
 
   private static final String message = "Error while performing mutation";
 
@@ -88,6 +99,11 @@ public class XMenInterface extends Application {
 
   // Hero logo — held so the theme switcher can repaint it.
   private ImageView heroLogo;
+
+  private Button howItWorksButton;
+
+  private static final String CHAT_ICON_WHITE = "/icons/chat-white.png";
+  private static final String CHAT_ICON_BLACK = "/icons/chat-black.png";
 
   @Override
   public void start(Stage stage) {
@@ -281,13 +297,30 @@ public class XMenInterface extends Application {
     panelSub.getStyleClass().add("x-control-sub");
     VBox panelHeader = new VBox(4, panelTitle, panelSub);
 
-    Button howItWorks = new Button("Chat with X-Men");
-    howItWorks.getStyleClass().add("x-cta-secondary");
-    howItWorks.setGraphic(Icons.chatBot(18, javafx.scene.paint.Color.WHITE));
+    VBox.setMargin(checkboxPanel, new Insets(52, 0, 0, 0));
+
+    Button howItWorks = new Button();
+    this.howItWorksButton = howItWorks;
+
+    howItWorks.getStyleClass().addAll("x-cta-secondary", "x-chat-trigger");
+    howItWorks.setText("");
+    howItWorks.setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
+    setChatIcon(false, null);
+
     howItWorks.setOnAction(e -> ChatBotDialog.show(stage, howItWorks));
     Animations.hoverLift(howItWorks, 1.03);
-    StackPane howItWorksWrap = new StackPane(howItWorks);
+
+    refreshChatIconFromServer(serverPort);
+
+    Label chatButtonText = new Label("Chat with X-Men");
+    chatButtonText.getStyleClass().add("x-chat-trigger-label");
+
+    VBox chatButtonGroup = new VBox(6, howItWorks, chatButtonText);
+    chatButtonGroup.setAlignment(Pos.CENTER);
+
+    StackPane howItWorksWrap = new StackPane(chatButtonGroup);
     howItWorksWrap.getStyleClass().add("x-shadow-room");
+
     HBox panelFooter = new HBox(howItWorksWrap);
     panelFooter.getStyleClass().add("x-control-footer");
 
@@ -323,6 +356,116 @@ public class XMenInterface extends Application {
     return scene;
   }
 
+  private void setChatIcon(boolean lightTheme, com.sermas.x.men.config.ThemeCatalog.Theme theme) {
+    if (howItWorksButton == null) return;
+
+    String iconPath = CHAT_ICON_WHITE; // always use white icon
+
+    try (InputStream is = getClass().getResourceAsStream(iconPath)) {
+      if (is == null) return;
+
+      ImageView icon = new ImageView(new Image(is));
+      icon.setFitWidth(84);
+      icon.setFitHeight(84);
+      icon.setPreserveRatio(true);
+      icon.setSmooth(true);
+      icon.setMouseTransparent(true);
+
+      boolean charcoalMono =
+              theme != null
+                      && theme.getId() != null
+                      && theme.getId().equalsIgnoreCase("charcoal-mono");
+
+      Color glowColor = Color.rgb(155, 93, 229, charcoalMono ? 0.55 : 1.0);
+
+      if (theme != null && theme.getAccent() != null && !theme.getAccent().isBlank()) {
+        Color accent = Color.web(theme.getAccent()).deriveColor(0, 1.0, 0.80, charcoalMono ? 0.55 : 1.0);
+        glowColor = accent;
+      }
+
+      DropShadow glow = new DropShadow();
+      glow.setColor(glowColor);
+      glow.setRadius(charcoalMono ? 14 : 24);
+      glow.setSpread(charcoalMono ? 0.25 : 0.55);
+
+      icon.setEffect(glow);
+
+      StackPane iconWrap = new StackPane(icon);
+      iconWrap.setMinSize(96, 96);
+      iconWrap.setPrefSize(96, 96);
+      iconWrap.setMaxSize(96, 96);
+      iconWrap.setMouseTransparent(true);
+
+      if (chatIconPulse != null) {
+        chatIconPulse.stop();
+      }
+
+      chatIconPulse =
+              new Timeline(
+                      new KeyFrame(
+                              Duration.ZERO,
+                              new KeyValue(glow.radiusProperty(), charcoalMono ? 10 : 18, Interpolator.EASE_BOTH),
+                              new KeyValue(glow.spreadProperty(), charcoalMono ? 0.18 : 0.34, Interpolator.EASE_BOTH),
+                              new KeyValue(iconWrap.scaleXProperty(), 0.98, Interpolator.EASE_BOTH),
+                              new KeyValue(iconWrap.scaleYProperty(), 0.98, Interpolator.EASE_BOTH)),
+                      new KeyFrame(
+                              Duration.seconds(1.8),
+                              new KeyValue(glow.radiusProperty(), charcoalMono ? 18 : 32, Interpolator.EASE_BOTH),
+                              new KeyValue(glow.spreadProperty(), charcoalMono ? 0.32 : 0.52, Interpolator.EASE_BOTH),
+                              new KeyValue(iconWrap.scaleXProperty(), 1.08, Interpolator.EASE_BOTH),
+                              new KeyValue(iconWrap.scaleYProperty(), 1.08, Interpolator.EASE_BOTH)),
+                      new KeyFrame(
+                              Duration.seconds(3.6),
+                              new KeyValue(glow.radiusProperty(), charcoalMono ? 10 : 18, Interpolator.EASE_BOTH),
+                              new KeyValue(glow.spreadProperty(), charcoalMono ? 0.18 : 0.34, Interpolator.EASE_BOTH),
+                              new KeyValue(iconWrap.scaleXProperty(), 0.98, Interpolator.EASE_BOTH),
+                              new KeyValue(iconWrap.scaleYProperty(), 0.98, Interpolator.EASE_BOTH)));
+
+      chatIconPulse.setCycleCount(Animation.INDEFINITE);
+      chatIconPulse.play();
+
+      howItWorksButton.setGraphic(iconWrap);
+      howItWorksButton.setGraphicTextGap(0);
+
+    } catch (Exception ignored) {
+    }
+  }
+
+  private void refreshChatIcon(com.sermas.x.men.config.ThemeCatalog.Theme theme) {
+    setChatIcon(ThemeLogo.isLightTheme(theme), theme);
+  }
+
+  private void refreshChatIconFromServer(int serverPort) {
+    new Thread(
+            () -> {
+              try {
+                OkHttpClient http = new OkHttpClient();
+
+                Response r =
+                        http.newCall(
+                                        new Request.Builder()
+                                                .url("http://localhost:" + serverPort + "/api/settings/themes/active")
+                                                .build())
+                                .execute();
+
+                try (r) {
+                  if (!r.isSuccessful() || r.body() == null) return;
+
+                  ObjectMapper mapper = new ObjectMapper();
+                  com.sermas.x.men.config.ThemeCatalog.Theme theme =
+                          mapper.readValue(
+                                  r.body().bytes(),
+                                  com.sermas.x.men.config.ThemeCatalog.Theme.class);
+
+                  Platform.runLater(() -> refreshChatIcon(theme));
+                }
+              } catch (Exception ignored) {
+              }
+            },
+            "chat-icon-theme-init")
+            .start();
+  }
+
   private void openSettings(Stage stage) {
     int serverPort = 8081;
     SettingsDialog dialog =
@@ -353,6 +496,7 @@ public class XMenInterface extends Application {
                         () -> {
                           ThemeApplier.apply(mainRoot, theme);
                           ThemeLogo.apply(heroLogo, theme);
+                          refreshChatIcon(theme);
                         });
                   }
                 }

@@ -111,7 +111,7 @@ public final class MainSceneFactory {
     settingsHost.setAlignment(Pos.BOTTOM_LEFT);
     settingsHost.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
     StackPane.setAlignment(settingsHost, Pos.BOTTOM_LEFT);
-    StackPane.setMargin(settingsHost, new Insets(0, 0, 24, 18));
+    StackPane.setMargin(settingsHost, new Insets(0, 0, 2, 18));
 
     BorderPane content = new BorderPane();
     content.setPickOnBounds(false);
@@ -406,9 +406,9 @@ public final class MainSceneFactory {
     tagline.setMaxWidth(540);
     tagline.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
     tagline.setAlignment(Pos.CENTER_LEFT);
-    VBox.setMargin(tagline, new javafx.geometry.Insets(18, 0, 0, 20));
+    VBox.setMargin(tagline, new javafx.geometry.Insets(6, 0, 0, 20));
     tagline.translateYProperty().unbind();
-    tagline.setTranslateY(0);
+    tagline.setTranslateY(-52);
     tagline.translateXProperty().unbind();
     tagline.translateXProperty().bind(col.widthProperty().multiply(-0.02));
 

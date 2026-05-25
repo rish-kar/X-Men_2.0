@@ -6,7 +6,7 @@
 # Fields:
 #   id           – stable identifier used by the API and CSS classes
 #   name         – human-readable label shown in the settings dialog
-#   accent       – primary accent colour (e.g. the green CTA in the mockup)
+#   accent       – primary accent colour
 #   accent-soft  – muted variant used on hover/secondary states
 #   overlay      – translucent overlay drawn over the background video
 #   glass-fill   – translucent fill of glass panels
@@ -15,16 +15,12 @@
 #   text-muted   – secondary text colour
 #   shadow       – drop-shadow colour for elevated panels
 #
-# Every colour must be a valid JavaFX/CSS colour (hex with optional alpha).
+# Every colour must be a valid JavaFX/CSS colour.
 # -------------------------------------------------------------------
 
 xmen:
   themes:
     default: "sermas-classic"
-
-    # All overlays are now darker (~0.62–0.78 alpha) so the theme actually
-    # tints the scene instead of vanishing into the video. Glass panels carry
-    # a tinted fill in addition to white so the chosen palette is unmistakable.
 
     catalog:
 
@@ -50,6 +46,17 @@ xmen:
         text-muted:   "rgba(220, 248, 234, 0.78)"
         shadow:       "rgba(0, 18, 12, 0.55)"
 
+      - id: toxic-orchid
+        name: "Toxic Orchid"
+        accent:       "#D7FF00"
+        accent-soft:  "#FF4FD8"
+        overlay:      "rgba(25, 5, 48, 0.76)"
+        glass-fill:   "rgba(215, 255, 0, 0.18)"
+        glass-stroke: "rgba(255, 79, 216, 0.46)"
+        text:         "#FAFFF2"
+        text-muted:   "rgba(245, 255, 210, 0.78)"
+        shadow:       "rgba(10, 0, 24, 0.62)"
+
       - id: midnight-violet
         name: "Midnight Violet"
         accent:       "#8E7BFF"
@@ -71,6 +78,17 @@ xmen:
         text:         "#F0F8FF"
         text-muted:   "rgba(216, 234, 255, 0.78)"
         shadow:       "rgba(0, 12, 40, 0.55)"
+
+      - id: ultraviolet-lagoon
+        name: "Ultraviolet Lagoon"
+        accent:       "#00E5FF"
+        accent-soft:  "#FF2BD6"
+        overlay:      "rgba(4, 18, 42, 0.76)"
+        glass-fill:   "rgba(0, 229, 255, 0.18)"
+        glass-stroke: "rgba(255, 43, 214, 0.46)"
+        text:         "#EFFFFF"
+        text-muted:   "rgba(207, 250, 255, 0.78)"
+        shadow:       "rgba(0, 8, 22, 0.62)"
 
       - id: sunset-coral
         name: "Sunset Coral"
@@ -94,6 +112,17 @@ xmen:
         text-muted:   "rgba(255, 242, 218, 0.78)"
         shadow:       "rgba(28, 14, 0, 0.55)"
 
+      - id: rusted-aqua
+        name: "Rusted Aqua"
+        accent:       "#FF6B35"
+        accent-soft:  "#00F5D4"
+        overlay:      "rgba(38, 16, 10, 0.76)"
+        glass-fill:   "rgba(255, 107, 53, 0.20)"
+        glass-stroke: "rgba(0, 245, 212, 0.46)"
+        text:         "#FFF4ED"
+        text-muted:   "rgba(255, 226, 210, 0.78)"
+        shadow:       "rgba(20, 6, 0, 0.62)"
+
       - id: rose-quartz
         name: "Rose Quartz"
         accent:       "#F472B6"
@@ -116,6 +145,17 @@ xmen:
         text-muted:   "rgba(214, 248, 224, 0.78)"
         shadow:       "rgba(0, 18, 8, 0.55)"
 
+      - id: deep-reef-ember
+        name: "Deep Reef Ember"
+        accent:       "#00F5D4"
+        accent-soft:  "#FF8A3D"
+        overlay:      "rgba(2, 22, 36, 0.76)"
+        glass-fill:   "rgba(0, 245, 212, 0.18)"
+        glass-stroke: "rgba(255, 138, 61, 0.46)"
+        text:         "#EFFFFC"
+        text-muted:   "rgba(210, 255, 247, 0.78)"
+        shadow:       "rgba(0, 8, 16, 0.62)"
+
       - id: cyber-teal
         name: "Cyber Teal"
         accent:       "#14B8A6"
@@ -129,7 +169,6 @@ xmen:
 
       - id: solar-yellow
         name: "Solar Yellow"
-        # Deepened so white CTA text stays readable on the accent.
         accent:       "#CA8A04"
         accent-soft:  "#FDE68A"
         overlay:      "rgba(40, 30, 0, 0.68)"
@@ -138,6 +177,17 @@ xmen:
         text:         "#FFFBE7"
         text-muted:   "rgba(255, 244, 196, 0.78)"
         shadow:       "rgba(24, 16, 0, 0.55)"
+
+      - id: acid-noir
+        name: "Acid Noir"
+        accent:       "#C8FF00"
+        accent-soft:  "#7C3AED"
+        overlay:      "rgba(5, 4, 14, 0.80)"
+        glass-fill:   "rgba(200, 255, 0, 0.17)"
+        glass-stroke: "rgba(124, 58, 237, 0.48)"
+        text:         "#FAFFE8"
+        text-muted:   "rgba(235, 255, 190, 0.78)"
+        shadow:       "rgba(0, 0, 0, 0.68)"
 
       - id: indigo-night
         name: "Indigo Night"
@@ -194,6 +244,17 @@ xmen:
         text-muted:   "rgba(15, 23, 42, 0.68)"
         shadow:       "rgba(15, 23, 42, 0.22)"
 
+      - id: ink-melon
+        name: "Ink Melon"
+        accent:       "#FF4D6D"
+        accent-soft:  "#B8FF3D"
+        overlay:      "rgba(8, 10, 24, 0.78)"
+        glass-fill:   "rgba(255, 77, 109, 0.19)"
+        glass-stroke: "rgba(184, 255, 61, 0.45)"
+        text:         "#FFF2F5"
+        text-muted:   "rgba(255, 218, 226, 0.78)"
+        shadow:       "rgba(0, 0, 10, 0.66)"
+
       - id: volcanic-red
         name: "Volcanic Red"
         accent:       "#EF4444"
@@ -240,7 +301,6 @@ xmen:
 
       - id: sage-green
         name: "Sage Green"
-        # Deepened from the pastel #84CC16 so the CTA's white text reads cleanly.
         accent:       "#4D7C0F"
         accent-soft:  "#BEF264"
         overlay:      "rgba(20, 34, 6, 0.72)"
@@ -249,6 +309,17 @@ xmen:
         text:         "#F7FEE7"
         text-muted:   "rgba(217, 249, 157, 0.78)"
         shadow:       "rgba(8, 18, 0, 0.55)"
+
+      - id: lunar-brass
+        name: "Lunar Brass"
+        accent:       "#D6A21E"
+        accent-soft:  "#B8F7FF"
+        overlay:      "rgba(18, 20, 26, 0.78)"
+        glass-fill:   "rgba(214, 162, 30, 0.20)"
+        glass-stroke: "rgba(184, 247, 255, 0.42)"
+        text:         "#FFF8E8"
+        text-muted:   "rgba(255, 235, 190, 0.78)"
+        shadow:       "rgba(0, 0, 0, 0.64)"
 
       - id: copper-bronze
         name: "Copper Bronze"
@@ -293,6 +364,17 @@ xmen:
         text:         "#FFFBEB"
         text-muted:   "rgba(254, 240, 200, 0.78)"
         shadow:       "rgba(28, 16, 0, 0.58)"
+
+      - id: plasma-peacock
+        name: "Plasma Peacock"
+        accent:       "#39FF88"
+        accent-soft:  "#4D5BFF"
+        overlay:      "rgba(2, 24, 26, 0.78)"
+        glass-fill:   "rgba(57, 255, 136, 0.18)"
+        glass-stroke: "rgba(77, 91, 255, 0.48)"
+        text:         "#EEFFF5"
+        text-muted:   "rgba(205, 255, 225, 0.78)"
+        shadow:       "rgba(0, 8, 12, 0.64)"
 
       - id: magenta-storm
         name: "Magenta Storm"

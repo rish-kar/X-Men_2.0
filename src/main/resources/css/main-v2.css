@@ -237,7 +237,10 @@
 
 .x-control-panel {
     -fx-background-color:
-        linear-gradient(to bottom right, derive(-glass-fill, 14%), -glass-fill);
+            linear-gradient(to bottom right,
+            rgba(255,255,255,0.045),
+            rgba(255,255,255,0.015)),
+            rgba(0,0,0,0.10);
     -fx-background-radius: 24;
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 24;
@@ -366,11 +369,11 @@
  * crisp. The opacity drop only softens the gradient pill. */
 .x-settings-pane .x-cta-primary,
 .x-settings-pane .x-cta-secondary {
-    -fx-opacity: 0.65;
+    -fx-opacity: 0.82;
 }
 .x-settings-pane .x-cta-primary:hover,
 .x-settings-pane .x-cta-secondary:hover {
-    -fx-opacity: 0.85;
+    -fx-opacity: 0.95;
 }
 .x-settings-pane .x-cta-primary .text,
 .x-settings-pane .x-cta-secondary .text {
@@ -790,6 +793,8 @@
     -fx-background-color:
             -glass-fill,
             -glass-fill,
+            -glass-fill
+            -glass-fill,
             -glass-fill;
     -fx-background-insets: 0;
     -fx-background-radius: 10;
@@ -816,6 +821,8 @@
 
 .combo-box-popup .list-view {
     -fx-background-color:
+            -glass-fill,
+            -glass-fill,
             -glass-fill,
             -glass-fill,
             -glass-fill;
@@ -1262,3 +1269,25 @@
 /* ============================================================================ */
 
 .x-chat-bot-icon { -fx-fill: ladder(-accent, white 49%, black 50%); -fx-stroke: ladder(-accent, white 49%, black 50%); }
+
+.x-chat-trigger {
+    -fx-padding: 0;
+    -fx-min-width: 118px;
+    -fx-min-height: 118px;
+    -fx-pref-width: 118px;
+    -fx-pref-height: 118px;
+    -fx-max-width: 118px;
+    -fx-max-height: 118px;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-graphic-text-gap: 0;
+    -fx-alignment: center;
+}
+
+.x-chat-trigger-label {
+    -fx-text-fill: -text;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-padding: 2 0 0 0;
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.35, 0, 2);
+}
