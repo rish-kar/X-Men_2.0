@@ -1,0 +1,885 @@
+entries:
+  - id: paper.jcs210075
+    title: Sempreboni and Vigano JCS paper
+    category: paper
+    terms: [Sempreboni Vigano paper, JCS210075, mutation based approach paper, security ceremonies paper, X-Men paper, DOI 10.3233 JCS 210075]
+    shortAnswer: |
+      The paper defines X-Men as a mutation-based approach for formally and automatically analyzing security ceremonies with Tamarin.
+    definition: |
+      "A mutation-based approach for the formal and automated analysis of security ceremonies" is a 2023 Journal of Computer Security paper by Diego Sempreboni and Luca Vigano. It introduces human-behavior mutations for security ceremonies, an automated X-Men workflow over Tamarin, and three case studies.
+    details:
+      - Venue is Journal of Computer Security 31, pages 293-364.
+      - The paper focuses on ceremonies where human users are first-class actors.
+      - The four core paper mutations are Skip, Add, Replace, and Neglect.
+      - The proof-of-concept case studies are Oyster, SAML-based SSO for Google Apps, and a Coach Service ceremony.
+    why: |
+      It is the conceptual source for the mutation families and examples used by X-Men, so answers about mutation meaning should follow this paper rather than generic mutation-testing language.
+    related: [paper.security-ceremony, paper.mutation.catalog, paper.case-studies]
+    followups:
+      - What is a security ceremony?
+      - What mutations are in the paper?
+      - What case studies does the paper analyze?
+
+  - id: paper.security-ceremony
+    title: Security ceremony
+    category: foundation
+    terms: [security ceremony, ceremony, human node, human user in protocol, socio technical security, ceremony analysis]
+    definition: |
+      A security ceremony extends a security protocol by including human nodes and non-standard communication links such as user interfaces, human-to-human communication, and physical objects carrying data.
+    why: |
+      A protocol-only model treats the non-attacker actors as fully honest and scripted. A ceremony model must also account for ordinary human mistakes that are neither honest protocol behavior nor attacker behavior.
+    details:
+      - What is out-of-band for a protocol is in-band for a ceremony.
+      - Ceremony analysis should include how humans interact with the system.
+      - The paper targets mistakes made by active human participants, not only deliberate attacks.
+      - X-Men models those mistakes as controlled mutations of the ceremony role.
+    example: |
+      In the Oyster ceremony, the passenger is part of the security behavior. Forgetting to touch in, touching out with another card, or touching two cards can affect the security goal even without a Dolev-Yao attacker.
+    related: [paper.human-shades, paper.mutation.catalog, paper.case.oyster]
+    followups:
+      - Why are humans not just honest agents?
+      - What mutations are in the paper?
+      - What is the Oyster case study?
+
+  - id: paper.human-shades
+    title: Human shades of gray
+    category: foundation
+    terms: [human shades of gray, black and white view, honest process, human mistake, human behavior]
+    definition: |
+      The paper argues that ceremony analysis needs a middle ground between honest agents and attackers. Human users may be trying to follow the ceremony but still skip, add, replace, or neglect actions.
+    details:
+      - Standard protocol analysis gives attackers maximal adversarial power.
+      - Standard protocol analysis often models everyone else as honest and fully scripted.
+      - Human behavior in ceremonies is neither of those extremes.
+      - X-Men represents plausible human deviations as mutations.
+    why: |
+      This is why X-Men does not just ask whether an attacker can break the original model. It asks whether the security goal survives realistic deviations by human participants.
+    related: [paper.security-ceremony, paper.generic-human-mutation, mutation.testing]
+
+  - id: paper.contributions
+    title: Paper contributions
+    category: paper
+    terms: [paper contributions, contributions of X-Men paper, formalization tool support proof of concept]
+    definition: |
+      The paper contributes a formal mutation approach, prototype tool support, and a proof-of-concept evaluation on three real-life case studies.
+    details:
+      - Formalization defines human mutations and matching mutations.
+      - Tool support is provided by X-Men on top of Tamarin.
+      - Case studies demonstrate vulnerabilities in Oyster, SSO, and Coach Service ceremonies.
+      - Some vulnerabilities were previously unknown or previously found only by manual or empirical analysis.
+    related: [paper.workflow, xmen.pipeline, paper.case-studies]
+
+  - id: paper.workflow
+    title: X-Men paper workflow
+    category: xmen
+    terms: [paper workflow, X-Men workflow, mutation workflow, mutated ceremony workflow, how X-Men works in paper]
+    definition: |
+      The paper workflow starts with a ceremony specification and goals, generates human mutations, applies matching and propagation where needed, analyzes each mutated model with Tamarin, and leaves security analyst checks for attack traces and realism.
+    steps:
+      - Start from the original ceremony model and security goals.
+      - Select human mutation families such as Skip, Add, Replace, or Neglect.
+      - Generate mutated human behavior.
+      - Match and propagate the mutation through other roles when the model would otherwise stop.
+      - Run Tamarin on the original and mutated models.
+      - Inspect falsified and timed-out models manually.
+    why: |
+      The workflow separates automated model generation from the human judgement needed to decide whether an attack trace is a real implementation risk or a false positive.
+    related: [paper.matching-mutation, paper.xmen-analysis-phase, xmen.results]
+
+  - id: paper.generic-human-mutation
+    title: Generic human mutation
+    category: mutation
+    terms: [generic human mutation, human mutation, mu H, mutation of human subtrace, mutated trace]
+    definition: |
+      A generic human mutation takes a ceremony trace and produces a new trace by changing the human participant's subtrace.
+    details:
+      - The mutation can skip actions.
+      - The mutation can add a new human action.
+      - The mutation can replace a message with another message.
+      - The mutation can remove internal role-actions through neglect.
+    why: |
+      This gives one common shape to the paper's four mutation families, so the bot should explain each mutation as a trace-level change rather than a keyword rewrite.
+    related: [paper.matching-mutation, paper.mutation.catalog, paper.trace-model]
+
+  - id: paper.matching-mutation
+    title: Matching mutation
+    category: mutation
+    terms: [matching mutation, propagation mutation, match human mutation, executable trace, matching and propagation]
+    definition: |
+      A matching mutation changes the other agents' subtraces so they can respond to the human mutation and the mutated ceremony can still execute.
+    why: |
+      Without matching, many human mutations would simply make the model non-executable because the other role would not receive the expected message or would not send the next expected message.
+    details:
+      - Matching is needed mainly for Skip, Add, and Replace.
+      - Neglect is normally local to the human role and does not need matching.
+      - Propagation updates later messages and knowledge after the changed interaction.
+      - Matching can represent a real implementation behavior or a hypothetical implementation deviation.
+    example: |
+      If a user skips a send, X-Men may mutate the receiving role by removing the corresponding receive and then propagate the changed knowledge into later sends.
+    commonMistakes:
+      - Treating every matched attack as automatically real.
+      - Forgetting that matched mutations can introduce false positives that need analyst review.
+    related: [paper.skip-mutation, paper.replace-mutation, paper.false-positives]
+    followups:
+      - Why does X-Men need matching?
+      - What is propagation?
+      - What is a false positive in X-Men?
+
+  - id: paper.mutation.catalog
+    title: Paper mutation catalog
+    category: mutation
+    terms: [what mutations are available, paper mutations, four mutations, skip add replace neglect, behavioral patterns library]
+    definition: |
+      The JCS paper focuses on four core human mutation families: Skip, Add, Replace, and Neglect. It also studies combinations such as Add plus Replace.
+    details:
+      - Skip variants are Skip Send, Skip Receive, Skip Send Receive, Skip Receive Send, and Skip Receive Send Receive.
+      - Add variants are adding a new send from current knowledge or duplicating an existing send.
+      - Replace variants are Replace Sub-Messages and Replace Type.
+      - Neglect removes internal role-actions such as equality checks; it does not remove sends or receives.
+      - Add plus Replace is a composed mutation used for extra sends that carry replaced values.
+      - Forget is implemented by this repo as a knowledge-loss mutation, although the paper discusses forgetting as future work.
+    why: |
+      These mutations are meant to mimic human mistakes in ceremonies, not arbitrary random edits.
+    related: [paper.skip-mutation, paper.add-mutation, paper.replace-mutation]
+    followups:
+      - How does Skip work?
+      - How does Add work?
+      - How does Replace work?
+
+  - id: paper.mutation.selection
+    title: Mutation selection from the paper
+    category: mutation
+    terms: [which mutation should I pick, choose mutation, when to use skip add replace neglect, mutation selection paper]
+    shortAnswer: |
+      Pick the mutation by the human behavior you want to model. Skip is missed behavior, Add is extra behavior, Replace is wrong-but-shaped behavior, and Neglect is missing internal validation.
+    definition: |
+      Mutation selection maps a plausible human or implementation deviation to the mutation family that represents it most directly.
+    useWhen:
+      - Use Skip when a user might omit a send, receive, or short exchange.
+      - Use Add when a user might perform an extra send or duplicate an existing send.
+      - Use Replace when a user might send a submessage or another same-type value.
+      - Use Neglect when a user still receives data but fails to check it.
+      - Use Add plus Replace when the scenario has an extra action carrying a replaced value.
+    avoidWhen:
+      - Do not use Replace for a totally different action. Model that as Skip plus Add.
+      - Do not use Neglect for a missing send or receive. That is a Skip-family question.
+    related: [paper.skip-mutation, paper.add-replace, paper.neglect-mutation]
+
+  - id: paper.skip-mutation
+    title: Skip mutation
+    category: mutation
+    terms: [skip mutation, Skip-Send, Skip-Receive, skip variants, five skip variants, what are the skip variants, skip S, skip R, skip SR, skip RS, skip RSR]
+    definition: |
+      Skip removes one or more actions from the human subtrace and then mutates later actions if needed so the trace remains meaningful.
+    why: |
+      It models a user missing part of the ceremony, such as not touching in with a card or ignoring a confirmation.
+    details:
+      - The paper identifies five skip variants based on skipped send and receive actions.
+      - Skip Send skips a human send action.
+      - Skip Receive skips a human receive action.
+      - Skip Send Receive skips a send and a later receive.
+      - Skip Receive Send skips a receive and the send that would normally follow it.
+      - Skip Receive Send Receive skips a larger receive-send-receive chunk.
+      - Matching mutations adjust other roles and propagated messages when the skipped action changes what later agents can know.
+    example: |
+      In the Oyster case study, a passenger can skip the touch-in send action and later touch out. Tamarin then finds an incomplete journey attack.
+    related: [paper.skip-s, paper.skip-r, paper.skip-sr]
+    followups:
+      - What are the five Skip variants?
+      - How does Skip-Send work?
+      - What happened in the Oyster incomplete journey attack?
+
+  - id: paper.skip-s
+    title: Skip-Send
+    category: mutation
+    terms: [Skip-Send, skip send, skip send mutation, skip S, mu skip S, skip a send action]
+    definition: |
+      Skip-Send removes a human send action. The human reaches a later landing transition without sending the message that the original role expected.
+    why: |
+      Use it when the human may fail to emit an expected message, but later parts of the ceremony might still run because the implementation or matching mutation compensates.
+    details:
+      - The human keeps the knowledge available before the skipped send.
+      - The next receiver may also need a matching mutation because it cannot receive a message that was never sent.
+      - Later messages may be the original message if still derivable, or a format-preserving mutation built from current knowledge.
+      - This is the smallest Skip variant that removes an outgoing human action.
+    example: |
+      Oyster Skip-Send M0 skips the human touch-in send. The passenger then touches out and the system cannot know the entry gate.
+    related: [paper.matching-skip-s, paper.case.oyster, paper.oyster-incomplete-journey]
+
+  - id: paper.matching-skip-s
+    title: Matching Skip-Send
+    category: mutation
+    terms: [matching Skip-Send, matching skip S, Algorithm 2, skip send propagation]
+    definition: |
+      Matching Skip-Send removes the corresponding receive from the next role and rebuilds that role's subsequent sends from the knowledge it still has.
+    steps:
+      - Find the transition that would have received the skipped human message.
+      - Remove that receive event.
+      - Recompute the receiver's knowledge without the missing message.
+      - Build format-preserving replacements for later sends when the original value is no longer derivable.
+      - Propagate the replacement through subsequent transitions, skipping the human landing transition when already handled.
+    why: |
+      This is the mechanism that turns a local skipped send into a full mutated ceremony trace.
+    related: [paper.skip-s, paper.matching-mutation]
+
+  - id: paper.skip-sr
+    title: Skip-Send-Receive
+    category: mutation
+    terms: [Skip-Send-Receive, skip send receive, skip send receive skip, skip SR, mu skip SR]
+    definition: |
+      Skip-Send-Receive skips a human send action and the later receive action that would normally depend on the skipped send.
+    why: |
+      Use it when the human misses an outgoing action and also does not consume the response that would normally come from that action.
+    details:
+      - It covers the case where the human neither sends the expected message nor waits for or processes a response.
+      - The paper gives the main pseudo-code in the appendix.
+      - Matching can remove or alter the other roles' receives and propagate message changes.
+      - It is different from Skip-Send because the human also ignores the dependent incoming message.
+      - It is different from Skip-Receive-Send because the omitted chunk starts with a send, not a receive.
+    example: |
+      Oyster Skip-Send-Receive M0 models a passenger who does not touch in and ignores any response from GateIn.
+    related: [paper.skip-mutation, paper.oyster-results]
+
+  - id: paper.skip-r
+    title: Skip-Receive
+    category: mutation
+    terms: [Skip-Receive, skip receive, skip receive mutation, skip R, mu skip R, ignore response]
+    definition: |
+      Skip-Receive removes a human receive action. The human continues without incorporating the message that should have been received.
+    why: |
+      Use it when the user may proceed without reading, receiving, or understanding a system response.
+    details:
+      - The following human send may need to be mutated because the skipped message is not in the human's knowledge.
+      - Matching decides whether other agents send the original later message or a mutation.
+      - It models ignoring a confirmation or proceeding without reading a received value.
+      - This is the smallest Skip variant that removes an incoming human action.
+    example: |
+      Oyster Skip-Receive M0 models a passenger not receiving confirmation of touch-in. GO1 can fail because the later journey completion lacks the expected earlier evidence.
+    related: [paper.skip-mutation, paper.oyster-results]
+
+  - id: paper.skip-rs
+    title: Skip-Receive-Send
+    category: mutation
+    terms: [Skip-Receive-Send, skip receive send, skip receive send skip, skip RS, mu skip RS]
+    definition: |
+      Skip-Receive-Send skips a human receive action and the send action that would normally follow it.
+    why: |
+      Use it when missing an incoming message prevents or discourages the human from sending the next expected message.
+    details:
+      - It is useful when a missed incoming message means the human also omits the outgoing response.
+      - Matching and propagation adjust later role behavior so the model can continue where possible.
+      - The paper's Oyster table includes a case where touch-in confirmation is not received and touch-out is not performed.
+      - It is different from Skip-Send-Receive because the omitted chunk starts with a receive.
+      - It is smaller than Skip-Receive-Send-Receive because it does not also remove the next receive.
+    related: [paper.skip-mutation, paper.oyster-results]
+
+  - id: paper.skip-rsr
+    title: Skip-Receive-Send-Receive
+    category: mutation
+    terms: [Skip-Receive-Send-Receive, skip receive send receive, skip receive send receive skip, skip RSR, mu skip RSR]
+    definition: |
+      Skip-Receive-Send-Receive skips a receive, the following send, and a later receive. It represents a larger omitted exchange.
+    why: |
+      Use it when the human misses an incoming message, omits the expected outgoing action, and also ignores the later response that would close the exchange.
+    details:
+      - The paper treats it as one of the five key skip patterns.
+      - It can model a user missing confirmation, not taking the next expected action, and ignoring the next response.
+      - The appendix defines its matching mutation.
+      - It is the broadest of the five named Skip variants in the paper.
+      - Because it removes a longer chunk, analyst review should check that the resulting behavior is realistic.
+    example: |
+      Oyster Skip-Receive-Send-Receive M0 falsifies GO1 while the functional goal is still verified.
+    related: [paper.skip-mutation, paper.oyster-results]
+
+  - id: paper.add-mutation
+    title: Add mutation
+    category: mutation
+    terms: [add mutation, Add-Mutation, add new send, extra send, duplicate send, send any known message, add variants]
+    definition: |
+      Add runs the original trace in parallel with a mutated trace where the human adds a send action or duplicates an existing send action.
+    why: |
+      It models extra human behavior, such as sending a message twice or touching in with an additional card.
+    details:
+      - Add-new-send inserts a send built from a non-empty subset of the human's current knowledge.
+      - Add-duplicate-send repeats an existing send action.
+      - The paper restricts added messages to finite choices from the human's current knowledge.
+      - The restriction avoids the infinite set produced by closing knowledge under all message generation rules.
+      - Added messages must preserve the type constraints expressed by constants in the model.
+      - The matching mutation gives the receiving role an extra receive transition but does not automatically duplicate the receiver's following send.
+    example: |
+      In the Oyster setting, Add can represent an extra card touch. The paper says Add is especially useful when combined with Replace.
+    related: [paper.matching-add, paper.add-replace, paper.oyster-results]
+    followups:
+      - How does matching Add work?
+      - What is Add plus Replace?
+      - Why restrict added messages?
+
+  - id: paper.add-new-send
+    title: Add new send
+    category: mutation
+    terms: [add new send, add arbitrary send, add known message, send from current knowledge, powerset knowledge add]
+    definition: |
+      Add new send inserts a new human send action whose message is selected from a finite non-empty subset of the human's current knowledge.
+    why: |
+      It models an extra action by the human while keeping the search finite and type-respecting.
+    details:
+      - The message is not chosen from the infinite closure of all terms the human could theoretically build.
+      - The paper uses the powerset of current knowledge, excluding the empty set.
+      - Constants/types restrict the generated message to the expected kind of value.
+      - The receiver gets a matching receive transition for the extra send.
+    related: [paper.add-mutation, paper.matching-add]
+
+  - id: paper.add-duplicate-send
+    title: Add duplicate send
+    category: mutation
+    terms: [add duplicate send, duplicate send, repeat send action, send message twice]
+    definition: |
+      Add duplicate send repeats an existing human send action, creating an additional execution of that send alongside the original trace.
+    why: |
+      It models repeated human behavior such as sending the same message twice or touching a card more than once.
+    details:
+      - The duplicated send keeps the same premises as the original state.
+      - It is often more useful when combined with Replace, because the duplicate can carry a compatible but different value.
+      - The paper does not automatically duplicate the receiver's following send in the basic matching algorithm.
+    related: [paper.add-mutation, paper.add-replace]
+
+  - id: paper.matching-add
+    title: Matching Add
+    category: mutation
+    terms: [matching Add, matching add mutation, Algorithm 4, add propagation, extra receive transition]
+    definition: |
+      Matching Add creates a receiver-side transition for the extra human send and shifts later states so the trace remains consistent.
+    steps:
+      - Take the receiver's transition that follows the inserted human send.
+      - Copy it.
+      - Remove any send event from the copy.
+      - Replace the receive values with the added channel, sender, and message.
+      - Increment later role steps while keeping their other content intact.
+    why: |
+      The paper intentionally keeps the receiver's extra receive simple; duplicating the receiver's following send would be a different matching policy.
+    related: [paper.add-mutation, paper.matching-mutation]
+
+  - id: paper.replace-mutation
+    title: Replace mutation
+    category: mutation
+    terms: [replace mutation, Replace-Sub-Messages, Replace-Type, replace variants, substitute message, replace submessage, replace same type]
+    definition: |
+      Replace changes a human send action so the human sends another message in place of the specified one.
+    why: |
+      It models wrong-but-plausible values, such as a submessage, a same-type value, or a card value that has the right shape but is not the expected card.
+    details:
+      - Replace can use a format-preserving submessage of the original message.
+      - Replace can use a value from the human's current knowledge with the same type.
+      - Replacing a whole action with a different action is modeled by combining Skip and Add.
+      - Matching and propagation update the receiver and later agents when the replacement affects later messages.
+    example: |
+      In SSO, Replace-Sub-Messages can remove the service provider information from the authentication assertion. In Oyster, Replace can model touching out with a different card.
+    related: [paper.matching-replace, paper.sso-attack, paper.oyster-two-cards]
+    followups:
+      - How does matching Replace work?
+      - What is Replace-Sub-Messages?
+      - What is the SSO replace attack?
+
+  - id: paper.replace-submessages
+    title: Replace Sub-Messages
+    category: mutation
+    terms: [Replace-Sub-Messages, replace sub messages, replace submessages, replace submessage, submessage replacement, replace with submessage]
+    definition: |
+      Replace Sub-Messages replaces the sent message with a format-preserving submessage of the original message.
+    why: |
+      It tests whether the ceremony depends on binding every field of a structured message, not just on receiving a value with a plausible outer shape.
+    details:
+      - The replacement is drawn from `submsg(m)` of the original message.
+      - The replacement preserves the original message format where the paper's algorithm requires it.
+      - Matching then updates the receiver and propagates later message changes.
+      - It is the variant used in the SSO case study.
+    example: |
+      In SSO, the mutation can remove the service-provider field from an authentication assertion, which breaks the injective-agreement goal.
+    related: [paper.replace-mutation, paper.sso-attack, paper.submessage-format]
+
+  - id: paper.replace-type
+    title: Replace Type
+    category: mutation
+    terms: [Replace-Type, replace type, type replacement, same type replacement, replace with same type]
+    definition: |
+      Replace Type replaces a sent value with another value from the human's current knowledge that has the same modeled type.
+    why: |
+      It tests whether the ceremony distinguishes the exact value, not merely the type or shape of the value.
+    details:
+      - The replacement comes from the human's current knowledge.
+      - The replacement must preserve the type constants used in the Tamarin model.
+      - This keeps the mutation finite and avoids arbitrary ill-typed messages.
+      - It is useful for card, identity, nonce, token, and key-binding mistakes.
+    example: |
+      In Oyster, replacing one card value with another same-type card value models touching out with a different card.
+    related: [paper.replace-mutation, paper.oyster-two-cards]
+
+  - id: paper.matching-replace
+    title: Matching Replace
+    category: mutation
+    terms: [matching Replace, Algorithm 6, replace propagation, replacement propagation]
+    definition: |
+      Matching Replace changes the next receiver to accept the mutated message, recomputes its knowledge, and propagates compatible replacements through later sends and receives.
+    details:
+      - If the replacement is a format-preserving submessage, later messages are built from compatible submessages when possible.
+      - If the replacement is a same-type value from current knowledge, later replacements are selected from same-type values in the receiver's knowledge.
+      - Propagation skips over the human transition that the human-side algorithm already handled.
+      - The goal is an executable mutated trace, not proof that the implementation really behaves this way.
+    related: [paper.replace-mutation, paper.matching-mutation, paper.false-positives]
+
+  - id: paper.neglect-mutation
+    title: Neglect mutation
+    category: mutation
+    terms: [neglect mutation, Neglect-Mutation, skipped check, remove role action, equality action removed, internal behavior]
+    definition: |
+      Neglect removes one or more internal role-actions from the human's transition, such as checks over received data.
+    why: |
+      It models a user or human-controlled role failing to perform validation while still otherwise participating in the ceremony.
+    details:
+      - Neglect is local to the human role and normally has no matching mutation.
+      - It must not remove role-actions that correspond to required facts needed for a well-formed rule.
+      - It must not remove role-actions that are necessary for the security goal itself.
+      - If a repeated check is removed once, the algorithm removes the same check in later human transitions too.
+    example: |
+      In the Coach Service case study, the Driver neglects the equality check over the ticket date. Tamarin then finds a forged e-ticket accepted as valid.
+    related: [paper.coach-attack, mutation.neglect, paper.case.coach]
+    followups:
+      - How does the Coach attack work?
+      - Why does Neglect need no matching mutation?
+      - How is Neglect different from Forget?
+
+  - id: paper.neglect-vs-forget
+    title: Neglect vs Forget in the paper
+    category: mutation
+    terms: [Neglect vs Forget, difference between neglect and forget in paper, forgetting fifth mutation, future forget mutation]
+    definition: |
+      In the JCS paper, Neglect is one of the four formalized mutations. Forgetting is discussed as future work, not as one of the four paper mutations.
+    details:
+      - Neglect means the data or check exists in the model but the role-action enforcing it is removed.
+      - Forgetting would remove terms from the human's current knowledge and limit later sends.
+      - This Java repo includes a project-specific Forget mutation, but that extension is beyond the four mutations formalized in the paper.
+    related: [paper.neglect-mutation, mutation.forget, mutation.forget-vs-neglect]
+
+  - id: paper.add-replace
+    title: Add plus Replace
+    category: mutation
+    terms: [add and replace, add replace, add plus replace, add&replace, combine add replace, True-Replace]
+    definition: |
+      Add plus Replace is a composed mutation where an extra send is added and the added or duplicated message is replaced with another compatible value.
+    why: |
+      The paper uses this combination to model cases that need both extra behavior and a wrong value, such as touching with two cards.
+    details:
+      - It is not a fifth core paper mutation.
+      - It combines Add's extra-send behavior with Replace's value substitution behavior.
+      - The Oyster case study uses Add plus Replace to model card clash and two-card behavior.
+      - In this repo it corresponds to combined add/replace options such as Add-Mutation with Replace-Sub-Messages or Replace-Type.
+    related: [paper.add-mutation, paper.replace-mutation, paper.oyster-card-clash]
+
+  - id: repo.forget-mutation
+    title: Forget mutation
+    category: mutation
+    terms: [Forget-Mutation, forget mutation, forget variant, forgotten value, knowledge loss mutation]
+    definition: |
+      Forget is the repo-specific mutation that removes selected knowledge from an agent state and checks whether later sends or checks can still be derived from the remaining knowledge.
+    why: |
+      It models state loss, such as a user or process losing a token, nonce, password component, or remembered value mid-ceremony.
+    details:
+      - The JCS paper discusses forgetting as future work, so this is an implementation extension rather than one of the four formal paper mutations.
+      - The forget set identifies values that should be treated as lost.
+      - If a forgotten value blocks a later derivation, the strategy may need a replacement, skip, or neglect-style consequence.
+      - "It is different from Neglect: Forget removes knowledge; Neglect removes use or validation of knowledge."
+    related: [mutation.forget, paper.neglect-vs-forget, mutation.forget-vs-neglect]
+
+  - id: paper.message-algebra
+    title: Message algebra in the paper
+    category: formal-model
+    terms: [message algebra, algebra of messages, term algebra, pair hash encryption signature, message term]
+    definition: |
+      The paper models messages as terms over a signature containing fresh constants, public constants, and function symbols for pairs, projections, hashes, symmetric encryption, asymmetric encryption, signatures, verification, and public keys.
+    details:
+      - Fresh constants model generated nonces.
+      - Public constants represent agent names and other public values.
+      - Message functions include pair, projections, hash, symmetric encryption, asymmetric encryption, signature, verification, and public key.
+      - A ground message contains no variables.
+    related: [paper.submessage-format, paper.dolev-yao, tamarin.functions]
+
+  - id: paper.submessage-format
+    title: Submessage and format
+    category: formal-model
+    terms: [submessage, submsg, format, message format, format preserving replacement]
+    definition: |
+      A submessage is a message contained inside another message, and a message's format is its top-level shape such as pair, hash, encryption, signature, or the atomic message itself.
+    why: |
+      Replace and propagation use format to keep mutations controlled. X-Men should not replace a structured message with an arbitrary unrelated object unless the selected mutation permits that type of replacement.
+    details:
+      - For a pair, each component contributes submessages.
+      - For hash, encryption, and signature, the protected payload contributes submessages.
+      - The format of a pair is pair.
+      - The format of an atomic term is the term itself.
+    related: [paper.replace-mutation, paper.message-algebra]
+
+  - id: paper.dolev-yao
+    title: Dolev-Yao model in the paper
+    category: formal-model
+    terms: [Dolev-Yao, attacker rules, equational theory, symbolic attacker, no attacker Oyster]
+    definition: |
+      The paper uses standard Dolev-Yao style symbolic equations for pairing, decryption, and signature verification, but it does not always enable an attacker.
+    details:
+      - Pair projections recover the first and second component.
+      - Symmetric and asymmetric decryptions recover the plaintext when the right key is available.
+      - Signature verification succeeds with the matching public key.
+      - Oyster attacks are found without enabling the Dolev-Yao attacker.
+      - SSO and Coach Service analyses enable attacker rules.
+    related: [paper.case.oyster, paper.case.sso, paper.case.coach]
+
+  - id: paper.role-script
+    title: Role script
+    category: formal-model
+    terms: [role script, human action, role action, Snd, Rcv, Start, Fresh]
+    definition: |
+      A role script is the projection of the ceremony to one role. It is a sequence of events such as sends, receives, setup events, and fresh-value generation.
+    details:
+      - Snd(A,l,P,m) means role A sends message m to P over link l.
+      - Rcv(A,l,P,m) means role A receives message m from P over link l.
+      - Start initializes the role's agent state.
+      - Fresh consumes a fresh fact to create a new value.
+      - The paper distinguishes ceremony human actions from Tamarin role-actions.
+    related: [paper.channels, paper.agent-rules, tamarin.rule]
+
+  - id: paper.channels
+    title: Ceremony channel properties
+    category: formal-model
+    terms: [channel properties, link properties, ins auth conf sec, insecure authentic confidential secure]
+    definition: |
+      The paper uses link properties to distinguish insecure, authentic, confidential, and secure communication when translating ceremony roles into Tamarin rules.
+    details:
+      - Insecure channels give the attacker the usual network power.
+      - Authentic channels protect sender authenticity but not confidentiality.
+      - Confidential channels protect message secrecy but not necessarily authenticity.
+      - Secure channels protect both authenticity and confidentiality, though interruption can still be modeled.
+    related: [paper.role-script, tamarin.in, tamarin.out]
+
+  - id: paper.trace-model
+    title: Trace and state model
+    category: formal-model
+    terms: [trace model, state model, multiset rewriting, state transition rule, AgSt, linear persistent facts]
+    definition: |
+      The paper follows Tamarin's multiset rewriting model. A system state is a multiset of facts, and a trace is generated by applying labeled transition rules.
+    details:
+      - Linear facts model consumable resources.
+      - Persistent facts model inexhaustible resources.
+      - Applying a rule consumes matching linear premises and adds conclusion facts.
+      - Rule labels record role-actions in the trace.
+      - AgSt records an agent, a role step, and the agent's knowledge at that step.
+    related: [tamarin.trace, tamarin.fact, paper.generic-human-mutation]
+
+  - id: paper.agent-rules
+    title: Agent rules in X-Men paper
+    category: formal-model
+    terms: [agent rules, protocol model, fresh rule, channel rules, attacker rules, role translation]
+    definition: |
+      A protocol or ceremony model contains agent rules, the fresh rule, channel rules, and optional attacker rules.
+    details:
+      - Agent rules translate role events into state transitions.
+      - Send events add outgoing message facts.
+      - Receive events require incoming message facts.
+      - Fresh events require fresh facts.
+      - Start events create the initial agent state.
+    related: [paper.role-script, paper.trace-model, tamarin.rule]
+
+  - id: paper.goals
+    title: Security goals in the paper
+    category: formal-model
+    terms: [security goals, goals in paper, Oyster goals, SSO goal, Coach goal, executable goal]
+    definition: |
+      The paper checks ceremony-specific Tamarin lemmas plus a functional or executable goal that ensures mutations still allow the modeled message passing to complete.
+    details:
+      - Oyster uses GO1 complete journey, GO2 same card, and GO3 no card clash.
+      - SSO uses an injective agreement goal.
+      - Coach Service uses ticket authenticity.
+      - The executable goal checks that a mutated model is not merely dead.
+    related: [paper.oyster-goals, paper.sso-goal, paper.coach-goal]
+
+  - id: paper.oyster-goals
+    title: Oyster goals
+    category: case-study
+    terms: [Oyster goals, GO1, GO2, GO3, complete journey, same card, card clash goal]
+    definition: |
+      The Oyster case study uses three main goals: the passenger completes a journey by touching in and out, uses the same card to touch in and out, and does not touch two cards in and out.
+    details:
+      - GO1 is complete journey.
+      - GO2 is same card.
+      - GO3 is no card clash.
+      - The paper also checks a functional goal for mutated models.
+    related: [paper.case.oyster, paper.oyster-results]
+
+  - id: paper.sso-goal
+    title: SSO goal
+    category: case-study
+    terms: [SSO goal, injective agreement, IdP authenticates only requester, Commit Running RevLtk]
+    definition: |
+      The SSO case study checks that the identity provider authenticates only the agent that requested authentication, formalized as an injective-agreement goal.
+    details:
+      - Commit records committed parameters.
+      - Running records a peer participating with those parameters.
+      - RevLtk accounts for long-term key compromise.
+      - The Replace-Sub-Messages mutation reveals a Google SSO style implementation deviation.
+    related: [paper.case.sso, paper.sso-attack, tamarin.authentication]
+
+  - id: paper.coach-goal
+    title: Coach Service goal
+    category: case-study
+    terms: [Coach Service goal, ticket authenticity, legit journey, ValidTicket, End valid ticket]
+    definition: |
+      The Coach Service case study checks ticket authenticity: if a customer completes with a valid ticket number and date, the web server must previously have issued that ticket for that date.
+    details:
+      - End records that the customer received a valid-ticket acknowledgment.
+      - ValidTicket records that the web server issued the ticket for that customer and date.
+      - The attack appears when the driver neglects a date equality check.
+    related: [paper.case.coach, paper.coach-attack]
+
+  - id: paper.xmen-preprocessing
+    title: X-Men preprocessing phase
+    category: xmen
+    terms: [preprocessing phase, Wolverine, slicer joiner, delimiters, slicing Tamarin model]
+    definition: |
+      In the paper, preprocessing is handled by Wolverine, which slices a Tamarin model into parts before mutation and joins the mutated part back afterward.
+    steps:
+      - Split the model from the beginning through channel rules.
+      - Split functions and all agent rules into the mutable middle part.
+      - Split restrictions and lemmas into the final part.
+      - Preserve a backup copy of the original model.
+      - Rejoin each mutated middle part with the unchanged surrounding parts.
+    related: [paper.xmen-mutation-phase, paper.xmen-analysis-phase, xmen.pipeline]
+
+  - id: paper.xmen-mutation-phase
+    title: X-Men mutation phase
+    category: xmen
+    terms: [mutation phase, behavioral patterns library, ANTLR grammar, GUI mutation selection, generated mutated models]
+    definition: |
+      In the paper, the mutation phase is the Java X-Men tool. It parses Tamarin syntax with an ANTLR grammar, lets the analyst select mutation families and variants, and generates mutated models.
+    details:
+      - The GUI first allows model upload.
+      - After upload, the analyst selects mutations such as Skip, Add, Replace, and Neglect.
+      - Skip variants include S, SR, R, RS, and RSR.
+      - Replace variants include submessages and type-based replacements.
+      - The generated models are passed back for joining and analysis.
+    related: [paper.mutation.catalog, paper.xmen-analysis-phase]
+
+  - id: paper.xmen-analysis-phase
+    title: X-Men analysis phase
+    category: xmen
+    terms: [analysis phase, Xavier, Tamarin report, falsified timeout verified, 10 minutes timeout]
+    definition: |
+      The analysis phase is handled by Xavier, which feeds mutated models into Tamarin and reports whether properties were falsified, timed out, or verified.
+    details:
+      - Falsified means Tamarin found a counterexample for one or more properties.
+      - Timeout means Tamarin did not finish within the configured time, which the paper sets to 10 minutes.
+      - Verified means Tamarin completed without finding a vulnerability for the checked property.
+      - Falsified and timed-out models still need security analyst review.
+    related: [xmen.results, paper.false-positives, paper.results-table]
+
+  - id: paper.results-table
+    title: Paper result summary
+    category: case-study
+    terms: [Table 1 results, generated falsified timeout verified, paper result counts, case study counts]
+    definition: |
+      Table 1 summarizes how many mutated models X-Men generated and how Tamarin classified them for Oyster, SSO, and Coach Service.
+    details:
+      - Oyster Skip-S generated 2 models with 1 falsified and 1 verified.
+      - Oyster Add generated 92 models with 48 falsified, 2 timed out, and 42 verified.
+      - SSO Replace-Submessage generated 255 models with 77 falsified and 178 timed out.
+      - SSO Add plus Replace generated 255 models and all timed out in the reported run.
+      - Coach Neglect generated 127 models with 95 falsified and 32 verified.
+    why: |
+      These counts explain why the paper stresses efficiency and analyst support. Mutation generation can be broad even when each mutation family is precise.
+    related: [paper.efficiency, paper.oyster-results, paper.sso-attack]
+
+  - id: paper.efficiency
+    title: Efficiency lessons from the paper
+    category: xmen
+    terms: [efficiency, efficient mutation analysis, too many mutants, grouping falsified models, reduce analyst work]
+    definition: |
+      The paper's main efficiency challenge is not only generating mutants but reducing how many falsified or timed-out models a security analyst must inspect.
+    details:
+      - Tamarin performance dominates the overall analysis time once models are generated.
+      - Add and Replace can create large numbers of mutants.
+      - The paper suggests grouping models by common features so analysts inspect fewer representative cases.
+      - Distinguishing attacks that need matching mutations from those that do not is an initial classification.
+    related: [paper.results-table, paper.false-positives, xmen.results]
+
+  - id: paper.false-positives
+    title: False positives in X-Men analysis
+    category: xmen
+    terms: [false positive, false positives, security analyst checks, realistic attack, manual inspection]
+    definition: |
+      A falsified mutated model is not automatically a real attack. If the attack depends on matching mutations that do not reflect the real implementation, it may be a false positive.
+    details:
+      - Analyst checks are an explicit manual step in the workflow.
+      - The analyst decides whether a mutated trace represents realistic user or implementation behavior.
+      - Attack traces can still be useful as test cases or warnings even when they are not direct production attacks.
+      - The Oyster Add-only falsified models were judged unrealistic because they systematically tried combinations without following ceremony logic.
+    related: [paper.workflow, paper.results-table, paper.exploiting-results]
+
+  - id: paper.case-studies
+    title: Paper case studies
+    category: case-study
+    terms: [paper case studies, three case studies, Oyster SSO Coach Service, real life case studies]
+    definition: |
+      The paper evaluates X-Men on three case studies: Oyster Card, SAML-based Single Sign-on for Google Apps, and a Coach Service e-ticket ceremony.
+    details:
+      - Oyster shows human mistakes can cause attacks without an explicit Dolev-Yao attacker.
+      - SSO shows Replace can capture a specification-implementation deviation.
+      - Coach Service shows Neglect can capture failure to check ticket fields.
+    related: [paper.case.oyster, paper.case.sso, paper.case.coach]
+
+  - id: paper.case.oyster
+    title: Oyster case study
+    category: case-study
+    terms: [Oyster case study, Oyster Card ceremony, Tube ceremony, touch in touch out, TfL card clash, incomplete journey]
+    definition: |
+      The Oyster case study models the London transport touch-in and touch-out ceremony, where the passenger, card, entry gate, exit gate, and system behavior together determine security-relevant outcomes.
+    details:
+      - The model abstracts from low-level cryptographic details.
+      - The key user actions are touching in and touching out.
+      - The main warnings map to incomplete journeys, using the same card, and avoiding card clash.
+      - The attacks are found without enabling a Dolev-Yao attacker.
+    related: [paper.oyster-goals, paper.oyster-results, paper.oyster-incomplete-journey]
+
+  - id: paper.oyster-results
+    title: Oyster analysis results
+    category: case-study
+    terms: [Oyster results, Table 2, Oyster mutations, Oyster attacks, incomplete journey same card card clash]
+    definition: |
+      The Oyster analysis finds realistic attacks from Skip, Replace, and Add plus Replace mutations, while many Add-only falsifications are treated as unrealistic after analyst review.
+    details:
+      - Skip-S M0 skipping touch-in falsifies GO1 and GO2.
+      - Skip-S M1 skipping touch-out does not falsify GO1, GO2, or GO3 in Table 2.
+      - Replace M1, touching out with a different card, falsifies GO2.
+      - Add plus Replace M0, using a contactless card instead of Oyster while keeping the original ceremony, falsifies GO2 and GO3.
+      - All Table 2 models pass the functional goal.
+    related: [paper.oyster-incomplete-journey, paper.oyster-two-cards, paper.oyster-card-clash]
+
+  - id: paper.oyster-incomplete-journey
+    title: Oyster incomplete journey attack
+    category: case-study
+    terms: [incomplete journey attack, Oyster Attack 1, skip touch in, does not touch in, penalty fare, GO1]
+    definition: |
+      The incomplete journey attack occurs when the passenger does not touch in, later touches out, and the exit side cannot determine the entry gate.
+    details:
+      - It is represented by Skip-S or related Skip variants.
+      - GateIn never writes its identifier to the card.
+      - GateOut reads a card that lacks the entry information.
+      - GO1 fails and the passenger can be charged a penalty fare.
+    example: |
+      This can occur at open gates, station entrances with only readers, or when a reader fails to read or write the card.
+    related: [paper.skip-s, paper.case.oyster, paper.oyster-goals]
+
+  - id: paper.oyster-two-cards
+    title: Oyster two-card attack
+    category: case-study
+    terms: [two cards attack, different card, touch out different card, Replace M1, same card goal, GO2]
+    definition: |
+      The two-card Oyster attack occurs when the passenger touches in with one card and touches out with another, causing the same-card goal to fail.
+    details:
+      - It is represented by Replace M1 in Table 2.
+      - The result can be two incomplete journeys.
+      - It can happen with two Oyster cards or with different payment devices.
+      - Apple Pay or Google Pay on different devices can still be treated as different identifiers.
+    related: [paper.replace-mutation, paper.oyster-results, paper.oyster-goals]
+
+  - id: paper.oyster-card-clash
+    title: Oyster card clash attack
+    category: case-study
+    terms: [card clash, Oyster Attack 3, touch two cards, wallet clash, Add Replace M0, GO3]
+    definition: |
+      The card clash attack occurs when the passenger touches more than one valid payment card at the gates, creating parallel or confused card use.
+    details:
+      - The paper models this with Add plus Replace.
+      - GO3 fails when two cards are touched in and out.
+      - A common real-life cause is touching a wallet that contains multiple valid cards.
+      - X-Men finds the scenario from the specification rather than by observing passengers.
+    related: [paper.add-replace, paper.oyster-results, paper.oyster-goals]
+
+  - id: paper.case.sso
+    title: SSO case study
+    category: case-study
+    terms: [SSO case study, SAML Google Apps, service provider, identity provider, single sign-on]
+    definition: |
+      The SSO case study models a SAML-based Single Sign-on protocol and uses Replace-Sub-Messages to capture a specification-implementation deviation.
+    details:
+      - The attacker plays the service provider role.
+      - The identity provider is treated as the mutating role for the purpose of the analysis.
+      - The key mutation removes service-provider information from the authentication assertion.
+      - The attack was known from Google SSO analysis, but X-Men can generate the relevant mutated model from the standard specification.
+    related: [paper.sso-goal, paper.sso-attack, paper.replace-mutation]
+
+  - id: paper.sso-attack
+    title: SSO replace-submessage attack
+    category: case-study
+    terms: [SSO attack, Replace Submessage SSO, AuthAssert C SP, Google SSO attack, injective agreement fails]
+    definition: |
+      The SSO attack is found when Replace-Sub-Messages changes the identity provider's message so the assertion contains the client and IdP identifier but removes information about the service provider.
+    details:
+      - Table 3 reports mutated model SSO M0.
+      - The injective-agreement goal is falsified.
+      - The functional goal is verified.
+      - The mutation captures the kind of message-field omission introduced by Google's implementation.
+    why: |
+      It demonstrates why Replace is not just type fuzzing. Removing a binding field from a structured message can break authentication.
+    related: [paper.replace-mutation, paper.sso-goal, tamarin.authentication]
+
+  - id: paper.case.coach
+    title: Coach Service case study
+    category: case-study
+    terms: [Coach Service case study, coach ceremony, e-ticket, driver, webserver, forged ticket]
+    definition: |
+      The Coach Service case study models a customer buying an e-ticket from a web server and presenting it to a driver for inspection.
+    details:
+      - The ticket includes fields such as customer, ticket number, price, date, departure time, origin, and destination.
+      - The driver is expected to check that visible fields match the protected ticket fields.
+      - The analysis enables attacker rules because the customer can be malicious.
+      - Neglect models the driver failing to perform a required check.
+    related: [paper.coach-goal, paper.coach-attack, paper.neglect-mutation]
+
+  - id: paper.coach-attack
+    title: Coach forged-ticket attack
+    category: case-study
+    terms: [Coach forged ticket attack, Coach attack, forged e-ticket, forged ticket accepted, date check neglected, Eq date removed, legit journey]
+    definition: |
+      The Coach forged-ticket attack occurs when an attacker reuses an old genuine e-ticket, changes its date, and the driver neglects the date equality check.
+    details:
+      - The customer first obtains a genuine e-ticket.
+      - The attacker modifies the date for a later journey.
+      - Neglect removes the driver's Eq(date, datekS) style role-action.
+      - Tamarin then finds a trace where the forged e-ticket is accepted as valid.
+      - Table 4 reports Neglect M0 falsifying the legit journey goal while the functional goal is verified.
+    related: [paper.neglect-mutation, paper.coach-goal, paper.case.coach]
+
+  - id: paper.exploiting-results
+    title: Using X-Men analysis results
+    category: xmen
+    terms: [exploit analysis results, use attack traces, generate test cases, recommendations guidelines, analyst checks]
+    definition: |
+      The paper says verified mutants increase confidence, timeouts require analyst work, and attack traces should be used to design fixes, tests, or user guidance.
+    details:
+      - If a model verifies, the checked property holds for that model.
+      - If analysis times out, no final verdict has been reached.
+      - If an attack is found without matching mutations, the trace can guide a direct fix or implementation test.
+      - If an attack depends on matching mutations, the analyst must decide whether the matching behavior is realistic.
+      - For human-facing ceremonies, traces can also become user warnings or staff training material.
+    related: [paper.false-positives, paper.workflow, xmen.results]
+
+  - id: paper.limitations-future-work
+    title: Paper limitations and future work
+    category: paper
+    terms: [paper limitations, future work, generate test cases, recommendations, forgetting mutation, complex combinations]
+    definition: |
+      The paper notes that mutation-based ceremony analysis is promising but can generate many models and still needs analyst review, better grouping, test-case generation, recommendation generation, and richer mutation families.
+    details:
+      - Future work includes generating concrete test cases from attack traces.
+      - Future work includes generating recommendations and guidelines for human users.
+      - The paper proposes forgetting as a possible fifth human mutation.
+      - The paper also points to more complex mutation combinations and compositionality results.
+      - The authors want to improve efficiency and reduce the number of models requiring manual inspection.
+    related: [paper.efficiency, paper.exploiting-results, paper.neglect-vs-forget]

@@ -171,43 +171,12 @@
             <version>${springdoc.version}</version>
         </dependency>
 
-        <!-- Program-AB-compatible AIML 2.0 engine (Batiaev's aimlang fork).
-             Powers the offline X-Men chat assistant; trained by adding AIML
-             files under src/main/resources/aiml/. Pulled from JitPack since
-             no Java AIML library is published to Maven Central.
-             Spring Boot 1.5 transitives are excluded because the project
-             already uses Spring Boot 3.x; the AIML classes themselves don't
-             depend on Spring at all. -->
-        <dependency>
-            <groupId>com.github.AIMLang.aiml-java-interpreter</groupId>
-            <artifactId>app-core</artifactId>
-            <version>master</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-autoconfigure</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
     </dependencies>
 
     <repositories>
         <repository>
             <id>central</id>
             <url>https://repo.maven.apache.org/maven2</url>
-        </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 

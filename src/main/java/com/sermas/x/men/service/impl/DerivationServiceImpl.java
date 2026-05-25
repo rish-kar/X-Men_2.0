@@ -71,6 +71,16 @@ public class DerivationServiceImpl implements DerivationService {
     return derivations;
   }
 
+  /**
+   * Same as {@link #deriveToDepth} but does NOT print the derivation tree.
+   * Use this when the caller only needs the set of derivations (e.g. for blocking
+   * analysis) and another caller is responsible for visualisation.
+   */
+  public Set<Derivation> deriveToDepthNoPrint(
+      Message target, Set<Message> knowledge, int depthLimit) {
+    return deriveAllRecursive(target, knowledge, depthLimit, new java.util.HashSet<>(), 0);
+  }
+
   @Override
   public Set<Derivation> deriveToInfinity(Message target, Set<Message> knowledge) {
     // Use config max depth instead of truly infinite to prevent explosion

@@ -126,8 +126,12 @@ public class ForgetDerivationChecker {
         }
 
         try {
-            // Use the derivation service to get all derivations up to depth limit
-            Set<Derivation> derivations = derivationService.deriveToDepth(target, knowledge, DEFAULT_DEPTH_LIMIT);
+            // Use the SILENT derivation path here: this method drives the mutation
+            // analysis (blocked-hypothesis checks). The visualisation tree is printed
+            // separately by ForgetMutationStrategy via printDerivationTree(...), so
+            // we do not want this call to also dump a (possibly less informative)
+            // tree on top of it.
+            Set<Derivation> derivations = derivationService.deriveToDepthNoPrint(target, knowledge, DEFAULT_DEPTH_LIMIT);
 
             // Cap the number of derivations to prevent explosion
             if (derivations.size() > MAX_DERIVATIONS) {
@@ -146,6 +150,28 @@ public class ForgetDerivationChecker {
         } catch (Exception e) {
             log.error("Error getting derivations for target {}: {}", target.represent(), e.getMessage());
             return Collections.emptySet();
+        }
+    }
+
+    /**
+     * Visualisation helper: runs the derivation engine for {@code target} from
+     * {@code displayKnowledge} purely to render the derivation tree to stdout
+     * (which is captured into the forget-mutation ZIP's _DerivationTree.txt by
+     * DerivationTreeCaptureService). The returned derivations are discarded —
+     * this method must NOT be used to drive mutation analysis. The caller is
+     * expected to pass an enriched knowledge set so the printed tree is
+     * informative; the mutation pipeline keeps using its own (transition-aware)
+     * knowledge via {@link #getAllDerivations}.
+     */
+    public void printDerivationTree(Message target, Set<Message> displayKnowledge) {
+        if (target == null || displayKnowledge == null) {
+            return;
+        }
+        try {
+            derivationService.deriveToDepth(target, displayKnowledge, DEFAULT_DEPTH_LIMIT);
+        } catch (Exception e) {
+            log.error("Error rendering derivation tree for target {}: {}",
+                      target.represent(), e.getMessage());
         }
     }
 

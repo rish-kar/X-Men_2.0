@@ -294,7 +294,7 @@ public final class ChatBotDialog {
       try {
         reply = bot.respondReply(text);
       } catch (Throwable t) {
-        log.warn("AIML reply failed", t);
+        log.warn("Chatbot reply failed", t);
         Platform.runLater(() -> addBubble(messageColumn,
             "Something went wrong while answering. Check the logs.", false));
         return;

@@ -5,45 +5,39 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Smoke test that verifies the AIML brain loads and that trained patterns
- * route to non-fallback replies. Kept content-agnostic so it doesn't break
- * when the AIML files are re-trained — it only asserts the wiring works.
+ * Smoke tests for the YAML-backed chatbot. These tests assert the important
+ * contract: answers are concept-driven, sectioned, and do not depend on legacy XML training.
  */
 class ChatBotServiceSmokeTest {
 
-  private static final String FALLBACK_PREFIX = "I don't have a trained answer";
-
   @Test
-  void brain_loads_and_responds_to_trained_patterns() {
+  void yaml_knowledge_base_loads() {
     ChatBotService bot = ChatBotService.getInstance();
 
     assertThat(bot.isReady())
-        .as("AIML brain status: %s", bot.status())
+        .as("chatbot status: %s", bot.status())
         .isTrue();
-
-    // A few canonical entry-point patterns the bundled brain ships with.
-    // We don't assert exact wording — only that the bot doesn't fall back.
-    for (String input : new String[] {
-        "hello",
-        "who are you",
-        "which mutation should I pick",
-        "how does X men work"
-    }) {
-      String reply = bot.respond(input);
-      assertThat(reply)
-          .as("reply for \"%s\"", input)
-          .isNotBlank()
-          .doesNotStartWith(FALLBACK_PREFIX);
-    }
+    assertThat(bot.status()).contains("YAML knowledge base loaded");
   }
 
   @Test
-  void cdata_templates_are_unwrapped_for_the_engine() {
-    String input =
-        "<aiml>\n  <template><![CDATA[Hi <b>there</b> & welcome]]></template>\n</aiml>";
-    String out = ChatBotService.unwrapCdata(input);
-    assertThat(out).contains("Hi &lt;b&gt;there&lt;/b&gt; &amp; welcome");
-    assertThat(out).doesNotContain("CDATA");
+  void greeting_and_core_entry_points_work() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    for (String input : new String[] {
+        "hello",
+        "who are you",
+        "what is tamarin",
+        "what mutations are available",
+        "how does X men work"
+    }) {
+      ChatBotService.Reply reply = bot.respondReply(input);
+      assertThat(reply.text)
+          .as("reply for \"%s\"", input)
+          .isNotBlank()
+          .doesNotContain("not have enough signal");
+      assertThat(reply.followups).as("followups for \"%s\"", input).isNotEmpty();
+    }
   }
 
   @Test
@@ -54,18 +48,171 @@ class ChatBotServiceSmokeTest {
 
     assertThat(reply.text).contains("not have enough signal");
     assertThat(reply.followups)
-        .contains("What can you help me with?", "Which mutation should I pick?");
+        .contains("What is Tamarin?", "Which mutation should I pick?");
   }
 
   @Test
-  void smart_conversation_training_answers_domain_adjacent_questions() {
+  void tamarin_definitions_are_sectioned_and_understandable() {
     ChatBotService bot = ChatBotService.getInstance();
 
-    ChatBotService.Reply reply = bot.respondReply("what is formal verification");
+    ChatBotService.Reply reply = bot.respondReply("what is a tamarin lemma");
 
     assertThat(reply.text)
-        .containsIgnoringCase("mathematical model")
-        .containsIgnoringCase("Tamarin");
-    assertThat(reply.followups).contains("Why use mutation testing?");
+        .contains("**Definition**")
+        .contains("**Key points**")
+        .containsIgnoringCase("property")
+        .containsIgnoringCase("trace")
+        .doesNotContain("Manual source")
+        .doesNotContain("<category");
+    assertThat(reply.followups)
+        .contains("What is all-traces?", "What is exists-trace?");
+  }
+
+  @Test
+  void related_tamarin_questions_retrieve_the_right_concept() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply =
+        bot.respondReply("how should I understand attacker knowledge K in tamarin");
+
+    assertThat(reply.text)
+        .contains("**Definition**")
+        .containsIgnoringCase("adversary")
+        .containsIgnoringCase("derive")
+        .doesNotContain("Manual sections")
+        .doesNotContain("```");
+    assertThat(reply.followups).contains("What is secrecy in Tamarin?");
+  }
+
+  @Test
+  void comparison_questions_are_answered_as_comparisons() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply =
+        bot.respondReply("what is the difference between forget and neglect");
+
+    assertThat(reply.text)
+        .contains("**Short answer**")
+        .contains("**Forget**")
+        .contains("**Neglect**")
+        .containsIgnoringCase("gone")
+        .containsIgnoringCase("available");
+  }
+
+  @Test
+  void selection_questions_use_choice_template() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply = bot.respondReply("which mutation should I pick");
+
+    assertThat(reply.text)
+        .contains("**Short answer**")
+        .contains("**Choose it when**")
+        .contains("Use Skip")
+        .contains("Use Forget")
+        .contains("Use Neglect");
+  }
+
+  @Test
+  void paper_mutation_catalog_is_precise() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply = bot.respondReply("what mutations are in the paper");
+
+    assertThat(reply.text)
+        .contains("**Definition**")
+        .contains("Skip")
+        .contains("Add")
+        .contains("Replace")
+        .contains("Neglect")
+        .contains("four core human mutation families")
+        .doesNotContain("<aiml")
+        .doesNotContain("random");
+  }
+
+  @Test
+  void skip_variants_are_answered_from_the_paper() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply = bot.respondReply("what are the five skip variants");
+
+    assertThat(reply.text)
+        .contains("Skip Send")
+        .contains("Skip Receive")
+        .contains("Skip Send Receive")
+        .contains("Skip Receive Send")
+        .contains("Skip Receive Send Receive");
+  }
+
+  @Test
+  void specific_skip_variant_does_not_fall_back_to_generic_skip() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply = bot.respondReply("skip send receive skip");
+
+    assertThat(reply.text)
+        .contains("**Definition**")
+        .contains("Skip-Send-Receive")
+        .contains("skips a human send action and the later receive action")
+        .contains("**Why it matters**")
+        .contains("does not consume the response")
+        .doesNotContain("Skip removes one or more actions from the human subtrace");
+  }
+
+  @Test
+  void all_named_mutation_variants_have_clear_answers() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    String[] questions = {
+        "define Skip Send",
+        "define Skip Receive",
+        "define Skip Receive Send",
+        "define Skip Receive Send Receive",
+        "define Add new send",
+        "define Add duplicate send",
+        "define Replace Sub-Messages",
+        "define Replace Type",
+        "define Add plus Replace",
+        "define Neglect mutation",
+        "define Forget mutation"
+    };
+
+    for (String question : questions) {
+      ChatBotService.Reply reply = bot.respondReply(question);
+      assertThat(reply.text)
+          .as("reply for %s", question)
+          .contains("**Definition**")
+          .contains("**Why it matters**")
+          .doesNotContain("not have enough signal")
+          .doesNotContain("<aiml");
+    }
+  }
+
+  @Test
+  void matching_mutation_answer_explains_propagation() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    ChatBotService.Reply reply = bot.respondReply("why does X-Men need matching mutations");
+
+    assertThat(reply.text)
+        .contains("**Definition**")
+        .containsIgnoringCase("other agents")
+        .containsIgnoringCase("executable")
+        .containsIgnoringCase("propagation");
+  }
+
+  @Test
+  void paper_case_study_attacks_are_retrievable() {
+    ChatBotService bot = ChatBotService.getInstance();
+
+    assertThat(bot.respond("what is the Oyster incomplete journey attack"))
+        .contains("GO1")
+        .containsIgnoringCase("touch in");
+    assertThat(bot.respond("what is the SSO replace submessage attack"))
+        .contains("injective")
+        .containsIgnoringCase("service provider");
+    assertThat(bot.respond("what is the Coach forged ticket attack"))
+        .contains("Eq(date")
+        .containsIgnoringCase("driver");
   }
 }

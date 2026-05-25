@@ -1,0 +1,819 @@
+greeting: |
+  Hi - I'm the X-Men assistant. I can explain Tamarin concepts, X-Men mutations, mutation selection, generated outputs, and debugging steps.
+
+fallback: |
+  I do not have enough signal to answer that exact question well. Try asking about a Tamarin concept, a mutation, the analysis pipeline, or a result.
+
+initialFollowups:
+  - What is Tamarin?
+  - What mutations are available?
+  - Which mutation should I pick?
+  - How does the analysis pipeline work?
+
+fallbackFollowups:
+  - What is Tamarin?
+  - What mutations are available?
+  - Which mutation should I pick?
+  - How do I read Tamarin results?
+
+entries:
+  - id: conversation.greeting
+    title: X-Men Assistant
+    category: conversation
+    terms: [hello, hi, hey, who are you, x-men assistant]
+    shortAnswer: |
+      I am the local X-Men assistant. I can explain Tamarin, explain X-Men mutations, help choose a mutation, and help interpret generated files and Tamarin results.
+    definition: |
+      I am a local help assistant for the X-Men mutation-analysis tool.
+    details:
+      - I answer from curated project knowledge, not from the internet.
+      - I keep answers structured so each concept is easier to read.
+      - I suggest related questions based on the concept being discussed.
+    followups:
+      - What is Tamarin?
+      - What mutations are available?
+      - Which mutation should I pick?
+
+  - id: conversation.thanks
+    title: Thanks
+    category: conversation
+    terms: [thanks, thank you, cheers]
+    shortAnswer: |
+      You are welcome. Send the next Tamarin, mutation, or result question when you have it.
+    definition: |
+      You are welcome.
+    followups:
+      - What is Tamarin?
+      - Which mutation should I pick?
+      - How do I read Tamarin results?
+
+  - id: xmen.capabilities
+    title: What I can help with
+    category: conversation
+    terms: [what can you help me with, what can you do, help, how can you help]
+    definition: |
+      I can help with Tamarin concepts, X-Men mutation choices, derivation-depth options, vocabulary profiles, generated files, and result interpretation.
+    details:
+      - For definitions, I explain the concept and why it matters.
+      - For choices, I compare options and give a practical selection rule.
+      - For debugging, I give checks in the order you should try them.
+    related: [tamarin.overview, mutation.catalog, xmen.pipeline]
+    followups:
+      - What is Tamarin?
+      - Which mutation should I pick?
+      - How does the analysis pipeline work?
+
+  - id: xmen.formal-verification
+    title: Formal verification
+    category: foundation
+    terms: [formal verification, formal methods, verify protocol, mathematical model]
+    definition: |
+      Formal verification checks a precise mathematical model of a system against a property, instead of relying only on examples or manual testing.
+    why: |
+      In protocol work, this matters because a security claim can look correct in normal testing but fail under an adversarial trace.
+    details:
+      - Tamarin is used to verify symbolic protocol models.
+      - X-Men mutates those models to test whether the original security argument survives plausible human or ceremony mistakes.
+    related: [tamarin.overview, mutation.testing, xmen.pipeline]
+    followups:
+      - What is Tamarin?
+      - Why use mutation testing?
+      - How does the analysis pipeline work?
+
+  - id: tamarin.overview
+    title: Tamarin
+    category: tamarin
+    terms: [tamarin, tamarin prover, protocol verification tool, security protocol verification]
+    definition: |
+      Tamarin is a protocol verification tool. You describe a protocol as symbolic rules and facts, write security properties as lemmas, and Tamarin tries to prove those properties or find an attack trace.
+    why: |
+      It lets you reason about all possible protocol traces, including adversary behavior, instead of checking only one hand-written execution.
+    details:
+      - Rules describe protocol steps.
+      - Facts describe state, messages, fresh values, and events.
+      - Lemmas describe properties such as secrecy, authentication, agreement, and executability.
+      - Tamarin either proves a lemma, finds a counterexample, or leaves the proof unfinished.
+    example: |
+      In X-Men, a mutated `.spthy` file is handed to Tamarin. If the original verifies but the mutant is falsified, the mutation exposed a security-relevant assumption.
+    related: [tamarin.spthy, tamarin.rule, tamarin.lemma]
+    followups:
+      - What is a SPTHY file?
+      - What is a Tamarin rule?
+      - What is a Tamarin lemma?
+
+  - id: tamarin.spthy
+    title: SPTHY file
+    category: tamarin
+    terms: [.spthy, spthy, tamarin file, theory file, tamarin theory file]
+    definition: |
+      A `.spthy` file is a Tamarin theory file. It contains the protocol model and the properties Tamarin should verify.
+    why: |
+      X-Men uses the `.spthy` file as the input model. Mutations are created by rewriting this theory and then asking Tamarin to verify the changed version.
+    details:
+      - It usually contains `theory Name`, `begin`, and `end`.
+      - It can define `builtins`, functions, equations, rules, lemmas, and restrictions.
+      - It should include both the protocol behavior and the properties you care about.
+    commonMistakes:
+      - Treating a `.spthy` file as only a transcript. It must model state, attacker interaction, and security claims.
+      - Uploading a file whose facts do not match the active vocabulary profile.
+    related: [tamarin.theory, tamarin.rule, tamarin.lemma]
+    followups:
+      - What is a Tamarin theory?
+      - What is a Tamarin rule?
+      - What is a Tamarin lemma?
+
+  - id: tamarin.theory
+    title: Tamarin theory
+    category: tamarin
+    terms: [theory, tamarin theory, theory in tamarin, model]
+    definition: |
+      A Tamarin theory is the complete model inside a `.spthy` file. It defines the symbols, transition rules, assumptions, and lemmas for one protocol analysis.
+    details:
+      - The rules say what can happen.
+      - The facts say what exists at each point.
+      - The lemmas say what must be true or what should be reachable.
+    commonMistakes:
+      - Writing rules without sanity lemmas, so the model may verify only because nothing meaningful can run.
+    related: [tamarin.spthy, tamarin.rule, tamarin.executability]
+
+  - id: tamarin.fact
+    title: Tamarin fact
+    category: tamarin
+    terms: [fact, facts, tamarin fact, state fact]
+    definition: |
+      A fact is a symbolic item in Tamarin's state or trace. Facts represent messages, local state, fresh values, attacker knowledge, and events.
+    details:
+      - "`Fr(x)` creates a fresh value."
+      - "`In(m)` receives a message from the network."
+      - "`Out(m)` sends a message to the network."
+      - State facts carry protocol state between rules.
+      - Action facts record events for lemmas.
+    why: |
+      Rules consume and produce facts. Lemmas usually reason about action facts. If facts are vague or inconsistent, the proof result may not mean what you think it means.
+    related: [tamarin.linear-fact, tamarin.persistent-fact, tamarin.action-fact]
+    followups:
+      - What is a linear fact?
+      - What is a persistent fact?
+      - What is an action fact?
+
+  - id: tamarin.linear-fact
+    title: Linear fact
+    category: tamarin
+    terms: [linear fact, linear facts, consumed fact]
+    definition: |
+      A linear fact is consumed when a rule uses it as a premise. That specific occurrence is removed from the state.
+    why: |
+      Linear facts are useful for one-time state, resources, and protocol steps that should not be reused freely.
+    example: |
+      A role state such as `State(A, x)` is usually linear because the old state should disappear when the role moves to the next step.
+    commonMistakes:
+      - Making one-time state persistent, which can create unrealistic replay behavior.
+    related: [tamarin.persistent-fact, tamarin.rule, tamarin.fact]
+
+  - id: tamarin.persistent-fact
+    title: Persistent fact
+    category: tamarin
+    terms: [persistent fact, persistent facts, bang fact, "! fact"]
+    definition: |
+      A persistent fact remains available after it is used. In Tamarin syntax it starts with `!`, for example `!Pk(A, pkA)`.
+    useWhen:
+      - Use it for long-term public keys.
+      - Use it for public registration data.
+      - Use it for facts that should be globally reusable.
+    avoidWhen:
+      - Do not use it for temporary state.
+      - Do not use it for one-time tokens.
+      - Do not use it for values that should be consumed.
+    related: [tamarin.linear-fact, tamarin.fact, tamarin.pki]
+
+  - id: tamarin.action-fact
+    title: Action fact
+    category: tamarin
+    terms: [action fact, action facts, event fact, event facts]
+    definition: |
+      An action fact records that something important happened at a specific point in a trace. It appears in the middle part of a rule, between `--[` and `]->`.
+    why: |
+      Lemmas usually talk about action facts. They are how you connect protocol behavior to security claims.
+    example: |
+      `--[ Secret(A, k) ]->` records the event that agent `A` considers `k` secret.
+    commonMistakes:
+      - Writing a lemma about an event that no rule ever emits.
+    related: [tamarin.lemma, tamarin.trace, tamarin.rule]
+
+  - id: tamarin.rule
+    title: Tamarin rule
+    category: tamarin
+    terms: [rule, rules, tamarin rule, multiset rewriting, transition rule]
+    definition: |
+      A Tamarin rule describes one possible transition in the protocol. It says: if these facts are available, then this event may happen and these new facts are produced.
+    details:
+      - Premises are what the step needs.
+      - Action facts are what the step records.
+      - Conclusions are what becomes true after the step.
+    example: |
+      Read `[ premises ] --[ events ]-> [ conclusions ]` as: consume or use the premises, record the events, and produce the conclusions.
+    commonMistakes:
+      - Making a rule too permissive, which can create attacks caused by the model rather than the real protocol.
+      - Making a rule too strict, which can block honest executions.
+    related: [tamarin.premise, tamarin.conclusion, tamarin.action-fact]
+
+  - id: tamarin.premise
+    title: Premise
+    category: tamarin
+    terms: [premise, premises, left side of rule]
+    definition: |
+      A premise is a fact that must be available before a rule can fire. Premises are written on the left side of a Tamarin rule.
+    example: |
+      If a rule has `In(m)` as a premise, the rule can fire only when the protocol receives a network message matching `m`.
+    commonMistakes:
+      - Too few premises make a rule too easy to fire.
+      - Too many premises can block valid traces.
+    related: [tamarin.rule, tamarin.conclusion, tamarin.in]
+
+  - id: tamarin.conclusion
+    title: Conclusion
+    category: tamarin
+    terms: [conclusion, conclusions, right side of rule]
+    definition: |
+      A conclusion is a fact produced after a rule fires. Conclusions are written on the right side of a Tamarin rule.
+    example: |
+      If a rule concludes `Out(m)`, message `m` is placed on the network.
+    commonMistakes:
+      - Putting every known value in every conclusion. Conclusions should represent the next state precisely.
+    related: [tamarin.rule, tamarin.premise, tamarin.out]
+
+  - id: tamarin.in
+    title: In
+    category: tamarin
+    terms: [in, in fact, "In(m)", network input, receive from network]
+    definition: |
+      `In(m)` means the protocol receives message `m` from the network.
+    why: |
+      The network is adversary-controlled. `In(m)` does not mean an honest party sent `m`; it means the adversary can provide a message matching `m`.
+    commonMistakes:
+      - Treating received input as trusted without modelling the checks that justify trusting it.
+    related: [tamarin.out, tamarin.attacker-knowledge, tamarin.authentication]
+
+  - id: tamarin.out
+    title: Out
+    category: tamarin
+    terms: [out, out fact, "Out(m)", network output, send to network]
+    definition: |
+      `Out(m)` means the protocol sends message `m` to the network.
+    why: |
+      Once a message is output, the adversary can observe it and use it to derive later messages according to the symbolic model.
+    commonMistakes:
+      - Outputting a secret directly or inside a structure that the adversary can open.
+    related: [tamarin.in, tamarin.attacker-knowledge, tamarin.secrecy]
+
+  - id: tamarin.attacker-knowledge
+    title: Attacker knowledge
+    category: tamarin
+    terms: [attacker knowledge, adversary knowledge, intruder knowledge, "K(x)", attacker knows]
+    definition: |
+      Attacker knowledge is what the adversary can derive from public data, network messages, and the cryptographic operations available in the model.
+    details:
+      - "`K(x)` is commonly used in lemmas to mean that the adversary knows `x`."
+      - Encryption is not assumed broken; the adversary needs enough symbolic information to derive the plaintext.
+    why: |
+      Secrecy properties usually ask whether a sensitive value ever becomes attacker knowledge.
+    related: [tamarin.secrecy, tamarin.out, tamarin.equations]
+    followups:
+      - What is secrecy in Tamarin?
+      - What is Out in Tamarin?
+      - What are equations in Tamarin?
+
+  - id: tamarin.lemma
+    title: Tamarin lemma
+    category: tamarin
+    terms: [lemma, lemmas, tamarin lemma, property, security property]
+    definition: |
+      A lemma is a property Tamarin tries to prove or disprove about protocol traces.
+    details:
+      - "`all-traces` means the property must hold for every possible execution."
+      - "`exists-trace` means Tamarin only needs to find one execution that satisfies it."
+      - Lemmas commonly express secrecy, authentication, agreement, and executability.
+    why: |
+      Lemmas are the bridge between the protocol model and the security claim you care about.
+    example: |
+      A secrecy lemma can say: if `Secret(A, k)` occurs, the adversary should not know `k` unless a reveal event occurred.
+    commonMistakes:
+      - Writing a lemma that refers to action facts no rule emits.
+      - Proving a security lemma before checking the model is executable.
+    related: [tamarin.all-traces, tamarin.exists-trace, tamarin.secrecy]
+    followups:
+      - What is all-traces?
+      - What is exists-trace?
+      - What is secrecy in Tamarin?
+
+  - id: tamarin.all-traces
+    title: all-traces
+    category: tamarin
+    terms: [all-traces, all traces, universal trace property]
+    definition: |
+      `all-traces` means the lemma must hold for every trace Tamarin can generate from the rules.
+    useWhen:
+      - Use it for secrecy.
+      - Use it for authentication.
+      - Use it for agreement and integrity.
+    why: |
+      If an `all-traces` lemma fails, Tamarin found at least one counterexample trace.
+    related: [tamarin.exists-trace, tamarin.attack-trace, tamarin.lemma]
+
+  - id: tamarin.exists-trace
+    title: exists-trace
+    category: tamarin
+    terms: [exists-trace, exists trace, existential trace property]
+    definition: |
+      `exists-trace` means Tamarin only needs to find one trace where the formula is true.
+    useWhen:
+      - Use it for executability checks.
+      - Use it for sanity checks.
+      - Use it to confirm that an honest protocol path can occur.
+    avoidWhen:
+      - Do not use it as a normal secrecy or authentication guarantee.
+    related: [tamarin.all-traces, tamarin.executability, tamarin.lemma]
+
+  - id: tamarin.trace
+    title: Trace
+    category: tamarin
+    terms: [trace, traces, protocol trace, execution trace]
+    definition: |
+      A trace is one possible execution of the protocol model: a sequence of rule applications and action facts.
+    why: |
+      Tamarin proves properties by reasoning about traces. If a lemma fails, the counterexample is shown as an attack trace.
+    related: [tamarin.attack-trace, tamarin.rule, tamarin.action-fact]
+
+  - id: tamarin.attack-trace
+    title: Attack trace
+    category: tamarin
+    terms: [attack trace, counterexample, falsified lemma, attack]
+    definition: |
+      An attack trace is a concrete counterexample found by Tamarin. It shows one execution where a lemma does not hold.
+    steps:
+      - Find the failed lemma.
+      - Follow the rule applications in order.
+      - Locate the first point where an expected event, check, or secrecy condition fails.
+      - Decide whether the trace reflects a real protocol issue or a modelling mistake.
+    why: |
+      In X-Men, original proved plus mutant falsified is a strong signal that the mutated element was security-relevant.
+    related: [tamarin.trace, xmen.results, mutation.testing]
+
+  - id: tamarin.secrecy
+    title: Secrecy
+    category: tamarin
+    terms: [secrecy, secret, confidentiality, secrecy lemma]
+    definition: |
+      Secrecy means a value should not become known to the adversary except in explicitly allowed cases, such as a reveal event.
+    example: |
+      If `Secret(A, k)` occurs, a secrecy lemma often requires that `K(k)` never occurs unless a reveal event also occurred.
+    commonMistakes:
+      - Forgetting to emit the action fact that marks the value as secret.
+      - Sending the value through `Out(...)` in a form the adversary can derive.
+    related: [tamarin.attacker-knowledge, tamarin.lemma, tamarin.out]
+
+  - id: tamarin.authentication
+    title: Authentication
+    category: tamarin
+    terms: [authentication, agreement, authenticates, authentication lemma]
+    definition: |
+      Authentication means one party's belief about another party, session, or message is justified by the trace.
+    details:
+      - Authentication lemmas usually compare action facts emitted by different roles.
+      - "A typical question is: if Bob accepts a session with Alice, did Alice really run the matching steps?"
+    commonMistakes:
+      - Trying to prove authentication from message syntax alone without recording role events.
+    related: [tamarin.action-fact, tamarin.trace, tamarin.lemma]
+
+  - id: tamarin.builtins
+    title: Builtins
+    category: tamarin
+    terms: [builtins, builtin, built-in message theories, hashing, signing, encryption, diffie-hellman]
+    definition: |
+      Builtins are predefined symbolic theories for common cryptographic operators.
+    details:
+      - Examples include hashing, symmetric encryption, asymmetric encryption, signing, and Diffie-Hellman.
+      - Builtins define useful function symbols and equations for standard cryptographic behavior.
+    commonMistakes:
+      - Enabling algebra the model does not need, which can make proof search harder.
+    related: [tamarin.functions, tamarin.equations, tamarin.diffie-hellman]
+
+  - id: tamarin.functions
+    title: Functions
+    category: tamarin
+    terms: [functions, function symbol, private function, message constructor]
+    definition: |
+      Functions are symbolic constructors for messages, such as `pair/2`, `mac/2`, or `token/3`.
+    details:
+      - A private function can be used by the model but is not directly available to the adversary.
+      - A function symbol alone does not define cryptographic behavior; equations or builtins may be needed.
+    related: [tamarin.builtins, tamarin.equations, tamarin.messages]
+
+  - id: tamarin.equations
+    title: Equations
+    category: tamarin
+    terms: [equations, equation, equational theory, algebraic behavior]
+    definition: |
+      Equations define when two symbolic terms should be considered equal.
+    why: |
+      They describe algebraic behavior, such as decryption undoing encryption when the right key is used.
+    commonMistakes:
+      - Making equations too weak, so the model misses real behavior.
+      - Making equations too broad, so proof search becomes difficult or the model no longer matches the protocol.
+    related: [tamarin.builtins, tamarin.functions, tamarin.attacker-knowledge]
+
+  - id: tamarin.diffie-hellman
+    title: Diffie-Hellman in Tamarin
+    category: tamarin
+    terms: [diffie-hellman, diffie hellman, dh, exponentiation]
+    definition: |
+      Diffie-Hellman is a builtin message theory for modelling exponentiation-style key exchange symbolically.
+    why: |
+      It gives Tamarin equations for the algebraic structure needed to reason about shared exponents.
+    commonMistakes:
+      - Treating Diffie-Hellman like ordinary uninterpreted functions when the protocol relies on its algebra.
+    related: [tamarin.builtins, tamarin.equations]
+
+  - id: tamarin.restrictions
+    title: Restrictions
+    category: tamarin
+    terms: [restriction, restrictions, trace restriction, modelling assumption]
+    definition: |
+      Restrictions remove traces that do not satisfy a modelling assumption.
+    useWhen:
+      - Use them for justified assumptions such as uniqueness, ordering, or well-formedness.
+    avoidWhen:
+      - Do not use restrictions to hide a real attack.
+      - Do not use restrictions as a substitute for modelling protocol checks.
+    related: [tamarin.trace, tamarin.lemma, tamarin.modeling-mistakes]
+
+  - id: tamarin.precomputation
+    title: Precomputation
+    category: tamarin
+    terms: [precomputation, sources, source computation]
+    definition: |
+      Precomputation is Tamarin's preparation phase before proof search. It computes source and dependency information that guides later proofs.
+    why: |
+      Good precomputation helps Tamarin avoid pointless search. Confusing source information often points to vague facts or overly broad rules.
+    related: [tamarin.sources, tamarin.heuristics, tamarin.slow]
+
+  - id: tamarin.sources
+    title: Sources
+    category: tamarin
+    terms: [sources, source, fact sources, source lemma]
+    definition: |
+      Sources describe where facts can come from during proof search.
+    why: |
+      If many rules can produce similar facts, proof search branches heavily. More precise facts usually create clearer sources.
+    related: [tamarin.precomputation, tamarin.fact, tamarin.heuristics]
+
+  - id: tamarin.heuristics
+    title: Proof heuristics
+    category: tamarin
+    terms: [heuristic, heuristics, proof heuristic, proof search strategy]
+    definition: |
+      Proof heuristics are strategies Tamarin uses to decide which proof step to try next.
+    why: |
+      Tamarin's search space can be huge. A different heuristic can make proof search faster, but it cannot fix a badly shaped model.
+    commonMistakes:
+      - Tuning heuristics before checking executability, facts, and lemma scope.
+    related: [tamarin.slow, tamarin.interactive, tamarin.precomputation]
+
+  - id: tamarin.interactive
+    title: Interactive mode
+    category: tamarin
+    terms: [interactive mode, graphical user interface, gui, inspect proof]
+    definition: |
+      Interactive mode lets you inspect and guide Tamarin proofs instead of relying only on automatic proof search.
+    useWhen:
+      - Use it when automatic proof search gets stuck.
+      - Use it to understand an attack trace.
+      - Use it to inspect sources and cases.
+    related: [tamarin.heuristics, tamarin.attack-trace, xmen.results]
+
+  - id: tamarin.sapic
+    title: SAPIC
+    category: tamarin
+    terms: [sapic, process, processes, process specification]
+    definition: |
+      SAPIC is a process-style language supported by Tamarin. It lets you describe protocols in process notation, which Tamarin translates into rules.
+    why: |
+      SAPIC can be easier to read for process-like protocols, but the generated model still needs meaningful events and lemmas.
+    related: [tamarin.rule, tamarin.theory, tamarin.lemma]
+
+  - id: tamarin.executability
+    title: Executability lemma
+    category: tamarin
+    terms: [executability, executable, executability lemma, sanity lemma, can run]
+    definition: |
+      An executability lemma checks that the model can actually run. It usually uses `exists-trace`.
+    why: |
+      Before proving secrecy or authentication, confirm that the honest protocol path is possible. Otherwise a security lemma may pass only because the model never reaches the interesting state.
+    commonMistakes:
+      - Skipping sanity lemmas and trusting a proof from a model that has no honest execution.
+    related: [tamarin.exists-trace, tamarin.lemma, tamarin.modeling-mistakes]
+
+  - id: tamarin.slow
+    title: Slow Tamarin run
+    category: tamarin
+    terms: [slow, timeout, takes long, proof search slow, why is tamarin slow]
+    shortAnswer: |
+      Tamarin can be slow because it searches many possible traces, adversary actions, and symbolic derivations.
+    definition: |
+      A slow Tamarin run usually means the proof search space is too large or insufficiently guided.
+    steps:
+      - Check that the model has an executability lemma.
+      - Check whether facts are too generic.
+      - Inspect sources and precomputation output.
+      - Try proving a smaller lemma or protocol slice.
+      - Change heuristics only after checking the model shape.
+    commonMistakes:
+      - Assuming timeout means the property is false.
+      - Adding more depth before checking sources.
+    related: [tamarin.sources, tamarin.heuristics, tamarin.precomputation]
+
+  - id: tamarin.modeling-mistakes
+    title: Common Tamarin modelling mistakes
+    category: tamarin
+    terms: [common tamarin mistakes, modeling mistakes, modelling mistakes, wrong proof, incorrect model]
+    definition: |
+      A modelling mistake is a mismatch between the protocol you intended to analyse and the symbolic model you actually wrote.
+    details:
+      - Treating `In(m)` as trusted input.
+      - Using persistent facts for state that should be consumed.
+      - Writing lemmas that refer to action facts never emitted by rules.
+      - Forgetting executability checks.
+      - Making facts too generic, causing noisy proof search.
+      - Using restrictions to remove traces that should be real attacks.
+    related: [tamarin.in, tamarin.persistent-fact, tamarin.executability]
+
+  - id: mutation.testing
+    title: Mutation testing
+    category: xmen
+    terms: [mutation testing, mutate protocol, why mutation, human error testing]
+    definition: |
+      Mutation testing asks whether a protocol model still satisfies its security properties after a controlled change is introduced.
+    why: |
+      For ceremony analysis, this is useful because real users can skip, forget, mistype, ignore, or over-share information.
+    details:
+      - A mutation is not the final verdict.
+      - A mutation is a precise "what if this human deviation happened?" question.
+      - Tamarin checks the mutated model against the original lemmas.
+    related: [mutation.catalog, xmen.pipeline, xmen.results]
+
+  - id: mutation.catalog
+    title: Mutation catalog
+    category: mutation
+    terms: [mutations, mutation list, available mutations, what mutations are available]
+    definition: |
+      X-Men supports mutation families that model different human or ceremony deviations. The JCS paper focuses on four core human mutation families: Skip, Add, Replace, and Neglect; this Java repo also exposes Forget and combined Add plus Replace options.
+    details:
+      - Skip removes a send, receive, or short send/receive chunk from the human trace.
+      - Add inserts an extra send or duplicates an existing send using finite choices from current knowledge.
+      - Replace swaps a message with a format-preserving submessage or same-type value.
+      - Neglect removes internal role-actions such as checks.
+      - Add plus Replace combines an extra action with a replaced value.
+      - Forget is a repo extension that removes knowledge from state; the JCS paper discusses forgetting as future work.
+    related: [paper.mutation.catalog, mutation.skip, mutation.add, mutation.replace]
+    followups:
+      - What is Skip?
+      - What is Add?
+      - What is Replace?
+
+  - id: mutation.pick
+    title: Mutation selection
+    category: mutation
+    terms: [which mutation should i pick, choose mutation, pick mutation, what should i run first]
+    shortAnswer: |
+      Pick the mutation that matches the behavior you want to test, not the one whose name sounds closest.
+    definition: |
+      Mutation selection is the process of mapping a suspected human or ceremony failure to the mutation family that models it.
+    useWhen:
+      - Use Skip when a step might be missed.
+      - Use Add when a participant might send an extra message or duplicate a send.
+      - Use Replace when the right-shaped or same-type value might be the wrong value.
+      - Use Forget when an agent might lose a value from state.
+      - Use Neglect when a participant receives the data but skips an internal check.
+    details:
+      - Start with Skip for a cheap baseline.
+      - Use Forget and Neglect when the question is about knowledge or checks.
+      - Use Replace for binding and type-confusion questions.
+    related: [paper.mutation.selection, mutation.skip, mutation.replace]
+    followups:
+      - What is Skip?
+      - What is Forget?
+      - What is Neglect?
+
+  - id: mutation.skip
+    title: Skip
+    category: mutation
+    terms: [skip, skip mutation, skip send, skip receive, remove step]
+    definition: |
+      Skip removes one or more send/receive actions from the human trace and checks whether the security goal still holds after matching and propagation.
+    why: |
+      It asks whether a step is load-bearing or merely operational.
+    details:
+      - Skip Send drops one human send action.
+      - Skip Receive drops one human receive action.
+      - Skip Send Receive drops a send and the later receive that depends on it.
+      - Skip Receive Send drops a receive and the send that would follow it.
+      - Skip Receive Send Receive drops a larger receive-send-receive chunk.
+    useWhen:
+      - Use it when a participant may miss a step.
+      - Use it to audit which protocol steps are essential.
+      - Use it as a fast first sweep before heavier mutations.
+    related: [paper.skip-mutation, mutation.pick, xmen.results]
+
+  - id: mutation.add
+    title: Add
+    category: mutation
+    terms: [add, add mutation, extra send, inject send, over disclosure]
+    definition: |
+      Add inserts an extra human send action or duplicates an existing human send action.
+    why: |
+      It asks whether sending one extra message or value weakens secrecy, authentication, or another property.
+    useWhen:
+      - Use it for over-disclosure checks.
+      - Use it when a user may repeat a send or send an extra known value.
+      - Use it with Replace when the extra action carries a wrong-but-compatible value.
+    example: |
+      In the Oyster case study, Add plus Replace can model touching with an additional card.
+    related: [paper.add-mutation, mutation.combine, mutation.replace]
+
+  - id: mutation.replace
+    title: Replace
+    category: mutation
+    terms: [replace, replace mutation, replace type, replace sub messages, substitute, swap value]
+    definition: |
+      Replace swaps a message component for another value of compatible shape or type.
+    why: |
+      It asks whether the protocol relies on the identity of a value or only on its shape.
+    details:
+      - Replace Sub Messages changes a component inside a structured message.
+      - Replace Type swaps a whole value with another value of the same type.
+      - Replacing a whole action with a different action is better understood as Skip plus Add.
+    useWhen:
+      - Use it for type-confusion questions.
+      - Use it to test whether authentication binds to the right nonce, key, token, or identity.
+    related: [paper.replace-mutation, mutation.add, tamarin.authentication]
+
+  - id: mutation.combine
+    title: Add plus Replace
+    category: mutation
+    terms: [combine, combine mutation, combination, piggyback, combination only, add replace, add plus replace, add&replace]
+    definition: |
+      Add plus Replace combines an extra send with a replacement of the value being sent.
+    why: |
+      It models behaviors that are not just extra and not just wrong-valued, such as touching with an additional card that carries a different identifier.
+    useWhen:
+      - Use it when an extra action carries a replaced or same-type value.
+      - Use it for Oyster-style two-card or card-clash scenarios.
+    related: [paper.add-replace, mutation.add, mutation.replace]
+
+  - id: mutation.forget
+    title: Forget
+    category: mutation
+    terms: [forget, forget mutation, lost knowledge, forget set, blocked derivation]
+    definition: |
+      Forget removes a piece of knowledge from an agent's state and checks whether later steps can still be derived from what remains.
+    why: |
+      It models state loss: cache eviction, device reboot, forgotten token, lost key material, or discarded local knowledge.
+    details:
+      - The forget set is the set of values marked as lost.
+      - A blocked derivation happens when the agent cannot reconstruct a forgotten value.
+      - If the protocol still completes, the forgotten value had an alternative derivation path.
+    useWhen:
+      - Use it when an agent may lose a value mid-run.
+      - Use it to test whether a secret has unintended alternative derivations.
+      - Use it with derivation-tree output to understand downstream consequences.
+    related: [mutation.neglect, mutation.pick, tamarin.trace]
+
+  - id: mutation.neglect
+    title: Neglect
+    category: mutation
+    terms: [neglect, neglect mutation, ignored knowledge, skipped check, unused fact]
+    definition: |
+      Neglect removes one or more internal role-actions, such as validation checks, from a human-controlled role.
+    why: |
+      It models skipped checks: the data may be present, but the expected check is not enforced.
+    useWhen:
+      - Use it when the protocol relies on a receiver checking a tag, signature, freshness value, or expected state.
+      - Use it to measure the cost of dropping a validation step.
+    related: [paper.neglect-mutation, mutation.forget, tamarin.authentication]
+
+  - id: mutation.forget-vs-neglect
+    title: Forget vs Neglect
+    category: mutation
+    terms: [forget vs neglect, difference between forget and neglect, compare forget neglect]
+    definition: |
+      Forget means the fact is gone. Neglect means the fact is still available but not used.
+    details:
+      - Forget tests whether knowledge is necessary.
+      - Neglect tests whether a check or use of knowledge is necessary.
+      - Forget exposes derivation gaps; Neglect exposes assumption gaps.
+    related: [mutation.forget, mutation.neglect, mutation.pick]
+
+  - id: mutation.skip-vs-forget
+    title: Skip vs Forget
+    category: mutation
+    terms: [skip vs forget, difference between skip and forget, compare skip forget]
+    definition: |
+      Skip removes an action from the trace. Forget keeps the step structure but removes knowledge that a later step may need.
+    details:
+      - Skip asks whether the step is necessary.
+      - Forget asks whether the knowledge is necessary.
+      - Skip is usually cheaper; Forget is more precise for state-loss questions.
+    related: [mutation.skip, mutation.forget, mutation.pick]
+
+  - id: xmen.pipeline
+    title: Analysis pipeline
+    category: xmen
+    terms: [pipeline, workflow, analysis pipeline, how does x men work, how does the tool work]
+    definition: |
+      The X-Men pipeline uploads a Tamarin theory, generates mutated theories, runs Tamarin on them, and reports how the verdict changes.
+    steps:
+      - Upload a `.spthy` theory.
+      - Select one or more mutations.
+      - Generate mutated copies of the theory.
+      - Run Tamarin on each mutant.
+      - Compare each mutant result with the original result.
+    why: |
+      The goal is to see which human or ceremony deviations break the original security argument.
+    related: [mutation.catalog, xmen.results, tamarin.spthy]
+    followups:
+      - What mutations are available?
+      - How do I read Tamarin results?
+      - Which mutation should I pick?
+
+  - id: xmen.use-tool
+    title: Using X-Men
+    category: xmen
+    terms: [how do i use this tool, how to use, getting started, how do i start]
+    shortAnswer: |
+      Start with one `.spthy` file and one mutation. Understand one result before running a broad batch.
+    steps:
+      - Upload the `.spthy` file.
+      - Select a mutation that matches the behavior you want to test.
+      - For Forget, choose a derivation mode.
+      - Start mutation generation.
+      - Review generated files and Tamarin results.
+    commonMistakes:
+      - Selecting many mutations before understanding the first generated mutant.
+      - Ignoring vocabulary profile mismatches.
+    related: [xmen.pipeline, mutation.pick, xmen.results]
+
+  - id: xmen.results
+    title: Tamarin results
+    category: xmen
+    terms: [results, generated output, read output, tamarin results, what does output mean]
+    definition: |
+      A result tells you whether Tamarin proved the lemma, found a counterexample, or did not finish.
+    details:
+      - "Original proved and mutant proved: the mutation did not break that lemma."
+      - "Original proved and mutant falsified: the mutation exposed a security-relevant assumption."
+      - Timeout is not a verdict; it needs more diagnosis.
+    steps:
+      - Compare original and mutant verdicts lemma by lemma.
+      - For falsified lemmas, inspect the attack trace.
+      - For Forget, inspect the derivation tree if available.
+      - Decide whether the issue is a real protocol weakness or a modelling mistake.
+    related: [tamarin.attack-trace, tamarin.lemma, mutation.testing]
+
+  - id: xmen.no-mutations
+    title: No mutations generated
+    category: xmen
+    terms: [no mutations generated, no file generated, why no file, mutation failed]
+    shortAnswer: |
+      If no mutants are generated, the tool usually lacks a valid input file, a selected mutation, or matching vocabulary/profile information.
+    steps:
+      - Confirm a `.spthy` file is uploaded.
+      - Confirm at least one mutation is selected.
+      - Confirm the active vocabulary profile matches the uploaded model.
+      - For Forget, confirm the needed derivation input exists.
+      - Try a simple Skip mutation to separate setup issues from derivation issues.
+    related: [xmen.vocabulary-profile, mutation.pick, tamarin.spthy]
+
+  - id: xmen.vocabulary-profile
+    title: Vocabulary profile
+    category: xmen
+    terms: [vocabulary profile, profile, vocabulary, active profile]
+    definition: |
+      A vocabulary profile tells X-Men which protocol terms represent actions, values, and domain-specific concepts in the uploaded model.
+    why: |
+      If the profile does not match the `.spthy` file, X-Men may not know which facts are sends, receives, setup facts, or typed values.
+    commonMistakes:
+      - Using a profile for a different case study or naming convention.
+    related: [xmen.no-mutations, xmen.pipeline, tamarin.fact]
+
+  - id: xmen.case-studies
+    title: Case studies
+    category: xmen
+    terms: [case studies, examples, oyster, sso, coach service, bank login]
+    definition: |
+      The bundled examples are worked protocols used to exercise the mutation engine end to end.
+    details:
+      - Oyster models a transit-ticket style ceremony.
+      - SSO models a single sign-on flow.
+      - Coach Service models a multi-party booking ceremony.
+      - Bank Login models banking authentication with a second factor.
+    related: [mutation.catalog, xmen.pipeline, xmen.results]

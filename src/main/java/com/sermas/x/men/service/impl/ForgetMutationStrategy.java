@@ -202,7 +202,19 @@ public class ForgetMutationStrategy implements MutationStrategy {
 
     log.info("Target message m2: {}", target.represent());
 
-    // Get ALL derivations for the target
+    // Visualisation only: print a derivation tree for the operator's benefit using
+    // an enriched K that includes the current rule's full pre/post-State and RcvS
+    // values. The result is discarded; this call exists purely so the rendered tree
+    // is informative when it appears in the forget-mutation ZIP's
+    // _DerivationTree.txt (captured by DerivationTreeCaptureService).
+    // IMPORTANT: ctx.getKnowledge() is NOT modified - mutation analysis below still
+    // runs against the transition-aware K and therefore produces identical output.
+    Set<Message> displayKnowledge = new LinkedHashSet<>(ctx.getKnowledge());
+    displayKnowledge.addAll(
+        derivationCheckService.extractKnowledgeWithoutForgetRemoval(knowledgeBundle));
+    forgetDerivationChecker.printDerivationTree(target, displayKnowledge);
+
+    // Get ALL derivations for the target (mutation-analysis path; runs silently)
     Set<Derivation> allDerivations = forgetDerivationChecker.getAllDerivations(target, ctx.getKnowledge());
 
     // Per Algorithm 1, if Π is empty the algorithm yields "skip the send". However, in
