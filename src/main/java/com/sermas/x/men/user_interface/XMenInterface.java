@@ -154,11 +154,12 @@ public class XMenInterface extends Application {
           stage.setAlwaysOnTop(false);
           // Maximize on whichever monitor the stage is currently sitting on.
           Rectangle2D current = currentScreenBounds(stage);
+
+          stage.setMaximized(false);
           stage.setX(current.getMinX());
           stage.setY(current.getMinY());
           stage.setWidth(current.getWidth());
-          stage.setHeight(current.getHeight());
-          stage.setMaximized(true);
+          stage.setHeight(current.getHeight() + 10);
         };
 
     if (splashPlayer != null) {

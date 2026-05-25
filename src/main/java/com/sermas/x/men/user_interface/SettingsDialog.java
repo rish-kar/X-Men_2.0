@@ -119,8 +119,8 @@ public class SettingsDialog {
     // Cap the dialog at ~85% of the active screen height so the footer and action buttons
     // are always visible even on a 768-px screen.
     javafx.geometry.Rectangle2D screenForSize = ThemedToast.screenFor(owner);
-    double maxH = Math.max(540, screenForSize.getHeight() * 0.85);
-    panel.setPrefHeight(Math.min(780, maxH));
+    double maxH = Math.max(540, screenForSize.getHeight() * 0.92);
+    panel.setPrefHeight(Math.min(860, maxH));
     panel.setMaxHeight(maxH);
 
     Label title = new Label("Settings");
@@ -466,11 +466,33 @@ public class SettingsDialog {
     descCol.setPrefWidth(420);
     descCol.setEditable(true);
     descCol.setCellFactory(
-        (Callback)
-            (Callback<TableColumn<VocabRow, String>, TableCell<VocabRow, String>>)
-                col ->
-                    new TextFieldTableCell<>(
-                        new javafx.util.converter.DefaultStringConverter()));
+            col ->
+                    new TextFieldTableCell<VocabRow, String>(
+                            new javafx.util.converter.DefaultStringConverter()) {
+
+                      @Override
+                      public void startEdit() {
+                        super.startEdit();
+
+                        if (getGraphic() instanceof TextField tf) {
+                          tf.focusedProperty()
+                                  .addListener(
+                                          (obs, oldFocus, newFocus) -> {
+                                            if (!newFocus && isEditing()) {
+                                              commitEdit(tf.getText());
+                                            }
+                                          });
+                        }
+                      }
+
+                      @Override
+                      public void commitEdit(String value) {
+                        super.commitEdit(value == null ? "" : value);
+
+                        VocabRow row = getTableView().getItems().get(getIndex());
+                        row.setDescription(value == null ? "" : value);
+                      }
+                    });
     descCol.setOnEditCommit(
         ev -> {
           String d = ev.getNewValue() == null ? "" : ev.getNewValue();
@@ -546,7 +568,7 @@ public class SettingsDialog {
     // Cap the table at a sensible height. With Vgrow ALWAYS the table previously stretched
     // far enough to push the action row off-screen on small displays. SOMETIMES + a hard
     // max keeps the table generous while guaranteeing the buttons stay visible.
-    table.setMaxHeight(360);
+    table.setMaxHeight(460);
     VBox.setVgrow(table, Priority.SOMETIMES);
 
     VBox content = new VBox(12, hint, profileRow, table, actions);

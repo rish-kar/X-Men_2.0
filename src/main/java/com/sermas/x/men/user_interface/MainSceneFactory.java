@@ -521,7 +521,6 @@ public final class MainSceneFactory {
     halo.heightProperty().bind(downloadBtn.heightProperty().add(10));
     halo.arcWidthProperty().bind(halo.heightProperty());
     halo.arcHeightProperty().bind(halo.heightProperty());
-
     halo.xProperty().bind(stack.widthProperty().subtract(halo.widthProperty()).multiply(0.5));
     halo.yProperty().bind(stack.heightProperty().subtract(halo.heightProperty()).multiply(0.5));
 
