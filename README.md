@@ -219,8 +219,8 @@ git --version
 ### Cloning the Project
 
 ```bash
-git clone https://github.kcl.ac.uk/SERMAS/X-Men_3.0.git
-cd X-Men_3.0
+git clone https://github.kcl.ac.uk/SERMAS/X-Men_2.0.git
+cd X-Men_2.0
 ```
 
 > Paths containing apostrophes (e.g. `King's College London`) are supported
@@ -233,7 +233,7 @@ cd X-Men_3.0
 1. Download **IntelliJ IDEA Community Edition** from
    [JetBrains](https://www.jetbrains.com/idea/download/).
 2. Install for your OS.
-3. Launch IntelliJ ▸ **Open…** ▸ select the cloned `X-Men_3.0` folder.
+3. Launch IntelliJ ▸ **Open…** ▸ select the cloned `X-Men_2.0` folder.
 4. IntelliJ auto-detects `pom.xml`. If it doesn't, right-click `pom.xml` ▸
    **Add as Maven Project**.
 
@@ -662,7 +662,7 @@ the failure-handling contract, and a focused troubleshooting table.
 ## 🗂 Project Structure
 
 ```
-X-Men_3.0/
+X-Men_2.0/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/sermas/x/men/

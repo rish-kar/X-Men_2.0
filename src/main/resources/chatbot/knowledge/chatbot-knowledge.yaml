@@ -20,7 +20,7 @@ entries:
   - id: conversation.greeting
     title: X-Men Assistant
     category: conversation
-    terms: [hello, hi, hey, who are you, x-men assistant]
+    terms: [hello, hi, hey, who are you, x-men assistant, what are you, what is this assistant, are you the X-Men bot, can you help me with X-Men, start help, chatbot help]
     shortAnswer: |
       I am the local X-Men assistant. I can explain Tamarin, explain X-Men mutations, help choose a mutation, and help interpret generated files and Tamarin results.
     definition: |
@@ -37,7 +37,7 @@ entries:
   - id: conversation.thanks
     title: Thanks
     category: conversation
-    terms: [thanks, thank you, cheers]
+    terms: [thanks, thank you, cheers, okay thanks, great thanks, that helps, understood, got it, perfect]
     shortAnswer: |
       You are welcome. Send the next Tamarin, mutation, or result question when you have it.
     definition: |
@@ -50,7 +50,7 @@ entries:
   - id: xmen.capabilities
     title: What I can help with
     category: conversation
-    terms: [what can you help me with, what can you do, help, how can you help]
+    terms: [what can you help me with, what can you do, help, how can you help, what questions can I ask, what should I ask, what topics do you know, what do you know about X-Men, can you explain mutations, can you help with Tamarin, what are your capabilities, show me help topics, give me example questions]
     definition: |
       I can help with Tamarin concepts, X-Men mutation choices, derivation-depth options, vocabulary profiles, generated files, and result interpretation.
     details:
@@ -63,10 +63,87 @@ entries:
       - Which mutation should I pick?
       - How does the analysis pipeline work?
 
+  - id: xmen.beginner-explanation
+    title: X-Men for beginners
+    category: conversation
+    terms: [explain X-Men simply, explain X-Men like I am new, beginner explanation, simple explanation, I do not understand X-Men, explain in plain English, explain this tool in simple words, what is the point of X-Men, why do we need X-Men, what problem does X-Men solve]
+    definition: |
+      X-Men helps analysts test what happens when a human participant in a security ceremony makes a realistic mistake.
+    details:
+      - A normal ceremony model says what should happen.
+      - X-Men creates changed versions of that model where a human skips, adds, replaces, neglects, or forgets something.
+      - Tamarin then checks whether the changed model still satisfies the intended security properties.
+      - If a mutant breaks a property, the analyst has a concrete behavior to inspect.
+    why: |
+      The practical goal is not to generate random edits. It is to expose assumptions that only hold when humans behave perfectly.
+    related: [manual.mutation.definition, manual.security-ceremony, tamarin.overview]
+    followups:
+      - What is a security ceremony?
+      - What is a mutation?
+      - What is Tamarin?
+
+  - id: xmen.question-guide
+    title: How to ask the assistant
+    category: conversation
+    terms: [how should I ask questions, how do I ask, best way to ask, ask the chatbot, question guide, examples of questions, give sample questions, what can I type, what can I type if I want better answers, type better answers, how to get better answers, how should I phrase a question]
+    definition: |
+      You can ask either short terms or full sentences. The assistant is designed to map both to the same concept.
+    details:
+      - Atomic terms work, such as `PSpecial`, `Skip Receive Send`, `lemma`, or `FileSplitterService`.
+      - Natural questions work, such as `Why are mutation files not generated?`
+      - Comparison questions work, such as `What is the difference between Forget and Skip Receive?`
+      - Choice questions work, such as `Which mutation should I use for a missed confirmation?`
+      - Debugging questions work best when they include the symptom and the object, such as `generated files are missing`.
+    why: |
+      Good questions name the concept, symptom, or behavior. Exact hyphenation is not required for common mutation names.
+    related: [xmen.capabilities, paper.mutation.selection]
+    followups:
+      - Which mutation should I pick?
+      - What is Skip Receive Send?
+      - Why are mutation files missing?
+
+  - id: xmen.smart-answering
+    title: How answers are selected
+    category: conversation
+    terms: [how do you answer, are answers keyword search, smart answering, why did it choose this answer, answer quality, formatted answers, structured answer, why suggestions matter, related suggestions, not just keyword search]
+    definition: |
+      Answers are selected from structured YAML concepts and then formatted into sections such as definition, key points, why it matters, examples, checks, and follow-up questions.
+    details:
+      - Entries contain terms, definitions, details, examples, related concepts, and follow-up suggestions.
+      - The matcher normalizes separators, common send/receive spellings, and related Tamarin/X-Men vocabulary.
+      - Specific multi-word matches are boosted so `Skip Receive Send` beats generic `Skip`.
+      - Suggestions come from related concepts on the selected entry, not from unrelated global keywords.
+    why: |
+      This keeps answers readable and concept-based while still staying local, lightweight, and repository-friendly.
+    related: [xmen.question-guide, xmen.capabilities]
+    followups:
+      - How should I ask questions?
+      - What can you help with?
+      - Why did Skip Receive Send match?
+
+  - id: xmen.local-knowledge-mode
+    title: Local knowledge mode
+    category: conversation
+    terms: [is this an LLM, local agent, local assistant, YAML templating, template answering, does it use AI, does it use internet, offline chatbot, local knowledge base, lightweight assistant, no heavy model]
+    definition: |
+      The current assistant is a local structured-knowledge system, not a bundled local LLM.
+    details:
+      - It uses curated YAML entries stored in the repository.
+      - It does not download models or require a heavy executable.
+      - It is suitable for Docker and GitHub because the knowledge files are plain text.
+      - "The locked fallback option is YAML templating: structured entries with stronger matching and formatted answers."
+    why: |
+      This design keeps RAM and repository size low while improving answer structure and retrieval quality.
+    related: [xmen.smart-answering, xmen.question-guide]
+    followups:
+      - How do you answer?
+      - How should I ask questions?
+      - What can you help with?
+
   - id: xmen.formal-verification
     title: Formal verification
     category: foundation
-    terms: [formal verification, formal methods, verify protocol, mathematical model]
+    terms: [formal verification, formal methods, verify protocol, mathematical model, why formal verification, what is formal verification, prove security property, check protocol mathematically, security proof tool, why not just test]
     definition: |
       Formal verification checks a precise mathematical model of a system against a property, instead of relying only on examples or manual testing.
     why: |
@@ -83,7 +160,7 @@ entries:
   - id: tamarin.overview
     title: Tamarin
     category: tamarin
-    terms: [tamarin, tamarin prover, protocol verification tool, security protocol verification]
+    terms: [tamarin, tamarin prover, protocol verification tool, security protocol verification, what is Tamarin, explain Tamarin, what does Tamarin do, how does Tamarin verify protocols, why use Tamarin, Tamarin for beginners, Tamarin meaning, Tamarin security tool]
     definition: |
       Tamarin is a protocol verification tool. You describe a protocol as symbolic rules and facts, write security properties as lemmas, and Tamarin tries to prove those properties or find an attack trace.
     why: |
@@ -104,7 +181,7 @@ entries:
   - id: tamarin.spthy
     title: SPTHY file
     category: tamarin
-    terms: [.spthy, spthy, tamarin file, theory file, tamarin theory file]
+    terms: [.spthy, spthy, tamarin file, theory file, tamarin theory file, what is a spthy file, what is .spthy, security protocol theory file, file uploaded to X-Men, input model file, Tamarin input file]
     definition: |
       A `.spthy` file is a Tamarin theory file. It contains the protocol model and the properties Tamarin should verify.
     why: |
@@ -125,7 +202,7 @@ entries:
   - id: tamarin.theory
     title: Tamarin theory
     category: tamarin
-    terms: [theory, tamarin theory, theory in tamarin, model]
+    terms: [theory, tamarin theory, theory in tamarin, model, what is a Tamarin theory, explain theory file, complete protocol model, theory begin end, protocol theory]
     definition: |
       A Tamarin theory is the complete model inside a `.spthy` file. It defines the symbols, transition rules, assumptions, and lemmas for one protocol analysis.
     details:
@@ -139,7 +216,7 @@ entries:
   - id: tamarin.fact
     title: Tamarin fact
     category: tamarin
-    terms: [fact, facts, tamarin fact, state fact]
+    terms: [fact, facts, tamarin fact, state fact, what is a fact, explain facts in Tamarin, Fr In Out facts, action state message facts, symbolic fact]
     definition: |
       A fact is a symbolic item in Tamarin's state or trace. Facts represent messages, local state, fresh values, attacker knowledge, and events.
     details:
@@ -203,7 +280,7 @@ entries:
   - id: tamarin.rule
     title: Tamarin rule
     category: tamarin
-    terms: [rule, rules, tamarin rule, multiset rewriting, transition rule]
+    terms: [rule, rules, tamarin rule, multiset rewriting, transition rule, what is a Tamarin rule, explain rule syntax, premises events conclusions, how to read a rule, rule arrow meaning]
     definition: |
       A Tamarin rule describes one possible transition in the protocol. It says: if these facts are available, then this event may happen and these new facts are produced.
     details:
@@ -675,13 +752,14 @@ entries:
     category: mutation
     terms: [forget, forget mutation, lost knowledge, forget set, blocked derivation]
     definition: |
-      Forget removes a piece of knowledge from an agent's state and checks whether later steps can still be derived from what remains.
+      Forget marks selected human knowledge as unusable and checks whether later steps can still be derived without blocked forgotten hypotheses.
     why: |
-      It models state loss: cache eviction, device reboot, forgotten token, lost key material, or discarded local knowledge.
+      It models state loss: cache eviction, device reboot, forgotten token, lost key material, discarded local knowledge, or a human memory lapse.
     details:
-      - The forget set is the set of values marked as lost.
-      - A blocked derivation happens when the agent cannot reconstruct a forgotten value.
-      - If the protocol still completes, the forgotten value had an alternative derivation path.
+      - The forget set is the set of values marked as unavailable.
+      - Monotonic knowledge is preserved; the forget set controls which hypotheses may be used.
+      - A blocked derivation happens when every derivation path depends on forgotten information.
+      - If the protocol still completes, the forgotten value had an alternative non-blocked derivation path.
     useWhen:
       - Use it when an agent may lose a value mid-run.
       - Use it to test whether a secret has unintended alternative derivations.
@@ -718,11 +796,12 @@ entries:
     category: mutation
     terms: [skip vs forget, difference between skip and forget, compare skip forget]
     definition: |
-      Skip removes an action from the trace. Forget keeps the step structure but removes knowledge that a later step may need.
+      Skip removes an action from the trace. Forget keeps the step structure but makes selected knowledge unusable for later derivations.
     details:
       - Skip asks whether the step is necessary.
       - Forget asks whether the knowledge is necessary.
-      - Skip is usually cheaper; Forget is more precise for state-loss questions.
+      - Forget newly received information preserves the receive action but does not add the message to usable knowledge.
+      - Forget prior knowledge has no direct Skip equivalent because no trace action is removed.
     related: [mutation.skip, mutation.forget, mutation.pick]
 
   - id: xmen.pipeline

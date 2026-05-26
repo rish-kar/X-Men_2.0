@@ -179,6 +179,10 @@ public final class MainSceneFactory {
     // window they have X-Men open on.
     Rectangle2D screen = screenForStage(stage);
     container.setPrefSize(screen.getWidth(), screen.getHeight());
+    ImageView fallback = buildBackgroundFallback(container);
+    if (fallback != null) {
+      container.getChildren().add(fallback);
+    }
 
     try {
       File tmp = ensureCachedVideo();
@@ -187,9 +191,24 @@ public final class MainSceneFactory {
         MediaPlayer player = new MediaPlayer(media);
         player.setCycleCount(MediaPlayer.INDEFINITE);
         player.setMute(true);
-        // autoPlay handles startup — no extra play() inside setOnReady (which used to
-        // race with stage maximize and stall the first second of playback).
         player.setAutoPlay(true);
+        player.setOnReady(() -> javafx.application.Platform.runLater(player::play));
+        player.setOnPlaying(
+            () -> {
+              if (fallback != null) fallback.setVisible(false);
+            });
+        player.statusProperty()
+            .addListener(
+                (obs, oldStatus, status) -> {
+                  if (fallback != null && status != MediaPlayer.Status.PLAYING) {
+                    fallback.setVisible(true);
+                  }
+                });
+        player.setOnStalled(
+            () -> {
+              if (fallback != null) fallback.setVisible(true);
+              player.play();
+            });
         // Smoother loop — explicitly tell the player to start fresh on cycle.
         player.setOnEndOfMedia(() -> {
           player.seek(Duration.ZERO);
@@ -197,33 +216,58 @@ public final class MainSceneFactory {
         });
         MediaView view = new MediaView(player);
         view.setPreserveRatio(false);
-        view.setSmooth(true);
+        view.setSmooth(false);
         view.fitWidthProperty().bind(container.widthProperty());
         view.fitHeightProperty().bind(container.heightProperty());
         // Stage sizing is handled in the splash hand-off (XMenInterface) BEFORE the scene
         // is shown — doing it again here triggered an extra layout pass right as the
         // MediaPlayer transitioned to PLAYING, which is what made the video look stuck.
-        // If the player ever errors out, log and fall back to the still image.
-        player.setOnError(() -> log.warn("MediaPlayer error: {}", player.getError()));
-        container.getChildren().add(view);
+        player.setOnError(
+            () -> {
+              if (fallback != null) fallback.setVisible(true);
+              log.warn("MediaPlayer error: {}", player.getError());
+            });
+        if (stage != null) {
+          stage.iconifiedProperty()
+              .addListener(
+                  (obs, was, iconified) -> {
+                    if (iconified) {
+                      player.pause();
+                    } else {
+                      player.play();
+                    }
+                  });
+          stage.showingProperty()
+              .addListener(
+                  (obs, was, showing) -> {
+                    if (!showing) player.dispose();
+                  });
+        }
+        container.getChildren().add(0, view);
+        container.getProperties().put("xmen.backgroundMediaPlayer", player);
         return container;
       }
     } catch (Exception e) {
       log.info("Background video missing or failed; falling back to image: {}", e.getMessage());
     }
 
+    return container;
+  }
+
+  private static ImageView buildBackgroundFallback(StackPane container) {
     try (InputStream img =
         MainSceneFactory.class.getResourceAsStream("/images/main_scene_dna_fallback.png")) {
       if (img != null) {
         ImageView iv = new ImageView(new Image(img));
         iv.setPreserveRatio(false);
+        iv.setSmooth(false);
         iv.fitWidthProperty().bind(container.widthProperty());
         iv.fitHeightProperty().bind(container.heightProperty());
-        container.getChildren().add(iv);
+        return iv;
       }
     } catch (Exception ignored) {
     }
-    return container;
+    return null;
   }
 
   /** Pick the screen containing the stage's centre. Falls back to primary. */
@@ -249,8 +293,11 @@ public final class MainSceneFactory {
       return cachedBackgroundFile;
     }
     File stable = new File(System.getProperty("java.io.tmpdir"), "xmen-bg-cache.mp4");
+    long expectedLength = backgroundVideoResourceLength();
     // Reuse the file across JVM restarts if a previous run already wrote it AND it isn't empty.
-    if (stable.exists() && stable.length() > 0) {
+    if (stable.exists()
+        && stable.length() > 0
+        && (expectedLength <= 0 || stable.length() == expectedLength)) {
       cachedBackgroundFile = stable;
       return stable;
     }
@@ -260,6 +307,16 @@ public final class MainSceneFactory {
       Files.copy(videoStream, stable.toPath(), StandardCopyOption.REPLACE_EXISTING);
       cachedBackgroundFile = stable;
       return stable;
+    }
+  }
+
+  private static long backgroundVideoResourceLength() {
+    try {
+      java.net.URL url = MainSceneFactory.class.getResource("/DNA-Background.mp4");
+      if (url == null) return -1;
+      return url.openConnection().getContentLengthLong();
+    } catch (IOException e) {
+      return -1;
     }
   }
 

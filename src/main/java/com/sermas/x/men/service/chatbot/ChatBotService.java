@@ -35,7 +35,9 @@ public final class ChatBotService {
 
   private static final List<String> KNOWLEDGE_RESOURCES = List.of(
       "chatbot/knowledge/chatbot-knowledge.yaml",
-      "chatbot/knowledge/existing-paper.yaml");
+      "chatbot/knowledge/existing-paper.yaml",
+      "chatbot/knowledge/forget-paper.yaml",
+      "chatbot/knowledge/xmen-manual.yaml");
 
   private static final String DEFAULT_GREETING =
       "Hi - I'm the X-Men assistant. I can explain Tamarin concepts, X-Men "
@@ -58,6 +60,7 @@ public final class ChatBotService {
       "their", "this", "that", "these", "those", "there", "here", "and", "or",
       "but", "if", "then", "else", "than", "so", "as", "of", "at", "by", "for",
       "from", "in", "into", "on", "onto", "to", "with", "without", "about",
+      "topic", "topics",
       "can", "could", "should", "would", "may", "might", "will", "shall", "just",
       "what", "which", "who", "whom", "whose", "when", "where", "why", "how",
       "tell", "explain", "show", "say", "talk", "know", "want", "need",
@@ -80,6 +83,11 @@ public final class ChatBotService {
       Map.entry("forget", List.of("knowledge", "state")),
       Map.entry("neglect", List.of("check", "unused")),
       Map.entry("skip", List.of("remove", "step")),
+      Map.entry("send", List.of("snd")),
+      Map.entry("snd", List.of("send")),
+      Map.entry("receive", List.of("recv", "rcv")),
+      Map.entry("recv", List.of("receive", "rcv")),
+      Map.entry("rcv", List.of("receive", "recv")),
       Map.entry("replace", List.of("substitute", "swap")),
       Map.entry("add", List.of("inject", "message")),
       Map.entry("combine", List.of("piggyback", "message")),
@@ -98,7 +106,7 @@ public final class ChatBotService {
       Map.entry("xavier", List.of("analysis", "report", "tamarin")),
       Map.entry("wolverine", List.of("preprocessing", "slice", "join")));
 
-  private static final Pattern WORD_RE = Pattern.compile("[A-Za-z][A-Za-z0-9'\\-]*");
+  private static final Pattern WORD_RE = Pattern.compile("[A-Za-z][A-Za-z0-9']*|[0-9]+");
 
   private static volatile ChatBotService instance;
 
@@ -285,6 +293,7 @@ public final class ChatBotService {
           int termTokenCount = entry.termTokenSets.get(i).size();
           score += normalizedTerm.length() <= 4 ? 7.5 : 9.0;
           score += termTokenCount * termTokenCount;
+          if (termTokenCount >= 2) score += 8.0 * termTokenCount;
         }
         score += 3.0 * overlap(queryTokens, entry.termTokenSets.get(i));
       }
@@ -292,6 +301,7 @@ public final class ChatBotService {
       if (!normalizedTitle.isBlank() && containsPhrase(normalizedQuestion, normalizedTitle)) {
         int titleTokenCount = entry.titleTokens.size();
         score += 10.0 + (titleTokenCount * titleTokenCount);
+        if (titleTokenCount >= 2) score += 8.0 * titleTokenCount;
       }
       score += 2.0 * overlap(queryTokens, entry.titleTokens);
       score += 0.6 * overlap(queryTokens, entry.contentTokens);
@@ -449,7 +459,8 @@ public final class ChatBotService {
         || q.contains("should i use") || q.contains("when should")) return Intent.PICK;
     if (q.contains("debug") || q.contains("why no") || q.contains("not working")
         || q.contains("error") || q.contains("slow") || q.contains("timeout")
-        || q.contains("wrong")) return Intent.DEBUG;
+        || q.contains("wrong") || q.contains("not generated") || q.contains("missing"))
+      return Intent.DEBUG;
     if (q.contains("how should i understand")) return Intent.DEFINITION;
     if (q.contains("how do i") || q.contains("how to") || q.contains("how should i")
         || q.contains("steps")) return Intent.HOW_TO;
@@ -524,10 +535,11 @@ public final class ChatBotService {
   private static Set<String> tokenize(String text) {
     if (text == null) return Set.of();
     Set<String> out = new HashSet<>();
-    Matcher matcher = WORD_RE.matcher(text.toLowerCase(Locale.ROOT));
+    Matcher matcher = WORD_RE.matcher(canonicalInput(text));
     while (matcher.find()) {
       String token = normalizeToken(matcher.group());
-      if (token.length() < 2 || STOP_WORDS.contains(token)) continue;
+      if ((token.length() < 2 && !token.chars().allMatch(Character::isDigit))
+          || STOP_WORDS.contains(token)) continue;
       out.add(token);
       List<String> expansions = TOKEN_EXPANSIONS.get(token);
       if (expansions != null) out.addAll(expansions);
@@ -537,7 +549,7 @@ public final class ChatBotService {
 
   private static String normalizeText(String text) {
     if (text == null) return "";
-    Matcher matcher = WORD_RE.matcher(text.toLowerCase(Locale.ROOT));
+    Matcher matcher = WORD_RE.matcher(canonicalInput(text));
     StringBuilder out = new StringBuilder();
     while (matcher.find()) {
       String token = normalizeToken(matcher.group());
@@ -553,12 +565,23 @@ public final class ChatBotService {
     String t = token.toLowerCase(Locale.ROOT).replace("'", "");
     if (t.equals("dh")) return "diffie";
     if (t.equals("msr")) return "multiset";
-    if (t.length() > 5 && t.endsWith("ies")) return t.substring(0, t.length() - 3) + "y";
-    if (t.length() > 5 && t.endsWith("ing")) return t.substring(0, t.length() - 3);
-    if (t.length() > 4 && t.endsWith("ed")) return t.substring(0, t.length() - 2);
-    if (t.length() > 4 && t.endsWith("es")) return t.substring(0, t.length() - 2);
-    if (t.length() > 3 && t.endsWith("s")) return t.substring(0, t.length() - 1);
+    if (t.equals("snd")) return "send";
+    if (t.equals("rcv") || t.equals("recv")) return "receive";
+    if (t.length() > 5 && t.endsWith("ies")) t = t.substring(0, t.length() - 3) + "y";
+    else if (t.length() > 5 && t.endsWith("ing")) t = t.substring(0, t.length() - 3);
+    else if (t.length() > 4 && t.endsWith("ed")) t = t.substring(0, t.length() - 2);
+    else if (t.length() > 4 && t.endsWith("es")) t = t.substring(0, t.length() - 2);
+    else if (t.length() > 3 && t.endsWith("s")) t = t.substring(0, t.length() - 1);
+    if (t.equals("receiv") || t.equals("reciev") || t.equals("recive")) return "receive";
+    if (t.equals("receive") || t.equals("recieve")) return "receive";
+    if (t.equals("sent")) return "send";
     return t;
+  }
+
+  private static String canonicalInput(String text) {
+    return text.toLowerCase(Locale.ROOT)
+        .replaceAll("[_\\-/]+", " ")
+        .replace('&', ' ');
   }
 
   private static String lowerFirst(String text) {

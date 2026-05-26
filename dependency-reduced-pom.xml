@@ -8,7 +8,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sermas.x.men</groupId>
-  <artifactId>X-Men_3.0</artifactId>
+  <artifactId>X-Men_2.0</artifactId>
   <name>X-Men</name>
   <version>0.0.1-SNAPSHOT</version>
   <description>X-Men: A Mutation-Based Approach for the Formal Analysis of Security Ceremonies</description>

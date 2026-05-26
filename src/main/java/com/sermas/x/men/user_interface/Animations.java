@@ -14,6 +14,8 @@ import javafx.util.Duration;
  */
 public final class Animations {
 
+  private static final String HOVER_SCALE_TRANSITION = "xmen.hoverScaleTransition";
+
   private Animations() {}
 
   public static void hoverLift(Node node, double scaleUpTo) {
@@ -23,10 +25,17 @@ public final class Animations {
   }
 
   private static void scale(Node node, double factor) {
-    ScaleTransition t = new ScaleTransition(Duration.millis(140), node);
+    ScaleTransition t = (ScaleTransition) node.getProperties().get(HOVER_SCALE_TRANSITION);
+    if (t == null) {
+      t = new ScaleTransition(Duration.millis(140), node);
+      t.setInterpolator(Interpolator.EASE_OUT);
+      node.getProperties().put(HOVER_SCALE_TRANSITION, t);
+    }
+    t.stop();
+    t.setFromX(node.getScaleX());
+    t.setFromY(node.getScaleY());
     t.setToX(factor);
     t.setToY(factor);
-    t.setInterpolator(Interpolator.EASE_OUT);
     t.play();
   }
 }

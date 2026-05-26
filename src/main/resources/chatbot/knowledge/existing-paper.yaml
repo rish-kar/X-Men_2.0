@@ -128,7 +128,7 @@ entries:
   - id: paper.mutation.catalog
     title: Paper mutation catalog
     category: mutation
-    terms: [what mutations are available, paper mutations, four mutations, skip add replace neglect, behavioral patterns library]
+    terms: [what mutations are available, what mutations are in the paper, paper mutations, four mutations, skip add replace neglect, behavioral patterns library, list all mutations, show mutation types, explain mutation families, what are the human mutations, which mutations does X-Men support, mutation catalogue, mutation catalog, all mutation variants, mutation options]
     definition: |
       The JCS paper focuses on four core human mutation families: Skip, Add, Replace, and Neglect. It also studies combinations such as Add plus Replace.
     details:
@@ -139,7 +139,7 @@ entries:
       - Add plus Replace is a composed mutation used for extra sends that carry replaced values.
       - Forget is implemented by this repo as a knowledge-loss mutation, although the paper discusses forgetting as future work.
     why: |
-      These mutations are meant to mimic human mistakes in ceremonies, not arbitrary random edits.
+      These mutations are meant to mimic human mistakes in ceremonies, not arbitrary edits.
     related: [paper.skip-mutation, paper.add-mutation, paper.replace-mutation]
     followups:
       - How does Skip work?
@@ -149,9 +149,9 @@ entries:
   - id: paper.mutation.selection
     title: Mutation selection from the paper
     category: mutation
-    terms: [which mutation should I pick, choose mutation, when to use skip add replace neglect, mutation selection paper]
+    terms: [which mutation should I pick, choose mutation, when to use skip add replace neglect, mutation selection paper, which mutation should I use, what mutation fits this scenario, missed action which mutation, wrong value which mutation, extra action which mutation, forgot value which mutation, user ignores check which mutation, user misses a message and does not reply which mutation is that, misses message does not reply mutation, how to choose a mutation, selection guide]
     shortAnswer: |
-      Pick the mutation by the human behavior you want to model. Skip is missed behavior, Add is extra behavior, Replace is wrong-but-shaped behavior, and Neglect is missing internal validation.
+      Pick the mutation by the human behavior you want to model. Skip is missed behavior, Add is extra behavior, Replace is wrong-but-shaped behavior, Neglect is missing internal validation, and Forget is memory or usable-knowledge loss.
     definition: |
       Mutation selection maps a plausible human or implementation deviation to the mutation family that represents it most directly.
     useWhen:
@@ -159,6 +159,7 @@ entries:
       - Use Add when a user might perform an extra send or duplicate an existing send.
       - Use Replace when a user might send a submessage or another same-type value.
       - Use Neglect when a user still receives data but fails to check it.
+      - Use Forget when a user still has a ceremony flow but cannot use a remembered value later.
       - Use Add plus Replace when the scenario has an extra action carrying a replaced value.
     avoidWhen:
       - Do not use Replace for a totally different action. Model that as Skip plus Add.
@@ -168,7 +169,7 @@ entries:
   - id: paper.skip-mutation
     title: Skip mutation
     category: mutation
-    terms: [skip mutation, Skip-Send, Skip-Receive, skip variants, five skip variants, what are the skip variants, skip S, skip R, skip SR, skip RS, skip RSR]
+    terms: [skip mutation, Skip-Send, Skip-Receive, skip variants, five skip variants, what are the skip variants, skip S, skip R, skip SR, skip RS, skip RSR, what is skip, explain skip mutation, user misses a step, user omits action, missing send receive, skipped communication, skipped ceremony step, forgot to do step]
     definition: |
       Skip removes one or more actions from the human subtrace and then mutates later actions if needed so the trace remains meaningful.
     why: |
@@ -192,7 +193,7 @@ entries:
   - id: paper.skip-s
     title: Skip-Send
     category: mutation
-    terms: [Skip-Send, skip send, skip send mutation, skip S, mu skip S, skip a send action]
+    terms: [Skip-Send, skip send, skip send mutation, skip S, mu skip S, skip a send action, Skip Send, user does not send, human fails to send, omitted outgoing message, missed send, no send action]
     definition: |
       Skip-Send removes a human send action. The human reaches a later landing transition without sending the message that the original role expected.
     why: |
@@ -225,7 +226,7 @@ entries:
   - id: paper.skip-sr
     title: Skip-Send-Receive
     category: mutation
-    terms: [Skip-Send-Receive, skip send receive, skip send receive skip, skip SR, mu skip SR]
+    terms: [Skip-Send-Receive, skip send receive, skip send receive skip, skip SR, mu skip SR, Skip Send Receive, skip send then receive, human does not send and does not receive reply, omit outgoing and incoming response, missed send and response, send receive skipped]
     definition: |
       Skip-Send-Receive skips a human send action and the later receive action that would normally depend on the skipped send.
     why: |
@@ -243,7 +244,7 @@ entries:
   - id: paper.skip-r
     title: Skip-Receive
     category: mutation
-    terms: [Skip-Receive, skip receive, skip receive mutation, skip R, mu skip R, ignore response]
+    terms: [Skip-Receive, skip receive, skip receive mutation, skip R, mu skip R, ignore response, Skip Receive, user does not receive, human misses incoming message, ignored confirmation, missed receive, no receive action, does not read response]
     definition: |
       Skip-Receive removes a human receive action. The human continues without incorporating the message that should have been received.
     why: |
@@ -260,7 +261,7 @@ entries:
   - id: paper.skip-rs
     title: Skip-Receive-Send
     category: mutation
-    terms: [Skip-Receive-Send, skip receive send, skip receive send skip, skip RS, mu skip RS]
+    terms: [Skip-Receive-Send, skip receive send, skip receive send skip, skip RS, mu skip RS, Skip Receive Send, Skip Recieve Send, skip recieve send, skip rcv send, receive send skipped, user misses message and does not reply, no receive then no send, missed incoming and outgoing response]
     definition: |
       Skip-Receive-Send skips a human receive action and the send action that would normally follow it.
     why: |
@@ -276,7 +277,7 @@ entries:
   - id: paper.skip-rsr
     title: Skip-Receive-Send-Receive
     category: mutation
-    terms: [Skip-Receive-Send-Receive, skip receive send receive, skip receive send receive skip, skip RSR, mu skip RSR]
+    terms: [Skip-Receive-Send-Receive, skip receive send receive, skip receive send receive skip, skip RSR, mu skip RSR, Skip Receive Send Receive, Skip Recieve Send Recieve, skip rcv send rcv, missed receive send receive chain, user misses incoming outgoing incoming sequence]
     definition: |
       Skip-Receive-Send-Receive skips a receive, the following send, and a later receive. It represents a larger omitted exchange.
     why: |
@@ -294,7 +295,7 @@ entries:
   - id: paper.add-mutation
     title: Add mutation
     category: mutation
-    terms: [add mutation, Add-Mutation, add new send, extra send, duplicate send, send any known message, add variants]
+    terms: [add mutation, Add-Mutation, add new send, extra send, duplicate send, send any known message, add variants, what is Add, explain Add mutation, user sends extra message, human sends duplicate, extra communication, repeated send, add another send]
     definition: |
       Add runs the original trace in parallel with a mutated trace where the human adds a send action or duplicates an existing send action.
     why: |
@@ -362,7 +363,7 @@ entries:
   - id: paper.replace-mutation
     title: Replace mutation
     category: mutation
-    terms: [replace mutation, Replace-Sub-Messages, Replace-Type, replace variants, substitute message, replace submessage, replace same type]
+    terms: [replace mutation, Replace-Sub-Messages, Replace-Type, replace variants, substitute message, replace submessage, replace same type, what is Replace, explain Replace mutation, user sends wrong value, human sends similar value, wrong but same shape, wrong submessage, substitute sent message]
     definition: |
       Replace changes a human send action so the human sends another message in place of the specified one.
     why: |
@@ -383,7 +384,7 @@ entries:
   - id: paper.replace-submessages
     title: Replace Sub-Messages
     category: mutation
-    terms: [Replace-Sub-Messages, replace sub messages, replace submessages, replace submessage, submessage replacement, replace with submessage]
+    terms: [Replace-Sub-Messages, replace sub messages, replace submessages, replace submessage, submessage replacement, replace with submessage, Replace Sub Messages, Replace Submessages, sends only part of message, partial message replacement, missing part of structured message, wrong sub part]
     definition: |
       Replace Sub-Messages replaces the sent message with a format-preserving submessage of the original message.
     why: |
@@ -400,7 +401,7 @@ entries:
   - id: paper.replace-type
     title: Replace Type
     category: mutation
-    terms: [Replace-Type, replace type, type replacement, same type replacement, replace with same type]
+    terms: [Replace-Type, replace type, type replacement, same type replacement, replace with same type, Replace Type, wrong value same type, same type different value, card with card, password with password, user confuses same type value]
     definition: |
       Replace Type replaces a sent value with another value from the human's current knowledge that has the same modeled type.
     why: |
@@ -430,7 +431,7 @@ entries:
   - id: paper.neglect-mutation
     title: Neglect mutation
     category: mutation
-    terms: [neglect mutation, Neglect-Mutation, skipped check, remove role action, equality action removed, internal behavior]
+    terms: [neglect mutation, Neglect-Mutation, skipped check, remove role action, equality action removed, internal behavior, what is Neglect, explain Neglect mutation, user does not check, human ignores validation, forgot to verify, skipped equality check, superficial check]
     definition: |
       Neglect removes one or more internal role-actions from the human's transition, such as checks over received data.
     why: |
@@ -449,7 +450,7 @@ entries:
       - How is Neglect different from Forget?
 
   - id: paper.neglect-vs-forget
-    title: Neglect vs Forget in the paper
+    title: Neglect vs Forget in the JCS paper
     category: mutation
     terms: [Neglect vs Forget, difference between neglect and forget in paper, forgetting fifth mutation, future forget mutation]
     definition: |
@@ -463,7 +464,7 @@ entries:
   - id: paper.add-replace
     title: Add plus Replace
     category: mutation
-    terms: [add and replace, add replace, add plus replace, add&replace, combine add replace, True-Replace]
+    terms: [add and replace, add replace, add plus replace, add&replace, combine add replace, True-Replace, Add Replace combination, combined mutation, extra send with wrong value, addition carrying replacement, add mutation with replace]
     definition: |
       Add plus Replace is a composed mutation where an extra send is added and the added or duplicated message is replaced with another compatible value.
     why: |
@@ -478,17 +479,17 @@ entries:
   - id: repo.forget-mutation
     title: Forget mutation
     category: mutation
-    terms: [Forget-Mutation, forget mutation, forget variant, forgotten value, knowledge loss mutation]
+    terms: [Forget-Mutation, forget mutation, forget variant, forgotten value, knowledge loss mutation, what is Forget, explain Forget mutation, human forgets value, memory lapse, forgot password, value no longer usable, knowledge unavailable]
     definition: |
-      Forget is the repo-specific mutation that removes selected knowledge from an agent state and checks whether later sends or checks can still be derived from the remaining knowledge.
+      Forget is a knowledge-level mutation for modeling human memory loss. It does not directly remove a send or receive action; it keeps the trace action in place, but stops the human from using selected remembered messages in later derivations unless they are learned again.
     why: |
       It models state loss, such as a user or process losing a token, nonce, password component, or remembered value mid-ceremony.
     details:
-      - The JCS paper discusses forgetting as future work, so this is an implementation extension rather than one of the four formal paper mutations.
-      - The forget set identifies values that should be treated as lost.
-      - If a forgotten value blocks a later derivation, the strategy may need a replacement, skip, or neglect-style consequence.
-      - "It is different from Neglect: Forget removes knowledge; Neglect removes use or validation of knowledge."
-    related: [mutation.forget, paper.neglect-vs-forget, mutation.forget-vs-neglect]
+      - The older JCS paper treated forgetting as future work; the newer X-Men 2.0 paper formalizes it.
+      - The forget set identifies values that should be treated as unavailable even though monotonic knowledge is preserved.
+      - If a forgotten value blocks a later derivation, Forget can trigger Neglect, Replace, or Skip as a consequence.
+      - "It is different from Neglect: Forget affects what the human can derive; Neglect removes an internal validation action."
+    related: [mutation.forget, paper.forget.definition, mutation.forget-vs-neglect]
 
   - id: paper.message-algebra
     title: Message algebra in the paper

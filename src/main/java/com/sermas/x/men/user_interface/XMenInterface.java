@@ -91,6 +91,7 @@ public class XMenInterface extends Application {
   /** Design size — used as a minimum before maximize on the chosen monitor. */
   private static final double MAIN_WIDTH = 1280;
   private static final double MAIN_HEIGHT = 800;
+  private static final double SPLASH_FALLBACK_LOGO_WIDTH = 400;
 
   // Keep a reference to the root StackPane so we can show a glass overlay.
   private StackPane mainRoot;
@@ -121,7 +122,13 @@ public class XMenInterface extends Application {
     MediaPlayer splashPlayer = createSplashScreen(splashRoot, stage);
     Scene splashScene = new Scene(splashRoot, screen.getWidth(), screen.getHeight());
     stage.setScene(splashScene);
-    stage.setTitle("X-Men 3.0");
+    stage.setTitle("X-Men 2.0");
+    // Lock the stage to the layout's true minimum so the body HBox
+    // (heroLeft minWidth 420 + controlsHost minWidth 640 = 1060) can
+    // never be squeezed into an overlapping state. Above this floor
+    // the existing HBox.setHgrow(_, ALWAYS) lets both columns grow.
+    stage.setMinWidth(1100);
+    stage.setMinHeight(720);
     stage.setX(screen.getMinX());
     stage.setY(screen.getMinY());
     stage.setWidth(screen.getWidth());
@@ -250,16 +257,21 @@ public class XMenInterface extends Application {
   private MediaPlayer createSplashScreen(StackPane splashRoot, Stage stage) {
     MediaPlayer splashPlayer = null;
     MediaView splashMediaView = new MediaView();
+    ImageView fallbackImage = createSplashFallbackLogo();
+    if (fallbackImage != null) {
+      splashRoot.getChildren().add(fallbackImage);
+    }
     boolean videoLoaded = false;
 
     try {
-      InputStream videoStream = getClass().getResourceAsStream("/" + SPLASH_VIDEO_RESOURCE);
-      if (videoStream == null) {
-        throw new Exception("Splash video resource not found: " + SPLASH_VIDEO_RESOURCE);
-      }
       File tempVideoFile = File.createTempFile("splash", ".mp4");
       tempVideoFile.deleteOnExit();
-      Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      try (InputStream videoStream = getClass().getResourceAsStream("/" + SPLASH_VIDEO_RESOURCE)) {
+        if (videoStream == null) {
+          throw new Exception("Splash video resource not found: " + SPLASH_VIDEO_RESOURCE);
+        }
+        Files.copy(videoStream, tempVideoFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      }
 
       Media splashMedia = new Media(tempVideoFile.toURI().toString());
       splashPlayer = new MediaPlayer(splashMedia);
@@ -287,7 +299,23 @@ public class XMenInterface extends Application {
         splashMediaView.setFitWidth(vw * scale);
         splashMediaView.setFitHeight(vh * scale);
       };
-      mp.setOnReady(applyCover);
+      mp.setOnReady(
+          () -> {
+            applyCover.run();
+            mp.play();
+          });
+      mp.statusProperty()
+          .addListener(
+              (obs, oldStatus, status) -> {
+                if (fallbackImage != null) {
+                  fallbackImage.setVisible(status != MediaPlayer.Status.PLAYING);
+                }
+              });
+      mp.setOnStalled(
+          () -> {
+            if (fallbackImage != null) fallbackImage.setVisible(true);
+            mp.play();
+          });
       splashRoot.widthProperty().addListener((o, a, b) -> applyCover.run());
       splashRoot.heightProperty().addListener((o, a, b) -> applyCover.run());
       applyCover.run();
@@ -302,7 +330,7 @@ public class XMenInterface extends Application {
         }
       });
 
-      splashRoot.getChildren().add(splashMediaView);
+      splashRoot.getChildren().add(0, splashMediaView);
       videoLoaded = true;
       log.info("Splash video '{}' loaded; playing at {}x{} with audio.",
           SPLASH_VIDEO_RESOURCE, MAIN_WIDTH, MAIN_HEIGHT);
@@ -312,12 +340,8 @@ public class XMenInterface extends Application {
     }
 
     if (!videoLoaded) {
-      InputStream imgStream = getClass().getResourceAsStream("/images/splash_fallback_logo.png");
-      if (imgStream != null) {
-        ImageView fallbackImage = new ImageView(new Image(imgStream));
-        fallbackImage.setFitWidth(400);
-        fallbackImage.setPreserveRatio(true);
-        splashRoot.getChildren().add(fallbackImage);
+      if (fallbackImage != null) {
+        fallbackImage.setVisible(true);
         log.info("Loaded fallback splash image.");
       } else {
         Label label = new Label("Splash Video not available");
@@ -327,6 +351,21 @@ public class XMenInterface extends Application {
     }
     splashRoot.setAlignment(Pos.CENTER);
     return splashPlayer;
+  }
+
+  private ImageView createSplashFallbackLogo() {
+    try (InputStream imgStream = getClass().getResourceAsStream("/images/splash_fallback_logo.png")) {
+      if (imgStream == null) return null;
+      ImageView fallbackImage = new ImageView(new Image(imgStream));
+      fallbackImage.setFitWidth(SPLASH_FALLBACK_LOGO_WIDTH);
+      fallbackImage.setPreserveRatio(true);
+      fallbackImage.setSmooth(true);
+      fallbackImage.setCache(true);
+      return fallbackImage;
+    } catch (Exception e) {
+      log.warn("Splash fallback image unavailable: {}", e.getMessage());
+      return null;
+    }
   }
 
   private Scene createMainScene(Stage stage) {
@@ -380,15 +419,35 @@ public class XMenInterface extends Application {
     panelFooter.getStyleClass().add("x-control-footer");
 
     VBox panelContent = new VBox(10, panelHeader, checkboxPanel);
-    panelContent.setTranslateY(MAIN_HEIGHT * 0.05);
 
-    VBox panelWrap = new VBox(8, panelContent, panelFooter);
-    panelWrap.getStyleClass().add("x-control-panel");
-    panelWrap.setMaxWidth(Double.MAX_VALUE);
-    panelWrap.setPrefHeight(MAIN_HEIGHT * 0.82);
-    panelWrap.setMaxHeight(MAIN_HEIGHT * 0.82);
+    // Smart resize: when the panel can't fit its content, fall back to a
+    // scrollable view rather than letting the grid overflow into the hero.
+    ScrollPane panelScroll = new ScrollPane(panelContent);
+    panelScroll.setFitToWidth(true);
+    panelScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+    panelScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+    panelScroll.setPannable(true);
+    panelScroll.setFocusTraversable(false);
+    panelScroll.setStyle(
+        "-fx-background: transparent; -fx-background-color: transparent; -fx-padding: 0;");
+    VBox.setVgrow(panelScroll, Priority.ALWAYS);
     VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
     VBox.setVgrow(panelContent, Priority.ALWAYS);
+
+    VBox panelWrap = new VBox(8, panelScroll, panelFooter);
+    panelWrap.getStyleClass().add("x-control-panel");
+    panelWrap.setMaxWidth(Double.MAX_VALUE);
+    // Bind to the stage so the panel always honours the available height
+    // (instead of the original design-time 82% of 800px which overflowed on
+    // smaller windows and shrank on taller ones).
+    stage.heightProperty().addListener((obs, was, now) -> {
+      double h = Math.max(360, now.doubleValue() * 0.82);
+      panelWrap.setPrefHeight(h);
+      panelWrap.setMaxHeight(h);
+    });
+    double initialH = Math.max(360, stage.getHeight() > 0 ? stage.getHeight() * 0.82 : MAIN_HEIGHT * 0.82);
+    panelWrap.setPrefHeight(initialH);
+    panelWrap.setMaxHeight(initialH);
     built.controlsHost().getChildren().add(panelWrap);
 
     Node heroStart = built.root().lookup("#heroStart");

@@ -1,0 +1,1311 @@
+entries:
+  - id: paper.forget.xmen2
+    title: X-Men 2.0 Forget paper
+    category: paper
+    terms: [X-Men 2.0 paper, Forget paper, formal modeling forget mutation, main 3 tex, bank login forget paper]
+    shortAnswer: |
+      The new paper formalizes Forget as a primitive X-Men mutation for human memory lapses and implements it in X-Men 2.0.
+    definition: |
+      The paper extends mutation-based security ceremony analysis with a new Forget mutation. Forget models cases where a human either fails to store newly received information or can no longer use information already known.
+    details:
+      - The work keeps humans as first-class ceremony participants instead of treating them as perfect protocol agents.
+      - Existing mutations are Skip, Add, Replace, Neglect, and Disorder; Forget fills the gap for memory loss.
+      - Forget is implemented in X-Men 2.0, a Java-based architecture that generates mutated models for Tamarin.
+      - The paper validates the mutation on a Bank Login ceremony and finds an authentication failure caused by forgetting the correct password.
+    why: |
+      Questions about forgetting, blocked derivations, Bank Login, and X-Men 2.0 should use this source because it is more specific than the older mutation catalog.
+    related: [paper.forget.definition, paper.bank-login.attack, paper.xmen2.overview]
+    followups:
+      - What is the Forget mutation?
+      - What is the Bank Login forget attack?
+      - How does Forget trigger Skip or Replace?
+
+  - id: paper.forget.definition
+    title: Forget mutation definition
+    category: mutation
+    terms: [Forget mutation definition, define Forget, formal Forget, forgetting human knowledge, memory lapse mutation]
+    definition: |
+      Forget is a primitive mutation that changes the human's usable knowledge. It does not directly remove a send or receive action; instead, it prevents selected information from being used in later message derivations.
+    details:
+      - Forget newly received information means the receive still happens, but the received message is not added to the human's knowledge.
+      - Forget prior knowledge means the message remains in monotonic knowledge, but is added to a separate forget set.
+      - A forgotten message can become usable again if the human explicitly re-receives it or derives it through new non-forgotten information.
+      - The mutation targets human memory lapses, not deliberate adversarial behavior.
+    why: |
+      This distinction prevents the bot from confusing Forget with Skip-Receive. Skip removes the receive event; Forget preserves the event but changes what the human can remember or derive afterward.
+    related: [paper.forget.newly-received, paper.forget.prior-knowledge, paper.forget-vs-skip-receive]
+    followups:
+      - What is the forget set?
+      - How is Forget different from Skip Receive?
+      - How does Forget trigger other mutations?
+
+  - id: paper.forget.forget-set
+    title: Forget set
+    category: formal-model
+    terms: [forget set, Forget_H, forgotten set, usable knowledge, monotonic knowledge with forget set]
+    definition: |
+      The forget set records messages that the human should not be allowed to use as derivation hypotheses, while the ordinary knowledge set remains monotonic.
+    details:
+      - Tamarin-style knowledge is usually monotonic, so simply deleting facts would not fit the execution model well.
+      - "The paper therefore keeps the knowledge set and adds a side condition: derivations must avoid blocked forgotten hypotheses."
+      - The notation `K(H,i) |-_{Forget_H^i} m` means that human H can derive message m at step i without relying on forbidden forgotten information.
+      - If a forgotten value is learned again later, it can be removed from the forget set.
+    why: |
+      The forget set is the reason Forget can model memory loss without breaking the rest of the ceremony semantics.
+    related: [paper.forget.blocked-derivations, paper.forget.prior-knowledge, paper.forget.derivable]
+
+  - id: paper.forget.newly-received
+    title: Forget newly received information
+    category: mutation
+    terms: [forget newly received message, forget received information, forget to add message, receive but forget, Forget Receive]
+    definition: |
+      Forget newly received information means the human receives a message but fails to store it in knowledge for later use.
+    details:
+      - The receive action stays in the trace.
+      - The human's next knowledge state is not extended with the received message.
+      - The forget set does not need to grow because the message was never added as usable knowledge.
+      - Later sends may fail, be replaced, or be skipped if they depended on the received message.
+    why: |
+      This is not the same as Skip-Receive. Skip-Receive says the human did not receive the message; Forget says the human received it but cannot use it afterward.
+    related: [paper.forget.definition, paper.forget-vs-skip-receive, paper.forget.triggers]
+
+  - id: paper.forget.prior-knowledge
+    title: Forget prior knowledge
+    category: mutation
+    terms: [forget prior knowledge, forget old message, forget remembered value, forget password, forget existing knowledge]
+    definition: |
+      Forget prior knowledge means the human already knew a message, but at a later step that message is marked unusable by adding it to the forget set.
+    details:
+      - The ordinary knowledge set still contains the message because knowledge is monotonic.
+      - The forget set blocks derivations that depend on the forgotten message.
+      - This captures memory lapses such as forgetting a password, nonce, token, identity, or key component.
+      - If the same message is explicitly received again, it can become usable again.
+    why: |
+      This is the case that older Skip, Add, Replace, Neglect, and Disorder mutations cannot express directly.
+    related: [paper.forget.forget-set, paper.bank-login.attack, paper.forget.blocked-derivations]
+
+  - id: paper.forget.blocked-derivations
+    title: Blocked derivations under Forget
+    category: formal-model
+    terms: [blocked derivation, blocked hypotheses, derivation blocked by forget, forgetting derivability, Dolev Yao derivation under forget]
+    definition: |
+      A derivation is blocked when it needs a hypothesis that the human has forgotten, or a hypothesis that is considered derived from forgotten material under the selected blocking policy.
+    details:
+      - Case 1 blocks only hypotheses explicitly present in the forget set.
+      - Case 2 also blocks hypotheses derivable from forgotten values using pair construction and decomposition.
+      - Case 3 blocks hypotheses derivable from forgotten values using the full Dolev-Yao rule set.
+      - A send is allowed only if at least one derivation of its message avoids blocked hypotheses.
+    why: |
+      This prevents nonsense answers like "the user forgot m but can still freely use m to build the next message."
+    related: [paper.forget.case1, paper.forget.case2, paper.forget.case3]
+    followups:
+      - What is Case 1 blocking?
+      - What is Case 2 blocking?
+      - What is Case 3 blocking?
+
+  - id: paper.forget.case1
+    title: Forget blocking Case 1
+    category: formal-model
+    terms: [Forget Case 1, blocked case 1, explicit forget set only, direct forgotten hypothesis]
+    definition: |
+      Case 1 blocks only a direct hypothesis that appears explicitly in the forget set.
+    details:
+      - If the exact forgotten message is required, the derivation is blocked.
+      - If the same result can be derived from a different non-forgotten hypothesis, the derivation may still be allowed.
+      - The Bank Login case uses Case 1 because usernames and passwords are modeled as separate values.
+    why: |
+      Case 1 is the least aggressive policy. It is useful when forgetting a value should not automatically mean forgetting every component or consequence related to it.
+    related: [paper.forget.blocked-derivations, paper.bank-login.attack]
+
+  - id: paper.forget.case2
+    title: Forget blocking Case 2
+    category: formal-model
+    terms: [Forget Case 2, blocked case 2, pair decomposition blocked, forget pair components]
+    definition: |
+      Case 2 blocks direct forgotten hypotheses and values derivable from them through pairing and projection rules.
+    details:
+      - If the forgotten message is a pair, its components can also become blocked.
+      - If the components are separately known outside the forgotten pair, those separate hypotheses can still matter depending on the derivation.
+      - Case 2 is useful when a user forgets a bundled item and should not automatically remember fields only seen through that bundle.
+    why: |
+      It is stricter than Case 1 but narrower than full Dolev-Yao closure.
+    related: [paper.forget.blocked-derivations, paper.forget.case3]
+
+  - id: paper.forget.case3
+    title: Forget blocking Case 3
+    category: formal-model
+    terms: [Forget Case 3, blocked case 3, full Dolev Yao blocking, encrypted forgotten derivation]
+    definition: |
+      Case 3 blocks direct forgotten hypotheses and any hypotheses derivable from forgotten material using the full Dolev-Yao inference system.
+    details:
+      - This is the strictest blocking policy.
+      - It can block values extracted from encryption, signatures, pairs, or other constructors if the extraction depends on forgotten information.
+      - It is appropriate when forgetting a source should also invalidate everything the human could reconstruct only from that source.
+    why: |
+      Case 3 gives the strongest model of memory loss, but it may over-block for ceremonies where humans remember derived values independently.
+    related: [paper.forget.blocked-derivations, paper.forget.derivable]
+
+  - id: paper.forget.derivable
+    title: Derivable under forgetting
+    category: formal-model
+    terms: [derivable under Forget, can derive after forgetting, derivation still allowed, forgotten message derived again]
+    definition: |
+      A message is still derivable under Forget if there exists at least one derivation that does not use blocked forgotten hypotheses.
+    details:
+      - Forget blocks dependence on forgotten information, not every message with the same surface value.
+      - If a value is directly known through an independent hypothesis, it may remain usable even if another source for it was forgotten.
+      - If all derivations require blocked hypotheses, the original send cannot be produced.
+      - The algorithm then tries a replacement and falls back to Skip if no valid replacement exists.
+    why: |
+      This is the core smart behavior: the assistant should explain dependency-sensitive derivability, not just say "forgotten means gone."
+    related: [paper.forget.blocked-derivations, paper.forget.triggers]
+
+  - id: paper.forget.algorithm
+    title: Forget mutation algorithm
+    category: mutation
+    terms: [Forget algorithm, algorithm for Forget mutation, how Forget mutation works, Forget pseudo code]
+    definition: |
+      The Forget algorithm updates usable knowledge, checks whether internal actions and outgoing messages still work, and triggers another mutation only when forgetting makes the original transition impossible.
+    steps:
+      - Inspect the human transition with state, receive, internal actions, and send.
+      - If the forgotten message is exactly the received message, do not add it to the next knowledge state.
+      - Otherwise, add the forgotten message to the forget set while preserving monotonic knowledge.
+      - If the forgotten information is needed for an internal action, trigger Neglect for that action.
+      - If the outgoing message has a non-blocked derivation, keep the original send.
+      - If no valid derivation exists, try format- and label-preserving replacements from usable knowledge.
+      - If no replacement can be generated, trigger Skip for the blocked send.
+    why: |
+      Forget is primitive, but its consequences may appear as Neglect, Replace, or Skip depending on what the forgotten message was needed for.
+    related: [paper.forget.triggers, paper.forget.matching-propagation]
+    followups:
+      - When does Forget trigger Neglect?
+      - When does Forget trigger Replace?
+      - When does Forget trigger Skip?
+
+  - id: paper.forget.triggers
+    title: Forget-triggered mutations
+    category: mutation
+    terms: [Forget triggers, Forget trigger Neglect Replace Skip, Forget consequence, Forget induced mutation]
+    definition: |
+      Forget can trigger another mutation when the lost usable knowledge prevents the human transition from executing as originally written.
+    details:
+      - It triggers Neglect when the forgotten value is needed for an internal action or check.
+      - It triggers Replace when the original outgoing message cannot be derived but a compatible substitute can be built.
+      - It triggers Skip when the outgoing message cannot be derived and no compatible substitute exists.
+      - If the original message remains derivable through a non-blocked path, no follow-on mutation is needed.
+    why: |
+      This is why Forget should not be answered as a keyword alias for Skip. Skip may be a consequence of Forget, but it is not the definition of Forget.
+    related: [paper.forget.algorithm, paper.forget.derivable]
+
+  - id: paper.forget.matching-propagation
+    title: Forget matching and propagation
+    category: mutation
+    terms: [Forget matching, Forget propagation, matching Forget mutation, propagate forgotten information]
+    definition: |
+      Forget itself changes only the human's usable knowledge, but any triggered send replacement or skipped send must be matched and propagated through the other roles.
+    details:
+      - A mutated send must be matched by a corresponding mutated receive.
+      - A skipped send means the matching receive is removed.
+      - A Neglect consequence is local and normally needs no matching mutation.
+      - Forgotten information remains unusable in later human steps unless it is explicitly learned again.
+    why: |
+      Matching and propagation keep the mutated ceremony executable instead of leaving other agents waiting for messages that no longer exist.
+    related: [paper.matching-mutation, paper.forget.triggers, paper.xmen2.overview]
+
+  - id: paper.forget-vs-skip-receive
+    title: Forget vs Skip Receive
+    category: mutation
+    terms: [Forget vs Skip Receive, difference Forget Skip Receive, forget receive vs skip receive, received but forgot]
+    definition: |
+      Skip-Receive removes the receive action. Forget newly received information keeps the receive action but prevents the received message from entering usable knowledge.
+    details:
+      - In Skip-Receive, the human never obtains the message in that trace.
+      - In Forget, the human may have seen the message but cannot use it later.
+      - Both can affect later sends, but they represent different human causes and produce different trace evidence.
+      - Forget prior knowledge has no Skip equivalent because no receive action is being removed.
+    why: |
+      Use this distinction when a query contains both words: Forget is about memory; Skip is about omitted actions.
+    related: [paper.skip-r, paper.forget.newly-received, paper.forget.prior-knowledge]
+
+  - id: paper.bank-login.overview
+    title: Bank Login ceremony
+    category: case-study
+    terms: [Bank Login ceremony, bank login case study, login ceremony, bank authentication ceremony]
+    definition: |
+      The Bank Login ceremony is an NSPK-like login example where a human and a bank establish a session using nonces and then the human sends credentials encrypted under the session key.
+    details:
+      - The human first sends an encrypted tuple containing the human name, bank name, and a fresh human nonce.
+      - The bank answers with encrypted nonces.
+      - The human derives a session key from the nonces and sends username and password encrypted under that key.
+      - The case study uses two banks, one compromised bank, and different passwords for the same human.
+    why: |
+      The case study shows a concrete security failure that only appears when a human can forget the correct credential during a cross-bank interaction.
+    related: [paper.bank-login.attack, paper.bank-login.goals, paper.bank-login.model]
+    followups:
+      - What is the Bank Login forget attack?
+      - What are the Bank Login security goals?
+      - How is the Bank Login modeled in Tamarin?
+
+  - id: paper.bank-login.attack
+    title: Bank Login forget attack
+    category: case-study
+    terms: [Bank Login attack, Forget attack, forget Bank1 password, Bank2 password attack, compromised Bank1 attack]
+    definition: |
+      The attack occurs when the human starts a session intended for Bank1, but an attacker forwards Bank2's challenge. The human forgets the Bank1 password and sends the Bank2 password, so Bank2 accepts a login the human did not intend.
+    details:
+      - The human has accounts at Bank1 and Bank2 with the same username and different passwords.
+      - Bank1 is compromised, so the attacker can abuse that interaction context.
+      - The attacker injects or forwards a Bank2 challenge into the human's Bank1 flow.
+      - Forget causes the human to lose the intended Bank1 password and select the compatible Bank2 password.
+      - Bank2 sees a valid encrypted credential message and raises a successful login event.
+    why: |
+      This falsifies the authentication goal that Bank2 should accept only when the human intended to authenticate to Bank2.
+    related: [paper.bank-login.goals, paper.forget.prior-knowledge, paper.forget.case1]
+
+  - id: paper.bank-login.goals
+    title: Bank Login security goals
+    category: case-study
+    terms: [Bank Login goals, SG1, SG2, Human intends Bank2, Password2 confidential, LoginOK]
+    definition: |
+      The Bank Login model checks an authentication goal and a password-confidentiality goal.
+    details:
+      - SG1 says that if Bank2 reports a successful login, the human must previously have intended to log in to Bank2.
+      - SG2 says the Bank2 password should remain confidential from the attacker.
+      - Tamarin falsifies SG1 under the Forget mutation with the cross-bank attack.
+      - Tamarin verifies SG2 for the Bank2 password in the modeled attack because the credential stays protected by the session key.
+    why: |
+      The attack is an authentication failure, not a password-leak result for the Bank2 password.
+    related: [paper.bank-login.attack, tamarin.lemma, tamarin.counterexample]
+
+  - id: paper.bank-login.model
+    title: Bank Login Tamarin model
+    category: case-study
+    terms: [Bank Login Tamarin model, appendix bank login model, human bank rules, compromised bank rules, login model rules]
+    definition: |
+      The appendix gives a Tamarin model with setup rules, human and bank role rules, channel rules, compromised-bank rules, and lemmas for authentication and confidentiality.
+    details:
+      - The model declares human, bank, username, password, nonce, and key material as structured facts.
+      - Setup assigns the human credentials for two banks.
+      - Channel rules model sending and receiving between human, bank, and attacker-controlled paths.
+      - Compromised-bank rules let the attacker obtain information associated with the compromised bank.
+      - Action facts such as intent, password attempt, and login success support the security lemmas.
+    why: |
+      The model matters because the Forget attack depends on the exact role facts and trace events, not on a loose natural-language story.
+    related: [paper.bank-login.goals, paper.xmen2.overview, tamarin.rules]
+
+  - id: paper.xmen2.overview
+    title: X-Men 2.0
+    category: xmen
+    terms: [X-Men 2.0, XMen 2.0, X-Men 2 architecture, automated analysis Forget, Java X-Men tool]
+    definition: |
+      X-Men 2.0 is the extended Java-based implementation of the mutation approach. It supports modular mutation generation, including the new Forget mutation, and emits models for Tamarin analysis.
+    details:
+      - The architecture is designed so new mutation strategies can be added without rewriting the whole tool.
+      - It remains Tamarin-oriented, but the paper notes that the high-level approach is tool-agnostic.
+      - The implementation automates generation of mutated formal models and uses Tamarin to prove or falsify lemmas.
+      - The paper identifies derivation generation as the key machinery needed for Forget-triggered replacements.
+    why: |
+      X-Men 2.0 is the implementation context for the new Forget paper and should be preferred over older answers when the user asks about local tool behavior.
+    related: [paper.forget.algorithm, paper.bank-login.model, xmen.pipeline]
+
+  - id: paper.mutation.relationships-xmen2
+    title: Mutation relationships in X-Men 2.0
+    category: mutation
+    terms: [mutation relationships, primitive mutation, derivable mutation, Forget relationship, Skip Add Replace Neglect Disorder Forget]
+    definition: |
+      The paper classifies mutations by what they change and whether they are primitive or derivable from other mutations.
+    details:
+      - Skip changes send and receive actions by removing them; it is primitive.
+      - Add inserts or duplicates sends; it is primitive.
+      - Forget changes usable knowledge; it is primitive.
+      - Replace changes a sent or received message and can be derived as Skip plus Add.
+      - Neglect removes an internal action or check and is derivable as skipping an internal action.
+      - Disorder changes order and can be represented through Skip plus Add effects.
+    why: |
+      This prevents the assistant from treating every mutation as the same kind of edit. Forget is primitive because existing action-level mutations cannot express prior knowledge loss.
+    related: [paper.forget.definition, paper.skip-mutation, paper.add-mutation, paper.replace-mutation, paper.neglect-mutation]
+
+  - id: paper.forget.related-work
+    title: Forget related work
+    category: paper
+    terms: [Forget related work, availability sets, non monotonic knowledge, user memory studies, Fortis UPPAAL Bella Basin]
+    definition: |
+      The paper positions Forget against related approaches for ceremony mutation, human error modeling, epistemic reasoning, and non-monotonic knowledge.
+    details:
+      - Fortis-style approaches generate deviations and repairs, while X-Men focuses on systematic mutation-based analysis.
+      - UPPAAL and other formal methods have been used for human-in-the-loop procedures.
+      - Prior human-error rules and epistemic models capture related ceremony risks from different angles.
+      - Availability-set approaches can model loss of knowledge but may require auxiliary losing ceremonies and become expensive in Tamarin.
+      - Usable-security studies about password and memory failures motivate treating forgetting as a formal mutation.
+    why: |
+      The paper chooses a forget set because it keeps Tamarin-style monotonic knowledge practical while still modeling memory loss.
+    related: [paper.forget.forget-set, paper.forget.xmen2]
+
+  - id: paper.forget.limitations-future
+    title: Forget limitations and future work
+    category: paper
+    terms: [Forget limitations, future work Forget, larger case studies, X-Men future work]
+    definition: |
+      The paper concludes that Forget is useful and implementable, but it should be evaluated on larger ceremonies and additional mutation families.
+    details:
+      - The Bank Login ceremony demonstrates the feasibility and security impact of Forget.
+      - Larger real-world examples are needed to study scalability and analyst workload.
+      - The relationship table suggests more derived or primitive mutations may be worth formalizing.
+      - Future work includes improving automated derivation and replacement generation.
+    why: |
+      This sets the correct expectation: the Forget model is principled, but not the final word on every possible human memory behavior.
+    related: [paper.forget.xmen2, paper.xmen2.overview, paper.mutation.relationships-xmen2]
+
+  - id: paper.forget.paper-title
+    title: Formal Modeling and Analysis of Human Memory Lapses in Security Ceremonies
+    category: paper
+    terms: [paper title, human memory lapses paper, formal modeling analysis human memory lapses, new research paper title]
+    definition: |
+      The supplied paper is titled "Formal Modeling and Analysis of Human Memory Lapses in Security Ceremonies." Its central idea is that memory lapses should be modeled directly as a human mutation in security ceremony analysis.
+    details:
+      - The target domain is security ceremonies, where humans participate in the protocol-relevant interaction.
+      - The specific human deviation is forgetting information during the ceremony.
+      - The technical contribution is the Forget mutation and its implementation in X-Men 2.0.
+      - The validating example is a Bank Login ceremony analyzed with Tamarin.
+    why: |
+      This entry anchors questions that ask about the paper itself rather than one particular technical object.
+    related: [paper.forget.abstract-expanded, paper.forget.contributions, paper.forget.organization]
+
+  - id: paper.forget.abstract-expanded
+    title: Forget paper abstract
+    category: paper
+    terms: [Forget paper abstract, summary of memory lapse paper, abstract of new paper, paper main contribution]
+    definition: |
+      The paper argues that security ceremonies can fail because humans forget information, even when the cryptographic protocol is not broken. It formalizes Forget as a new X-Men mutation for that class of mistake.
+    details:
+      - Security ceremonies extend protocols by explicitly including human users.
+      - Human mistakes can compromise the ceremony even when the protocol logic is cryptographically sound.
+      - The X-Men approach models mistakes as mutations and analyzes mutated ceremony models.
+      - "Forget captures two memory-lapse cases: failing to store newly acquired information and losing access to previously possessed information."
+      - X-Men 2.0 implements Forget and applies it to Bank Login.
+      - The paper also discusses how Forget relates to Skip, Add, Replace, Neglect, and Disorder.
+    why: |
+      The abstract makes clear that Forget is not a synonym for Skip. It is a knowledge-level mutation whose effects may later look like Skip, Replace, or Neglect.
+    related: [paper.forget.definition, paper.forget.triggers, paper.mutation.relationships-xmen2]
+
+  - id: paper.forget.contributions
+    title: Forget paper contributions
+    category: paper
+    terms: [Forget paper contributions, contributions of new paper, memory lapse paper contributions]
+    definition: |
+      The paper contributes the formal Forget mutation, an X-Men 2.0 implementation, a Bank Login analysis, and a classification of primitive versus derivable mutations.
+    details:
+      - Contribution 1 is the formalization of Forget as a mutation over human usable knowledge.
+      - Contribution 2 is the implementation of Forget in X-Men 2.0 with a modular architecture for adding mutations.
+      - Contribution 3 is the Bank Login case study showing an attack caused by a human memory lapse.
+      - Contribution 4 is the discussion of mutation relationships, especially primitive and derivable mutations.
+      - The paper also explains why deleting a message from knowledge is not the right way to model forgetting.
+    why: |
+      These contributions tell the assistant which parts of the paper are original and should receive detailed answers.
+    related: [paper.forget.delete-knowledge-problem, paper.xmen2.overview, paper.mutation.relationships-xmen2]
+
+  - id: paper.forget.organization
+    title: Forget paper organization
+    category: paper
+    terms: [paper organization, sections of Forget paper, structure of memory lapse paper]
+    definition: |
+      The paper is organized from motivation to formal model, then to the Forget definition, automated analysis, mutation relationships, related work, and conclusion.
+    steps:
+      - Introduction motivates memory lapses and states contributions.
+      - Mutation Approach recalls X-Men, matching, propagation, and mutation classification.
+      - Bank Login introduces the running case study and attack story.
+      - Preliminaries define message algebra, Dolev-Yao derivations, role scripts, execution traces, and goals.
+      - The Forget section defines the mutation, forget set, blocked derivations, and algorithm.
+      - Automated Analysis explains X-Men 2.0 and the Tamarin lemmas.
+      - Forget and Other Mutations classifies primitive and derivable mutations.
+      - The appendix gives the Bank Login role scripts and Tamarin rules.
+    related: [paper.forget.xmen2, paper.bank-login.model, paper.bank-login.appendix-overview]
+
+  - id: paper.forget.memory-motivation
+    title: Why memory lapses matter
+    category: foundation
+    terms: [why memory lapses matter, human forgetting motivation, reconstructive memory, forgotten password motivation]
+    definition: |
+      Memory lapses matter because humans may continue a ceremony with plausible remembered information instead of stopping when the exact required information is unavailable.
+    details:
+      - A user may forget a key needed to decrypt and check a message.
+      - A user may forget a password and try another password they remember.
+      - The paper treats passwords as an example of relevant ceremony information, not as the whole topic.
+      - "Human memory is described as reconstructive: people often reconstruct or substitute plausible information rather than reproduce the exact original value."
+      - Password reuse and memorable passwords are noted as related usability issues, but password recovery systems are outside the paper's scope.
+    why: |
+      This motivation explains why a bot answer should talk about human behavior, usable security, and formal derivability together.
+    related: [paper.bank-login.attack, paper.forget.prior-knowledge, paper.forget.related-work-usable-security]
+
+  - id: paper.forget.delete-knowledge-problem
+    title: Why Forget does not delete knowledge
+    category: formal-model
+    terms: [why not delete knowledge, forget not just delete knowledge, forget not delete knowledge, does forget delete knowledge, deleting forgotten message, forget set instead of deletion, monotonic knowledge problem]
+    definition: |
+      The paper avoids deleting forgotten messages from knowledge because messages may appear inside composed terms, encrypted terms, pairs, or derivable structures.
+    details:
+      - If a password occurs inside an encrypted pair with a username, it is unclear whether forgetting should remove only the password, the pair, the ciphertext, or future decryptable components.
+      - If the required key is not yet known, the forgotten component may not currently be derivable but may become derivable later.
+      - Direct deletion can make the knowledge structure non-monotonic and hard to reconcile with Tamarin-style reasoning.
+      - The forget set records the forgotten message and forbids derivations that rely on blocked hypotheses.
+    why: |
+      This is the formal reason Forget is dependency-sensitive rather than a simple "remove token from list" operation.
+    related: [paper.forget.forget-set, paper.forget.blocked-derivations, paper.forget.derivable]
+
+  - id: paper.mutation.approach-expanded
+    title: Mutation approach in the new paper
+    category: mutation
+    terms: [Mutation Approach section, X-Men mutation approach, human mutation matching propagation false positives]
+    definition: |
+      The mutation approach changes the human subtrace, then applies matching and propagation to other agents so the mutated ceremony remains executable for Tamarin analysis.
+    details:
+      - Human mutations capture deviations in a human participant's behavior.
+      - A human mutation can affect other agents because later sends and receives may no longer line up.
+      - Matching mutations adapt other agents' traces to the human mutation.
+      - Propagation carries changed messages and knowledge through later roles.
+      - The resulting mutated ceremony model is analyzed in Tamarin against the same security goals.
+      - Matched mutations can produce false positives, so attack traces require designer validation.
+    why: |
+      The bot should not answer mutation questions as isolated local edits. In X-Men, a mutation is meaningful only after matching, propagation, and security-goal analysis.
+    related: [paper.matching-mutation, paper.false-positives, paper.forget.matching-propagation]
+
+  - id: paper.mutation.cognitive-origin
+    title: Cognitive origin of mutations
+    category: mutation
+    terms: [cognitive origin mutation, behavioral path, same observable outcome, why separate Replace and Skip Add]
+    definition: |
+      The paper separates mutations that can have the same computational effect when they come from different human causes.
+    details:
+      - Replacing a message can look operationally like skipping the original send and adding a new send.
+      - The observable trace effect may be equivalent, but the cognitive origin differs.
+      - Forgetting a value and deliberately replacing a value can both produce a substituted outgoing message, but they are different mistakes.
+      - The classification therefore distinguishes primitive and derivable mutations without collapsing their meanings.
+    why: |
+      This is why answers should say what behavior the mutation represents, not only what trace edit it eventually causes.
+    related: [paper.mutation.relationships-xmen2, paper.forget-vs-replace, paper.forget-vs-skip-receive]
+
+  - id: paper.bank-login.normal-flow
+    title: Bank Login normal flow
+    category: case-study
+    terms: [Bank Login normal flow, normal Bank Login ceremony, Figure Ceremony, Bank Login sequence diagram]
+    definition: |
+      In the normal Bank Login ceremony, the human and bank exchange an NSPK-style challenge-response and then the human sends credentials protected by a session key derived from two nonces.
+    steps:
+      - The human sends an encrypted login request containing the human identity, bank identity, and human nonce.
+      - The bank replies with the human nonce and a bank nonce encrypted for the human.
+      - The human sends the human identity and password under a symmetric key derived from the two nonces.
+      - If the bank verifies the password, it sends Granted.
+      - If verification fails, it sends Denied.
+    why: |
+      The attack is easier to understand once the normal dependency is clear: the final credential message is bound to the two nonces but may contain the wrong bank's password.
+    related: [paper.bank-login.attack-flow, paper.bank-login.role-script-human, paper.bank-login.role-script-bank]
+
+  - id: paper.bank-login.attack-flow
+    title: Bank Login attack flow
+    category: case-study
+    terms: [Bank Login attack flow, Figure CeremonyAttack, step by step Bank Login attack, forwarded Bank2 challenge]
+    definition: |
+      The attack flow forwards Bank2's encrypted challenge into a session the human believes is with Bank1, then relies on the human forgetting Bank1's password and using Bank2's password.
+    steps:
+      - The human starts a login intended for Bank1.
+      - The attacker has compromised Bank1 and can read Bank1 traffic and act in that context.
+      - The attacker starts or forwards a parallel request to Bank2 while impersonating the human.
+      - Bank2 sends an encrypted nonce challenge for the human.
+      - The attacker cannot decrypt the challenge but forwards it to the human as if it came from Bank1.
+      - The human forgets PW1 and sends PW2 encrypted under the nonce-derived session key.
+      - The attacker forwards that ciphertext to Bank2.
+      - Bank2 accepts and grants access even though the human never intended Bank2.
+      - The attacker may then report a failed login back to the human for the Bank1-facing flow.
+    why: |
+      The core failure is authentication intent, not disclosure of PW2.
+    related: [paper.bank-login.attack, paper.bank-login.sg1, paper.bank-login.sg2]
+
+  - id: paper.bank-login.crypto-not-broken
+    title: Bank Login attack is not a cryptographic break
+    category: case-study
+    terms: [Bank Login not cryptographic break, password not disclosed, NSPK weakness not cause, PW2 remains secret]
+    definition: |
+      The Bank Login attack does not require breaking encryption or learning the Bank2 password. It abuses forwarding and the human's forgotten password choice.
+    details:
+      - The attacker does not know Bank2's fresh nonce.
+      - The attacker cannot decrypt Bank2's response encrypted for the human.
+      - The attacker forwards ciphertexts unchanged.
+      - PW2 remains protected under a session key derived from fresh nonces.
+      - SG1 fails because Bank2 authenticates without the human intending Bank2.
+      - SG2 still holds for PW2 in the model.
+    why: |
+      This distinction prevents answers from falsely claiming that the attack is caused by password leakage or a broken NSPK primitive.
+    related: [paper.bank-login.sg1, paper.bank-login.sg2, paper.bank-login.attack-flow]
+
+  - id: paper.prelim.message-algebra-detailed
+    title: Message algebra in the Forget paper
+    category: formal-model
+    terms: [message algebra Forget paper, algebra of messages detailed, Sigma fresh public functions, Def Algebra]
+    definition: |
+      The message algebra is the term algebra used to model all messages exchanged by agents in the ceremony.
+    details:
+      - The algebra is built from a signature Sigma and a countably infinite set of variables.
+      - Fresh constants model generated values such as nonces.
+      - Public constants model agent names and other public data.
+      - Function symbols model operations including pairing, symmetric encryption, symmetric decryption, asymmetric encryption, and asymmetric decryption.
+      - The paper allows additional operators such as signatures, hashes, or modular exponentiation when needed.
+      - It uses concise notation such as nested pairs and inverse keys for readability.
+    why: |
+      Forget depends on message structure, so the assistant must know what a message, submessage, pair, key, and encrypted term mean in the paper.
+    related: [paper.prelim.submessage-format-detailed, paper.dolev-yao, paper.forget.delete-knowledge-problem]
+
+  - id: paper.prelim.submessage-format-detailed
+    title: Submessage and format in the Forget paper
+    category: formal-model
+    terms: [submessage format detailed, submsg definition, message format definition, atomic message Forget paper]
+    definition: |
+      A submessage is a term contained inside another term, and a format is the top-level shape of a message.
+    details:
+      - A message is always a submessage of itself.
+      - Components of pairs are submessages.
+      - Payloads of hashes and encryptions contribute submessages.
+      - A message with no proper submessages besides itself is atomic.
+      - "Format is the top-level symbol: pair, hash, symmetric encryption, asymmetric encryption, or the atom itself."
+      - Format is used by the Forget algorithm when choosing replacements for blocked hypotheses.
+    why: |
+      Replacement after Forget is constrained by format and label compatibility; without this, answers become vague or incorrect.
+    related: [paper.forget.replacement-set, paper.replace-mutation, paper.message-algebra]
+
+  - id: paper.prelim.dy-rules-detailed
+    title: Dolev-Yao inference rules in the Forget paper
+    category: formal-model
+    terms: [Dolev Yao rules Forget paper, pair comp pair decomp symmetric decrypt asymmetric decrypt, knowledge inference rules]
+    definition: |
+      The paper uses Dolev-Yao inference rules to decide what an agent can derive from current knowledge.
+    details:
+      - Pair composition derives a pair from its two components.
+      - Pair decomposition derives a component from a pair.
+      - Symmetric encryption derives ciphertext from plaintext and key.
+      - Symmetric decryption derives plaintext from ciphertext and key.
+      - Asymmetric encryption derives ciphertext from plaintext and public key.
+      - Asymmetric decryption derives plaintext from ciphertext and inverse or private key.
+      - "Cryptography is symbolic: agents cannot break encryption without the required key."
+    why: |
+      Forget works by restricting which Dolev-Yao derivations are allowed after a memory lapse.
+    related: [paper.forget.blocked-derivations, paper.prelim.normal-derivations, tamarin.attacker-knowledge]
+
+  - id: paper.prelim.normal-derivations
+    title: Normal derivations
+    category: formal-model
+    terms: [normal derivation, derivation tree, finite derivation search, cyclic derivation]
+    definition: |
+      A normal derivation is a derivation without immediate inverse cycles, such as pairing and immediately decomposing or encrypting and immediately decrypting.
+    details:
+      - Any derivation with such cycles can be normalized without changing the final derivable message.
+      - Normal derivations keep the search space finite enough for the analysis described by the paper.
+      - Forget checks whether at least one normal derivation avoids blocked hypotheses.
+      - Derivation trees represent messages as nodes and inference-rule applications as edges.
+    why: |
+      This is the formal basis for generating all derivations before deciding whether a send can remain, be replaced, or be skipped.
+    related: [paper.forget.all-derivations, paper.forget.derivable, paper.prelim.dy-rules-detailed]
+
+  - id: paper.prelim.role-script-events
+    title: Role-script events
+    category: formal-model
+    terms: [role script events, Snd Rcv Fresh Start, ceremony role script, event actions]
+    definition: |
+      A role script is a sequence of events that defines what an agent does during a ceremony execution.
+    details:
+      - Start initializes the role with initial knowledge.
+      - Fresh generates a fresh value such as a nonce or key.
+      - Snd sends a message to an intended partner over a channel type.
+      - Rcv receives a message from an apparent sender over a channel type.
+      - Send and receive events include the executing role, channel label, partner, and message.
+      - Tamarin can also model internal actions such as checks.
+    why: |
+      Skip, Add, Replace, Neglect, Disorder, and Forget are easiest to distinguish by the role-script component they affect.
+    related: [paper.bank-login.role-script-human, paper.bank-login.role-script-bank, paper.mutation.classification-skip]
+
+  - id: paper.prelim.channel-types
+    title: Channel types in the Forget paper
+    category: formal-model
+    terms: [channel types, insecure confidential authentic secure, ChannelType, conf sec insec auth]
+    definition: |
+      Channel types label the security assumptions of message exchange in role scripts.
+    details:
+      - Insecure channels provide no confidentiality or authenticity guarantees.
+      - Confidential channels protect message contents.
+      - Authentic channels support origin authenticity.
+      - Secure channels combine stronger channel assumptions, including confidentiality and authenticity in the paper's model.
+      - Channel labels appear in send and receive events and in Tamarin channel facts such as confidential and secure facts.
+    why: |
+      The Bank Login case uses confidential and secure channels, and the attack forwards ciphertexts while respecting the modeled channel facts.
+    related: [paper.bank-login.channel-rules, paper.bank-login.forward-confidential, paper.bank-login.forward-secure]
+
+  - id: paper.prelim.execution-model-detailed
+    title: Execution model in the Forget paper
+    category: formal-model
+    terms: [execution model Forget paper, multiset rewriting, labeled transition system, AgSt trace Pre Post]
+    definition: |
+      The execution model uses Tamarin-style multiset rewriting rules to move from one state to another while recording action facts in a trace.
+    details:
+      - A state is a multiset of facts.
+      - Linear facts are consumed when rules fire.
+      - Persistent facts prefixed by `!` remain available once produced.
+      - A rule has premises, action labels, and conclusions.
+      - Applying a rule consumes matching premises, records the action labels, and adds conclusion facts.
+      - Agent state facts such as AgSt track role position and knowledge.
+      - A receive transition requires an incoming message fact; a send transition produces an outgoing message fact.
+    why: |
+      Forget modifies the knowledge carried in the agent state while preserving the trace mechanics.
+    related: [paper.forget.algorithm-transition-shape, tamarin.rule, tamarin.trace]
+
+  - id: paper.prelim.security-goals-detailed
+    title: Bank Login informal security goals
+    category: case-study
+    terms: [Bank Login informal goals, SG1 SG2 informal, legitimate account holder, attacker learns password]
+    definition: |
+      The Bank Login case studies two security goals: legitimate authentication and password secrecy.
+    details:
+      - SG1 says only a legitimate account holder should authenticate with the bank and obtain account access.
+      - SG2 says an illegitimate user or attacker should not learn the human's password during an attack.
+      - The paper later formalizes SG1 as an all-traces authentication lemma over LoginOK and U_LoginRequest.
+      - It formalizes SG2 as an all-traces secrecy lemma over PasswordAttempt and attacker knowledge K.
+    why: |
+      The attack falsifies SG1 while SG2 for PW2 is still verified, so the bot must separate authentication from secrecy.
+    related: [paper.bank-login.sg1, paper.bank-login.sg2, paper.bank-login.crypto-not-broken]
+
+  - id: paper.forget.example-occurrence-hypothesis
+    title: Forgotten occurrence versus forgotten hypothesis
+    category: formal-model
+    terms: [forgotten occurrence vs hypothesis, different occurrences forgotten message, hypothesis in derivation, Example different occurrences]
+    definition: |
+      A forgotten message may appear inside a derivation, but the derivation is blocked only when the forgotten message is used as a hypothesis under the selected blocking policy.
+    details:
+      - If m is derived by decrypting with a forgotten key used directly as a hypothesis, that derivation is blocked.
+      - If the forgotten value is itself re-derived from non-forgotten hypotheses and then used internally, the derivation can be allowed.
+      - The paper uses this example to show that Forget is about dependency on forgotten hypotheses, not textual occurrence of the forgotten symbol.
+    why: |
+      This prevents the assistant from giving the simplistic answer "if the forgotten symbol appears anywhere, derivation fails."
+    related: [paper.forget.derivable, paper.forget.blocking-function, paper.forget.example-relearn]
+
+  - id: paper.forget.example-new-received
+    title: Example of forgetting a just received message
+    category: mutation
+    terms: [example forgetting just received message, forgetting before adding to knowledge, m1 not added forget set unchanged]
+    definition: |
+      If the human receives m1 in transition i but forgets to add it, the next knowledge state remains the previous knowledge and the forget set is unchanged.
+    details:
+      - The receive event still occurs.
+      - The newly received message is not added to usable knowledge.
+      - The forget set does not need to include m1 because m1 was never added as remembered knowledge.
+      - Other earlier occurrences of m1 remain available if the human already knew them independently.
+    why: |
+      This is the first Forget case and is closest to Skip-Receive, but it preserves the receive in the trace.
+    related: [paper.forget.newly-received, paper.forget-vs-skip-receive]
+
+  - id: paper.forget.example-prior-knowledge
+    title: Example of forgetting prior knowledge
+    category: mutation
+    terms: [example forgetting prior knowledge, m2 added to forget set, re receive forgotten message, forget set removes m2]
+    definition: |
+      If the human already knows m2 and later forgets it, m2 remains in monotonic knowledge but is added to the forget set and cannot be used until learned again.
+    details:
+      - The transition may still add the newly received m1 to knowledge.
+      - The forgotten prior message m2 is recorded in the forget set.
+      - If the human later receives m2 directly, m2 can be removed from the forget set.
+      - If the human receives enough new information to derive m2 without blocked hypotheses, m2 can become usable again.
+    why: |
+      This is the second Forget case and the one that causes the Bank Login attack.
+    related: [paper.forget.prior-knowledge, paper.bank-login.attack, paper.forget.example-relearn]
+
+  - id: paper.forget.example-relearn
+    title: Relearning forgotten information
+    category: mutation
+    terms: [relearn forgotten message, receive forgotten m2 again, remove from forget set, forgotten information usable again]
+    definition: |
+      Forgotten information can become usable again when the human explicitly receives it again or receives new non-forgotten material that allows deriving it.
+    details:
+      - Re-receiving the exact forgotten message removes that message from the forget set.
+      - Receiving a new supporting message can make a forgotten value derivable again.
+      - The key condition is that the new derivation must not depend on blocked hypotheses.
+      - This makes Forget reversible in a controlled way, without deleting or rewriting the original knowledge.
+    why: |
+      This is important for long ceremonies where a user can be reminded of something they had forgotten.
+    related: [paper.forget.prior-knowledge, paper.forget.derivable, paper.forget.forget-set]
+
+  - id: paper.forget.blocking-function
+    title: Blocking function
+    category: formal-model
+    terms: [Blocking function, Blocked Hyp pi, blocked hypotheses function, Hyp pi forget set]
+    definition: |
+      The blocking function takes the hypotheses of a derivation and the current forget set, then returns the hypotheses that are blocked by the chosen forgetting policy.
+    details:
+      - In Case 1 it returns the intersection between derivation hypotheses and the forget set.
+      - In Case 2 it returns hypotheses derivable from the forget set using pairing rules.
+      - In Case 3 it returns hypotheses derivable from the forget set using all Dolev-Yao rules.
+      - A derivation is valid under forgetting only when this returned set is empty.
+    why: |
+      The blocking function is the precise object that decides whether a derivation can still justify a send.
+    related: [paper.forget.case1, paper.forget.case2, paper.forget.case3, paper.forget.derivable]
+
+  - id: paper.forget.case-choice-bank-login
+    title: Why Bank Login uses Case 1
+    category: case-study
+    terms: [why Bank Login uses Case 1, Case 1 Bank Login, username password separate, identifier password pair Case 2]
+    definition: |
+      The paper adopts Case 1 for the Bank Login analysis because the user identifier and password are treated as separate values rather than one inseparable pair in the relevant model.
+    details:
+      - Case 1 treats a forgotten message as the explicitly forgotten hypothesis.
+      - The Bank Login attack depends on forgetting PW1 and using PW2, not on decomposing a forgotten pair.
+      - If a ceremony transmitted the identifier and password together as a pair in the same step, Case 2 might be a better fit.
+      - Case selection is ceremony-dependent and captures different cognitive assumptions about what forgetting propagates to.
+    why: |
+      This answers why the paper does not automatically use the strongest Case 3 semantics.
+    related: [paper.forget.case1, paper.forget.case2, paper.bank-login.attack]
+
+  - id: paper.forget.derivability-example-1
+    title: Derivability example 1
+    category: formal-model
+    terms: [Derivability example 1, forgotten ciphertext direct m1, m1 still derivable, encrypted m1 forgotten]
+    definition: |
+      If m1 is directly known and an encrypted occurrence of m1 is forgotten, m1 remains derivable through the direct non-forgotten hypothesis.
+    details:
+      - Knowledge contains m1, encrypted m1, and the key.
+      - The forget set contains the encrypted occurrence of m1.
+      - The derivation that uses the forgotten ciphertext is blocked.
+      - The direct derivation from m1 remains valid.
+      - The result is the same under Case 1, Case 2, and Case 3 for this example.
+    why: |
+      Forget restricts invalid derivation paths but does not remove every independent way to know the same value.
+    related: [paper.forget.derivable, paper.forget.example-occurrence-hypothesis]
+
+  - id: paper.forget.derivability-example-2
+    title: Derivability example 2
+    category: formal-model
+    terms: [Derivability example 2, forgotten ciphertext and key, m1 under Case 1 Case 3]
+    definition: |
+      If both an encrypted occurrence and its key are forgotten, direct knowledge of m1 may still matter, but decrypting through the forgotten material is blocked.
+    details:
+      - Under Case 1, m1 can still be derived directly if m1 itself is explicitly present in knowledge and not forgotten.
+      - The decryption path using the forgotten ciphertext or forgotten key is blocked.
+      - Under stronger closure policies, derivations that depend on messages derivable from the forget set are also forbidden.
+      - The example illustrates how Case 3 can be much stricter than Case 1.
+    why: |
+      This example is useful when a user asks why different blocking cases can produce different answers.
+    related: [paper.forget.case1, paper.forget.case3, paper.forget.blocked-derivations]
+
+  - id: paper.forget.derivability-example-3
+    title: Derivability example 3
+    category: formal-model
+    terms: [Derivability example 3, forgotten pair, pair decomposition, components individually known]
+    definition: |
+      If a pair is forgotten, Case 1 treats the pair as forgotten as a whole, while Case 2 and Case 3 can also block derivations of its components through pair rules.
+    details:
+      - Knowledge contains the pair and its components individually.
+      - The forget set contains the pair.
+      - In Case 1, the pair is non-decomposable for forgetting, so independently known components may remain usable.
+      - In Case 2 and Case 3, pair decomposition closes the forget set over the components.
+      - The intended lesson is that stricter cases can block component use when the components are only reachable through forgotten structure.
+    why: |
+      This answers questions about forgetting pairs, usernames, passwords, and structured credentials.
+    related: [paper.forget.case2, paper.prelim.submessage-format-detailed, paper.forget.blocking-function]
+
+  - id: paper.forget.algorithm-transition-shape
+    title: Forget algorithm transition shape
+    category: mutation
+    terms: [Forget algorithm transition shape, transition i, AgSt Pre Post receive send, m1 m2]
+    definition: |
+      The Forget algorithm analyzes a transition containing an agent state, preconditions, a receive, internal actions, postconditions, and a send.
+    details:
+      - The input transition is centered on human H at step i.
+      - The transition reads AgSt(H, i, K_H_i) and produces AgSt(H, i+1, K_H_i+1).
+      - It may include precondition facts such as freshness facts.
+      - It may include a receive of m1 from A1.
+      - It may include internal action labels a.
+      - It may include a send of m2 to A2.
+    why: |
+      This transition shape explains where Forget can affect knowledge, internal actions, and outgoing sends.
+    related: [paper.forget.algorithm, paper.prelim.execution-model-detailed]
+
+  - id: paper.forget.all-derivations
+    title: Construct all derivations in Forget
+    category: mutation
+    terms: [construct all derivations, all DY derivations, Pi derivations, Forget derivation generation]
+    definition: |
+      The algorithm constructs the set of derivations of the outgoing message from the mutated knowledge, then checks whether any derivation avoids blocked hypotheses.
+    details:
+      - The derivation set is written as Pi.
+      - If at least one derivation has no blocked hypotheses, the original send is preserved.
+      - If every derivation is blocked, the algorithm looks at blocked hypotheses and tries replacements.
+      - The paper marks generation of all derivations as a crucial point for X-Men 2.0 implementation detail.
+      - Normal derivations keep this search meaningful by avoiding immediate inverse-rule cycles.
+    why: |
+      This is the key reason Forget can be smarter than keyword matching: it reasons about dependency paths.
+    related: [paper.prelim.normal-derivations, paper.forget.replacement-set, paper.forget.derivable]
+
+  - id: paper.forget.replacement-set
+    title: Replacement set in Forget
+    category: mutation
+    terms: [what is the replacement set in Forget, replacement set in Forget, replacement set R_mbar, Forget replacement candidates, format label compatible replacement, admissible replacement]
+    definition: |
+      When all derivations of the outgoing message are blocked, the algorithm builds replacement sets for blocked hypotheses from usable knowledge.
+    details:
+      - A replacement candidate must come from the updated mutated knowledge.
+      - It must not itself be in the forget set.
+      - It must have the same format as the blocked hypothesis.
+      - It must have the same label as the blocked hypothesis.
+      - Each combination of replacements yields a distinct mutated outgoing message.
+      - Each such variant triggers a Replace mutation on the transition.
+    why: |
+      This is why forgetting PW1 can lead to sending PW2: PW2 is a usable password-labeled value with compatible shape.
+    related: [paper.forget.triggers, paper.forget.trigger-replace-detailed, paper.prelim.submessage-format-detailed]
+
+  - id: paper.forget.trigger-neglect-detailed
+    title: When Forget triggers Neglect
+    category: mutation
+    terms: [Forget triggers Neglect detailed, forgotten value used in internal action, forgot key for check, neglect check]
+    definition: |
+      Forget triggers Neglect when the forgotten information is needed for an internal action, such as a check that the human can no longer perform.
+    details:
+      - The human may still proceed with the transition.
+      - The internal action is mutated or removed through Neglect.
+      - The outgoing message can remain unchanged if it is derivable without the forgotten information.
+      - "Example situation: the user forgets a key required to decrypt a message before checking its contents."
+    why: |
+      Forget is the cause; Neglect is the visible follow-on behavior in the trace.
+    related: [paper.forget.algorithm, paper.neglect-mutation, paper.forget.triggers]
+
+  - id: paper.forget.trigger-replace-detailed
+    title: When Forget triggers Replace
+    category: mutation
+    terms: [Forget triggers Replace detailed, controlled substitution, forget password replace password, compatible alternative]
+    definition: |
+      Forget triggers Replace when the intended outgoing message cannot be derived, but a format- and label-compatible alternative can be built from usable knowledge.
+    details:
+      - Replacement is not arbitrary.
+      - The replacement must be available in the mutated knowledge.
+      - It must avoid the forget set.
+      - It must preserve the blocked hypothesis format and label.
+      - In Bank Login, forgetting PW1 can lead to using PW2 because both are password-labeled values.
+    why: |
+      This gives a precise explanation of why Forget can produce a replacement without being the same mutation as Replace.
+    related: [paper.forget.replacement-set, paper.bank-login.attack, paper.forget-vs-replace]
+
+  - id: paper.forget.trigger-skip-detailed
+    title: When Forget triggers Skip
+    category: mutation
+    terms: [Forget triggers Skip detailed, no replacement exists, skip send after forget, blocked outgoing message]
+    definition: |
+      Forget triggers Skip when the outgoing message cannot be derived under the forget set and no admissible replacement can be generated.
+    details:
+      - The algorithm first tries to preserve the original send through an unblocked derivation.
+      - If that fails, it tries replacement candidates.
+      - If no candidate set can produce a valid variant, it skips the send.
+      - The matching receive must then be removed or adjusted so the ceremony remains executable.
+    why: |
+      Skip is a fallback consequence of forgetting, not the definition of Forget.
+    related: [paper.forget.algorithm, paper.forget.matching-propagation, paper.skip-mutation]
+
+  - id: paper.forget-vs-replace
+    title: Forget vs Replace
+    category: mutation
+    terms: [Forget vs Replace, difference Forget Replace, controlled substitution due to forgetting, replace due to error]
+    definition: |
+      Replace directly substitutes one message for another. Forget restricts usable knowledge and may induce a controlled substitution only when the intended message can no longer be derived.
+    details:
+      - Replace is an action/message mutation.
+      - Forget is a knowledge mutation.
+      - Replace represents sending a wrong-but-compatible value because of a substitution error.
+      - Forget-triggered replacement represents sending an alternative because the intended value is unavailable.
+      - The two can have overlapping trace effects but different human causes.
+    why: |
+      This distinction is central to the paper's cognitive-origin argument.
+    related: [paper.mutation.cognitive-origin, paper.forget.trigger-replace-detailed, paper.replace-mutation]
+
+  - id: paper.mutation.classification-skip
+    title: Skip in the mutation classification table
+    category: mutation
+    terms: [Skip classification table, Skip primitive, Skip operates on Snd Rcv, Skip knowledge does not increase]
+    definition: |
+      In the classification table, Skip operates on send or receive actions, removes an event from the trace, and is primitive.
+    details:
+      - "The affected ceremony component is a trace event: Snd or Rcv."
+      - It has no direct content-level target in the table.
+      - Its trace effect is event removal.
+      - Its knowledge effect is that knowledge does not increase when a skipped receive or matching skipped receive prevents learning.
+      - The table marks Skip as primitive.
+    why: |
+      This gives the precise table-based answer for Skip, separate from individual Skip variants in the older JCS paper.
+    related: [paper.skip-mutation, paper.mutation.relationships-xmen2]
+
+  - id: paper.mutation.classification-add
+    title: Add in the mutation classification table
+    category: mutation
+    terms: [Add classification table, Add primitive, Add inserts duplicate event, Add knowledge changes]
+    definition: |
+      In the classification table, Add operates on a send action or message inside a send, inserts or duplicates events, and is primitive.
+    details:
+      - The trace-event component is a send action.
+      - The content component can be the send action itself or the message inside the send.
+      - Its trace effect is inserted or duplicated event(s).
+      - Its knowledge effect is that learned facts may be added or changed.
+      - The table marks Add as primitive.
+    related: [paper.add-mutation, paper.mutation.relationships-xmen2]
+
+  - id: paper.mutation.classification-replace
+    title: Replace in the mutation classification table
+    category: mutation
+    terms: [Replace classification table, Replace derivable Skip Add, Replace message inside Snd Rcv]
+    definition: |
+      In the classification table, Replace changes the message inside a send or receive action and is derivable via Skip plus Add.
+    details:
+      - It operates on Snd/Rcv actions and on the message content inside them.
+      - Its trace effect is changing the message corresponding to an event.
+      - Its knowledge effect does not increase the mutating agent's knowledge.
+      - The paper treats it as derivable because deleting one message and inserting another can represent its effect.
+    related: [paper.replace-mutation, paper.forget-vs-replace, paper.mutation.cognitive-origin]
+
+  - id: paper.mutation.classification-neglect
+    title: Neglect in the mutation classification table
+    category: mutation
+    terms: [Neglect classification table, Neglect internal action, Neglect derivable Skip internal action]
+    definition: |
+      In the classification table, Neglect operates on an internal action or check, skips that check, and is derivable via Skip of an internal action.
+    details:
+      - The affected component is an internal action, not a send or receive.
+      - Its trace effect is that a check is skipped.
+      - Its knowledge effect can indirectly prevent some send action from being carried out.
+      - The paper treats it as derivable via skipping an internal action.
+    related: [paper.neglect-mutation, paper.forget.trigger-neglect-detailed, paper.mutation.relationships-xmen2]
+
+  - id: paper.mutation.classification-disorder
+    title: Disorder in the mutation classification table
+    category: mutation
+    terms: [Disorder classification table, Disorder permutes event ordering, Disorder derivable Skip Add]
+    definition: |
+      In the classification table, Disorder operates on the order of send and receive actions, permutes event ordering, and is derivable via Skip plus Add.
+    details:
+      - The affected component is action order for Snd/Rcv events.
+      - Its trace effect is permutation of event order.
+      - Its knowledge effect changes because different orderings change what is known at each step.
+      - The paper treats it as derivable using deletion and reinsertion effects.
+    related: [paper.mutation.relationships-xmen2, mutation.catalog]
+
+  - id: paper.mutation.classification-forget
+    title: Forget in the mutation classification table
+    category: mutation
+    terms: [Forget classification table, Forget primitive knowledge, no trace change, inability to use forgotten message]
+    definition: |
+      In the classification table, Forget operates on knowledge, causes no direct trace change, and creates an inability to use forgotten messages during derivation.
+    details:
+      - It has no Snd/Rcv trace-event target as its primary component.
+      - Its target is the knowledge state.
+      - Its direct trace effect is none.
+      - Its knowledge-state effect is loss of usable access to a remembered message.
+      - The table marks Forget as primitive.
+    why: |
+      This is the clearest table-based answer to "what kind of mutation is Forget?"
+    related: [paper.forget.definition, paper.forget.triggers, paper.mutation.relationships-xmen2]
+
+  - id: paper.bank-login.sg1
+    title: SG1 Human intends Bank2 if Bank2 OK
+    category: case-study
+    terms: [SG1 Human_intends_Bank2_if_Bank2_OK, Bank2 authentication lemma, LoginOK U_LoginRequest]
+    definition: |
+      SG1 is the authentication lemma saying that if Bank2 reaches LoginOK for a user, then the human must previously have made a login request targeting Bank2.
+    details:
+      - The lemma is all-traces.
+      - The key success event is LoginOK(b2, u, pw).
+      - The required prior human intent event is U_LoginRequest(u, b2, nH).
+      - The intent event must happen before the login success event.
+      - Tamarin falsifies this lemma for the mutated Bank Login model.
+    why: |
+      The Forget attack is specifically an SG1 failure: Bank2 accepts without the human intending Bank2.
+    related: [paper.bank-login.attack, paper.bank-login.attack-flow, paper.bank-login.sg2]
+
+  - id: paper.bank-login.sg2
+    title: SG2 Password2 confidential
+    category: case-study
+    terms: [SG2 Password2_confidential, password confidentiality lemma, PasswordAttempt K pw, Bank2 password secrecy]
+    definition: |
+      SG2 is the confidentiality lemma saying that whenever the human attempts authentication with a password, the attacker must never know that password.
+    details:
+      - The lemma is all-traces.
+      - The relevant action fact is PasswordAttempt(u, b, pw, nH, nB).
+      - The forbidden attacker knowledge event is K(pw).
+      - Tamarin verifies the property for PW2 in the modeled scenario.
+      - PW1 is known to the attacker because Bank1 is compromised, but PW2 remains protected.
+    why: |
+      SG2 explains why the attack is an authentication attack rather than a Bank2 password disclosure attack.
+    related: [paper.bank-login.crypto-not-broken, paper.bank-login.sg1, tamarin.secrecy]
+
+  - id: paper.bank-login.appendix-overview
+    title: Bank Login appendix overview
+    category: case-study
+    terms: [Bank Login appendix, formal model appendix, appendix role scripts rules lemmas]
+    definition: |
+      The appendix contains the detailed Bank Login formal model, including role scripts, human and bank agent rules, lemma constructs, channel rules, setup, compromise, forwarding, and Tamarin agent rules.
+    details:
+      - The role-script section gives the bank role script.
+      - The agent-rule figures give human and bank abstract role rules.
+      - The lemma-construct section explains variables, quantifiers, logical operators, timestamped facts, and equalities.
+      - Channel rules define confidential and secure send/receive behavior.
+      - Setup and registration rules initialize sessions, users, banks, keys, passwords, and types.
+      - Compromise and forwarding rules model the attack setup.
+      - Agent rules User_1, User_2, User_3, Bank_Respond_1, Bank_Respond_2, and Bank_Reuses_Nonce encode the ceremony.
+    related: [paper.bank-login.role-script-bank, paper.bank-login.setup-session, paper.bank-login.user-1]
+
+  - id: paper.bank-login.role-script-human
+    title: Human role script in Bank Login
+    category: case-study
+    terms: [human role script Bank Login, RoleScript H, human Bank Login steps]
+    definition: |
+      The human role script starts with the human's initial knowledge, sends the encrypted request, receives the nonce challenge, sends encrypted credentials, and receives an access result.
+    steps:
+      - Start with human identity, bank identity, password, human key pair, and bank public key.
+      - Send a confidential encrypted tuple containing human identity, bank identity, and human nonce.
+      - Receive a confidential encrypted tuple containing the human nonce and bank nonce.
+      - Send a secure encrypted tuple containing human identity and password under the nonce-derived key.
+      - Receive the access result Granted over an insecure channel in the simplified successful path.
+    related: [paper.bank-login.normal-flow, paper.bank-login.user-1, paper.bank-login.user-2]
+
+  - id: paper.bank-login.role-script-bank
+    title: Bank role script in Bank Login
+    category: case-study
+    terms: [bank role script Bank Login, RoleScript Bank, bank Bank Login steps]
+    definition: |
+      The bank role script receives the initial encrypted request, sends an encrypted nonce challenge, receives the secure credential message, and sends Granted.
+    steps:
+      - Start with bank identity, human identity, bank key pair, and human public key.
+      - Receive the human's confidential encrypted request.
+      - Send a confidential encrypted challenge containing the human nonce and fresh bank nonce.
+      - Receive the human's secure credential ciphertext.
+      - Send an insecure access result containing Granted.
+    related: [paper.bank-login.normal-flow, paper.bank-login.bank-respond-1, paper.bank-login.bank-respond-2]
+
+  - id: paper.bank-login.channel-rules
+    title: Bank Login channel rules
+    category: case-study
+    terms: [Bank Login channel rules, ChanSnd_C ChanRcv_C ChanSnd_S ChanRcv_S, confidential secure channel rules]
+    definition: |
+      The appendix models confidential and secure communication with paired send and receive rules that transform send facts into persistent channel facts and then into receive facts.
+    details:
+      - ChanSnd_C consumes SndC and produces a persistent Conf fact.
+      - ChanRcv_C consumes or reads Conf and produces RcvC.
+      - ChanSnd_S consumes SndS and produces a persistent Sec fact.
+      - ChanRcv_S reads Sec and produces RcvS.
+      - Persistent channel facts support forwarding behavior in the attack model.
+    related: [paper.prelim.channel-types, paper.bank-login.forward-confidential, paper.bank-login.forward-secure]
+
+  - id: paper.bank-login.setup-session
+    title: SetupSession rule
+    category: case-study
+    terms: [SetupSession rule, Bank Login setup session, St_U_1, SessionStart]
+    definition: |
+      SetupSession creates the user's initial session state for the Bank Login case and records that a ceremony instance has started.
+    details:
+      - It generates a fresh human nonce nH.
+      - It uses persistent facts for the user's two passwords and both banks' public keys.
+      - It emits SessionStart(U, B1, B2, nH).
+      - It stores St_U_1 with the user, both banks, the nonce, and both passwords.
+      - It records Type facts for nonce and bank agent names.
+    related: [paper.bank-login.user-registration, paper.bank-login.user-1]
+
+  - id: paper.bank-login.user-registration
+    title: RegisterUser rule
+    category: case-study
+    terms: [RegisterUser rule, user registration, Pw1 Pw2 Ltk Pk Type password]
+    definition: |
+      RegisterUser initializes a human user with a fresh long-term key and two fresh passwords.
+    details:
+      - It creates a private long-term key for the user.
+      - It publishes the corresponding public key.
+      - It stores Pw1 and Pw2 as persistent password facts.
+      - It outputs the public key.
+      - It records the user's agent-name type and both password types.
+    related: [paper.bank-login.setup-session, paper.bank-login.attack]
+
+  - id: paper.bank-login.bank-registration
+    title: RegisterBank rule
+    category: case-study
+    terms: [RegisterBank rule, bank registration, bank long term key, bank public key]
+    definition: |
+      RegisterBank initializes a bank with a fresh long-term private key, publishes its public key, and records the bank as an agent name.
+    details:
+      - It creates a fresh bank long-term key.
+      - It stores the private key in a persistent Ltk fact.
+      - It stores and outputs the public key.
+      - It records the bank's agent-name type.
+    related: [paper.bank-login.compromise, paper.bank-login.bank-respond-1]
+
+  - id: paper.bank-login.compromise
+    title: Compromise rule
+    category: case-study
+    terms: [Compromise rule, RevLtk, compromised bank, leak bank private key]
+    definition: |
+      The Compromise rule models a compromised bank by leaking its long-term private key and marking it as compromised.
+    details:
+      - It reads the persistent bank long-term key fact.
+      - It emits RevLtk(B) as an action fact.
+      - It outputs the private key to the attacker.
+      - It creates a persistent Compromised(B) fact.
+      - In the attack, Bank1 is compromised and Bank2 is not.
+    related: [paper.bank-login.attack-flow, paper.bank-login.forward-confidential, paper.bank-login.forward-secure]
+
+  - id: paper.bank-login.forward-confidential
+    title: Forward confidential rule
+    category: case-study
+    terms: [Fwd_Conf_B2_to_User_as_B1, forward confidential, B2 challenge forwarded as B1]
+    definition: |
+      The confidential forwarding rule lets a compromised Bank1 context forward a confidential ciphertext from Bank2 to the user as if it came from Bank1.
+    details:
+      - It requires Bank1 to be compromised.
+      - It reads a confidential fact from Bank2 to the user.
+      - It emits FwdC and a bank-inequality condition.
+      - It produces a confidential fact from Bank1 to the user with the same ciphertext.
+      - This models forwarding without decrypting the Bank2 challenge.
+    related: [paper.bank-login.attack-flow, paper.bank-login.compromise]
+
+  - id: paper.bank-login.forward-secure
+    title: Forward secure rule
+    category: case-study
+    terms: [Fwd_Sec_User_to_B2, forward secure, user credential forwarded to Bank2]
+    definition: |
+      The secure forwarding rule lets the attacker forward the user's secure credential ciphertext from the Bank1-facing flow to Bank2.
+    details:
+      - It requires Bank1 to be compromised.
+      - It reads the secure channel fact from the user to Bank1.
+      - It uses Bank2's public key fact and a bank-inequality condition.
+      - It produces a secure channel fact from the user to Bank2 with the same ciphertext.
+      - This is how the PW2 credential reaches Bank2 in the attack.
+    related: [paper.bank-login.attack-flow, paper.bank-login.crypto-not-broken]
+
+  - id: paper.bank-login.user-1
+    title: User_1 rule
+    category: case-study
+    terms: [User_1 rule, user step 1, U_LoginRequest, initial login request, SndC aenc nH U]
+    definition: |
+      User_1 sends the initial login request from the human to Bank1 and records the human's intended login target.
+    details:
+      - It starts from St_U_1 with the user, both banks, the human nonce, and both passwords.
+      - It uses Bank1's public key.
+      - It emits H() to mark a human-executed step.
+      - It emits U_LoginRequest(U, B1, nH), recording that the user intended Bank1.
+      - It sends a confidential asymmetric encryption of the nonce and user identity to Bank1.
+      - It advances to St_U_2.
+    related: [paper.bank-login.sg1, paper.bank-login.attack-flow]
+
+  - id: paper.bank-login.user-2
+    title: User_2 rule
+    category: case-study
+    terms: [User_2 rule, user step 2, PasswordAttempt, forget pw1 use pw2, SndS credentials]
+    definition: |
+      User_2 receives the bank challenge and sends the credential response; in the mutated attack model this is where the human uses PW2.
+    details:
+      - It starts from St_U_2 with both passwords.
+      - It uses the user's long-term key to receive a confidential challenge containing nH and nB.
+      - It emits H() and PasswordAttempt(U, B1, pw2, nH, nB).
+      - It emits a TypeEv event for the received nonce.
+      - It advances to St_U_3 with both nonces and both passwords.
+      - It sends `SndS(U,B1,senc(<U,pw2,nH,nB>,k(nH,nB)))`, a secure symmetric encryption of user, pw2, nH, and nB under k(nH,nB).
+    why: |
+      This rule captures the concrete place where Forget produces the wrong-password response used in the attack.
+    related: [paper.bank-login.attack, paper.forget.trigger-replace-detailed]
+
+  - id: paper.bank-login.user-3
+    title: User_3 rule
+    category: case-study
+    terms: [User_3 rule, user step 3, HFin Granted, access Granted]
+    definition: |
+      User_3 completes the human-side ceremony when the user receives an access Granted message.
+    details:
+      - It starts from St_U_3 with user, banks, nonces, and passwords.
+      - It requires an input message containing access and Granted.
+      - It emits HFin(U, Granted).
+      - It produces no further state facts.
+    related: [paper.bank-login.role-script-human, paper.bank-login.attack-flow]
+
+  - id: paper.bank-login.bank-respond-1
+    title: Bank_Respond_1 rule
+    category: case-study
+    terms: [Bank_Respond_1 rule, bank response step 1, B_Running, BankKnowsNonce, challenge nonce]
+    definition: |
+      Bank_Respond_1 processes the initial login request, creates the bank nonce, and sends the encrypted challenge back to the user.
+    details:
+      - It uses the bank's long-term private key to receive the confidential request.
+      - It reads the user's public key.
+      - It generates a fresh bank nonce nB.
+      - It emits B_Running(B, U, nH, nB).
+      - It stores St_B_2 with the bank, user, human nonce, and bank nonce.
+      - It sends a confidential encrypted pair of nH and nB to the user.
+      - It records BankKnowsNonce(B, U, nH) and a nonce Type fact.
+    related: [paper.bank-login.bank-reuses-nonce, paper.bank-login.forward-confidential]
+
+  - id: paper.bank-login.bank-respond-2
+    title: Bank_Respond_2 rule
+    category: case-study
+    terms: [Bank_Respond_2 rule, bank response step 2, LoginOK, Out Granted]
+    definition: |
+      Bank_Respond_2 consumes the secure credential response and records a successful bank login.
+    details:
+      - It starts from St_B_2 with the bank, user, and both nonces.
+      - It receives a secure symmetric encryption containing the user, password, nH, and nB.
+      - It emits LoginOK(B, U, pw).
+      - It advances to St_B_3.
+      - It outputs an access Granted message.
+      - It records a Type fact for Granted access.
+    why: |
+      This is the event that violates SG1 when B is Bank2 and there was no prior U_LoginRequest for Bank2.
+    related: [paper.bank-login.sg1, paper.bank-login.attack]
+
+  - id: paper.bank-login.bank-reuses-nonce
+    title: Bank_Reuses_Nonce rule
+    category: case-study
+    terms: [Bank_Reuses_Nonce rule, ReusesNonce, parallel Bank2 request, reuse nH]
+    definition: |
+      Bank_Reuses_Nonce creates the parallel request to Bank2 using a nonce already known from the Bank1-facing flow.
+    details:
+      - It reads BankKnowsNonce(B1, U, nH).
+      - It reads Bank2's public key.
+      - It emits ReusesNonce(B1, B2, nH) and requires B1 and B2 to differ.
+      - It sends a confidential encrypted request to Bank2 containing nH and the user identity.
+      - This helps create the Bank2 challenge that is later forwarded to the human.
+    related: [paper.bank-login.attack-flow, paper.bank-login.forward-confidential]
+
+  - id: paper.related-work-fortis
+    title: Fortis compared with X-Men Forget
+    category: paper
+    terms: [Fortis related work, deviations and repair, X-Men vs Fortis]
+    definition: |
+      Fortis studies deviations in security-critical systems and supports repair, while the X-Men Forget paper focuses on systematic mutation generation and formal ceremony analysis.
+    details:
+      - Fortis includes deviations arising from environment behavior, including human users.
+      - It can generate deviations under which properties still hold as a repair-oriented workflow.
+      - X-Men focuses on mutation families and their impact on security goals.
+      - X-Men 2.0 extends that mutation space with Forget.
+    related: [paper.forget.related-work, paper.mutation.approach-expanded]
+
+  - id: paper.related-work-availability-sets
+    title: Availability sets compared with Forget sets
+    category: paper
+    terms: [availability sets vs forget sets, Fila Radomirovic, non monotonic knowledge comparison]
+    definition: |
+      Availability sets model knowledge that can be gained and lost directly, while Forget sets preserve monotonic knowledge and restrict derivation use.
+    details:
+      - Availability-set approaches can model losing information through auxiliary losing ceremonies.
+      - They can capture occasional information loss rather than forcing forgetting in every run.
+      - In Tamarin, non-monotonic knowledge can enlarge the search space.
+      - The Forget paper keeps the main ceremony monotonic and records forgotten messages separately.
+      - This allows execution to continue by replacement or skipping sends when necessary.
+    why: |
+      This is the main related-work contrast for the formal design of Forget.
+    related: [paper.forget.forget-set, paper.forget.delete-knowledge-problem]
+
+  - id: paper.related-work-usable-security
+    title: Usable security motivation for Forget
+    category: paper
+    terms: [usable security forgetting, password memorability, password reuse, Gao forgetting passwords, Adams Sasse]
+    definition: |
+      Usable-security work motivates Forget by showing that memory limitations shape authentication behavior, especially password selection, reuse, and forgetting.
+    details:
+      - Users often struggle to balance password security and memorability.
+      - Password reuse or adaptation across services can be a response to memory limits.
+      - Forgetting passwords is common and influenced by usage frequency and retention.
+      - The Forget paper turns those human factors into a formal mutation for automated analysis.
+    related: [paper.forget.memory-motivation, paper.bank-login.attack]

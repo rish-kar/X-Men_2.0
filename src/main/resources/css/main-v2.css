@@ -1,5 +1,5 @@
 /* ============================================================================
- * X-Men 3.0 — UI v2 stylesheet
+ * X-Men 2.0 - UI v2 stylesheet
  *
  * Themes inject palette values via inline -fx-* variables on the .x-root node.
  * Defaults match SERMAS Classic.
@@ -282,6 +282,22 @@
     -fx-padding: 0;
 }
 
+/* Keep the scrollable wrapper around the controls fully transparent so the
+ * glass card stays seamless when the panel needs to scroll on small windows. */
+.x-control-panel .scroll-pane,
+.x-control-panel .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+.x-control-panel .scroll-pane > .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+.x-control-panel .scroll-pane > .scroll-bar > .thumb {
+    -fx-background-color: -accent-soft;
+    -fx-background-radius: 8;
+    -fx-opacity: 0.55;
+}
+
 /* The legacy "glass-panel" class from main.css must not double-up here. */
 .x-control-panel .glass-panel {
     -fx-background-color: transparent;
@@ -421,7 +437,6 @@
 .button.x-cta-primary,
 .button.x-cta-secondary {
     -fx-text-overrun: clip;
-    -fx-min-width: -fx-pref-width;
     -fx-content-display: left;
 }
 

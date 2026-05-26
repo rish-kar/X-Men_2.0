@@ -32,7 +32,7 @@ FROM eclipse-temurin:21-jre AS runtime
 
 LABEL org.opencontainers.image.title="X-Men" \
       org.opencontainers.image.description="X-Men: Mutation-Based Analysis of Security Ceremonies" \
-      org.opencontainers.image.source="https://github.kcl.ac.uk/SERMAS/X-Men_3.0" \
+      org.opencontainers.image.source="https://github.kcl.ac.uk/SERMAS/X-Men_2.0" \
       org.opencontainers.image.licenses="UNLICENSED"
 
 # Tiny tool needed for the HEALTHCHECK; keep the layer small.
@@ -46,7 +46,7 @@ USER appuser
 WORKDIR /app
 
 # Override the jar name with --build-arg if your version changes.
-ARG JAR_FILE=target/X-Men_3.0-0.0.1-SNAPSHOT.jar
+ARG JAR_FILE=target/X-Men_2.0-0.0.1-SNAPSHOT.jar
 COPY --from=build /workspace/${JAR_FILE} app.jar
 
 # Defaults that match application.yaml fallbacks. All overridable at `docker run` time.

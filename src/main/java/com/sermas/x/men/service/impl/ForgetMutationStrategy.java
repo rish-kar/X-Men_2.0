@@ -908,11 +908,18 @@ public class ForgetMutationStrategy implements MutationStrategy {
 
   /**
    * Propagates mutation with variant replacements to subsequent rules.
+   *
+   * Per the paper (Sec. IV.C): "a mutated send action is matched by mutating
+   * the corresponding receive action so that the receiver accepts the modified
+   * message ... Propagation updates agents' knowledge according to the messages
+   * actually received". So we substitute only in the receive-side of subsequent
+   * rules (RcvS/In preconditions, all actions, and postconditions). State
+   * preconditions are left intact because they represent each agent's prior,
+   * monotonic knowledge. Rules whose content is not touched stay un-tagged.
    */
   private void propagateMutationWithVariant(ArrayList<Rule> theory, Rule startRule,
                                             Map<Message, Set<Message>> blockedToReplacements,
                                             Map<String, String> setup) {
-    // Build string-based substitution
     Map<String, String> substitution = new HashMap<>();
     for (Map.Entry<Message, Set<Message>> entry : blockedToReplacements.entrySet()) {
       if (!entry.getValue().isEmpty()) {
@@ -936,17 +943,60 @@ public class ForgetMutationStrategy implements MutationStrategy {
     for (int i = startIndex + 1; i < theory.size(); i++) {
       Rule r = theory.get(i);
 
-      if (!r.getRule_name().endsWith("_M")) {
+      boolean changed = false;
+      for (Map.Entry<String, String> sub : substitution.entrySet()) {
+        if (ruleHasReceiveSideValue(r, sub.getKey())) {
+          forwardPropagate(r, sub.getKey(), sub.getValue());
+          changed = true;
+        }
+      }
+
+      if (changed && !r.getRule_name().endsWith("_M")) {
         r.setRule_name(r.getRule_name() + "_M");
         r.setTypo(Type.MUTATED);
       }
+    }
+  }
 
-      if (r.isHuman()) continue;
-
-      // Apply substitutions
-      for (Map.Entry<String, String> sub : substitution.entrySet()) {
-        replaceValue(r, sub.getKey(), sub.getValue(), true, true, true);
+  /**
+   * True when {@code value} occurs on the receive side of the rule, i.e. in
+   * an RcvS/In precondition, in any action, or in any postcondition. State
+   * preconditions are excluded because they encode the agent's pre-existing
+   * knowledge, which the paper requires to remain monotonic.
+   */
+  private boolean ruleHasReceiveSideValue(Rule r, String value) {
+    for (Fact pre : r.getPreconditions()) {
+      String name = pre.getF_name();
+      if ("RcvS".equals(name) || "In".equals(name)) {
+        if (containsParam(pre, value)) return true;
       }
+    }
+    for (Fact act : r.getActions()) {
+      if (containsParam(act, value)) return true;
+    }
+    for (Fact post : r.getPostconditions()) {
+      if (containsParam(post, value)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Substitute {@code from} -> {@code to} on the receive side of the rule
+   * (RcvS/In preconditions, actions, and postconditions). State preconditions
+   * are left intact so the receiver's prior knowledge is preserved.
+   */
+  private void forwardPropagate(Rule r, String from, String to) {
+    for (Fact pre : r.getPreconditions()) {
+      String name = pre.getF_name();
+      if ("RcvS".equals(name) || "In".equals(name)) {
+        replaceInFact(pre, from, to);
+      }
+    }
+    for (Fact act : r.getActions()) {
+      replaceInFact(act, from, to);
+    }
+    for (Fact post : r.getPostconditions()) {
+      replaceInFact(post, from, to);
     }
   }
 
