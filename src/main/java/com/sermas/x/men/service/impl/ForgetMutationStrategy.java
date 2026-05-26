@@ -196,7 +196,28 @@ public class ForgetMutationStrategy implements MutationStrategy {
     // Extract target message (m2 - the send message)
     Message target = derivationCheckService.extractTargetFromRule(rule);
     if (target == null) {
-      log.warn("No target message found for rule {}", rule.getRule_name());
+      // Per paper Algorithm 1 (Sec. IV.C, lines 7-8): when there is no
+      // outgoing m2, only Neglect applies — remove any internal action
+      // that uses the forgotten message, drop the Forget annotation, and
+      // emit the mutated rule. Knowledge K[i+1] stays monotonic, so the
+      // forward propagation that other rules rely on (via State) is
+      // preserved without rewriting any witness arguments.
+      log.info(
+          "No outgoing m2 in rule {} — Neglect path: removing {} internal action(s) and Forget annotation",
+          rule.getRule_name(), actionsToNeglect.size());
+      ArrayList<Rule> theoryClone = deepCloneTheory(rules);
+      Rule startRule = findRuleByName(theoryClone, rule.getRule_name());
+      if (startRule != null) {
+        for (String forgotten : forgetSet) {
+          removeForgetMutation(startRule, canonicalize(forgotten));
+        }
+        if (!actionsToNeglect.isEmpty()) {
+          removeNeglectedActions(startRule, actionsToNeglect);
+          startRule.setRule_name(startRule.getRule_name() + "_M");
+          startRule.setTypo(Type.MUTATED);
+        }
+      }
+      parametersBundle.getCollections().add(theoryClone);
       return parametersBundle;
     }
 

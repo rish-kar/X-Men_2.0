@@ -1130,6 +1130,8 @@ public class XMenInterface extends Application {
         || (cbAdd != null && cbAdd.isSelected())
         || (cbSubmessages != null && cbSubmessages.isSelected())
         || (cbType != null && cbType.isSelected())
+        || (cbCombineAddition != null && cbCombineAddition.isSelected())
+        || (cbCombineOnly != null && cbCombineOnly.isSelected())
         || (cbForget != null && cbForget.isSelected())
         || (cbNeglect != null && cbNeglect.isSelected());
   }

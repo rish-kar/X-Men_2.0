@@ -84,7 +84,11 @@ public final class ThemedToast {
     Label text = new Label(message);
     text.getStyleClass().add("x-toast-message");
     text.setWrapText(true);
-    text.setMaxWidth(420);
+    text.setTextOverrun(javafx.scene.control.OverrunStyle.CLIP);
+    text.setMaxWidth(440);
+    // Let the label grow vertically as the message wraps — otherwise long
+    // toasts get truncated to "...".
+    text.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
 
     VBox card = new VBox(text);
     card.getStyleClass().add("x-toast");

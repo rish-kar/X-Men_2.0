@@ -123,14 +123,14 @@ public class DerivationCheckServiceImpl implements DerivationCheckService {
       }
     }
 
-    // Fallback: use the last postcondition's last parameter (original behavior)
-    Fact lastFact = posts.get(posts.size() - 1);
-    List<Object> params = lastFact.getParameters();
-    if (params == null || params.isEmpty()) return null;
-
-    Object lastParam = params.get(params.size() - 1);
-    String paramStr = payloadToString(lastParam).trim();
-    return parseTargetParam(paramStr);
+    // No SndS / Out — there is no outgoing message m2 in this transition.
+    // Per paper Algorithm 1 (Sec. IV.C), only lines 7-8 apply in this case
+    // (Neglect of an internal action that uses the forgotten message). Do
+    // NOT fall back to the State postcondition: that conflates the human's
+    // monotonic knowledge with an "outgoing message", which sends the
+    // algorithm into the textual-substitution branch and silently rewrites
+    // witness actions.
+    return null;
   }
 
   // Convert a Fact parameter to its plain string form; unwrap Value when present

@@ -77,11 +77,18 @@ public final class ThemedDialog {
     Label titleLabel = new Label(title == null ? "" : title);
     titleLabel.getStyleClass().add("x-dialog-title");
     titleLabel.setWrapText(true);
+    titleLabel.setTextOverrun(javafx.scene.control.OverrunStyle.CLIP);
+    titleLabel.setMaxWidth(440);
+    titleLabel.setMinHeight(Region.USE_PREF_SIZE);
 
     Label bodyLabel = new Label(body == null ? "" : body);
     bodyLabel.getStyleClass().add("x-dialog-body");
     bodyLabel.setWrapText(true);
-    bodyLabel.setMaxWidth(420);
+    bodyLabel.setTextOverrun(javafx.scene.control.OverrunStyle.CLIP);
+    bodyLabel.setMaxWidth(440);
+    // Force the label to grow to whatever height its wrapped text needs,
+    // so long messages don't get crushed into a single elided line.
+    bodyLabel.setMinHeight(Region.USE_PREF_SIZE);
 
     ImageView icon = loadIcon(kind);
 

@@ -1232,11 +1232,19 @@
     -fx-text-fill: -text;
     -fx-font-size: 20px;
     -fx-font-weight: 800;
+    -fx-wrap-text: true;
+    -fx-text-overrun: clip;
 }
 .x-dialog-body {
     -fx-text-fill: -text;
     -fx-font-size: 14px;
     -fx-line-spacing: 2px;
+    -fx-wrap-text: true;
+    -fx-text-overrun: clip;
+}
+.x-toast-message {
+    -fx-wrap-text: true;
+    -fx-text-overrun: clip;
 }
 
 /* ============================================================================ */
