@@ -8,13 +8,13 @@
 
 ---
 
-> 🎯 &nbsp;**At a glance** &nbsp;·&nbsp; Hosts every unit, integration, and UI test for X-Men. All test classes live under `com/sermas/x/men`.
+> 🎯 &nbsp;**At a glance** &nbsp;·&nbsp; Hosts every unit, integration, and UI test for X-Men. All test classes live under `com/xmen`.
 
 ## 🗺️ Where this sits
 
 ```text
 src/test/java   ←  you are here
-   └── com/sermas/x/men/
+   └── com/xmen/
          ├── ApplicationTests           (Spring context smoke test)
          ├── integrationTests/          (end-to-end mutation tests)
          ├── service/                   (service unit tests)
@@ -27,7 +27,7 @@ src/test/java   ←  you are here
 
 | Entry | Type | What it is |
 | --- | --- | --- |
-| `com/` | package tree | The full `com.sermas.x.men` test namespace. |
+| `com/` | package tree | The full `com.xmen` test namespace. |
 
 ## 🔗 Connections
 

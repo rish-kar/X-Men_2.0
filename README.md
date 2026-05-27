@@ -22,8 +22,62 @@
 
 ---
 
+## 🐳 Docker Quick Start — Recommended Reviewer Path
+
+<table>
+<tr>
+<td>
+
+> **Use this path if you simply want to run and review X-Men.**  
+> Docker builds the Java application, starts the Spring Boot API, launches the
+> JavaFX interface with `-Djava.awt.headless=false`, and exposes the full UI in
+> your browser through a bundled virtual display.
+
+### 1) Prerequisite
+
+Install **Docker Desktop** on Windows/macOS, or **Docker Engine + Docker Compose**
+on Linux.
+
+### 2) Run X-Men
+
+```bash
+docker compose up --build
+```
+
+### 3) Open the application
+
+| Surface | URL | Purpose |
+| --- | --- | --- |
+| **JavaFX UI** | <http://localhost:6080/vnc.html?autoconnect=1&resize=scale> | Full X-Men desktop interface in the browser. |
+| **REST API** | <http://localhost:8081> | Spring Boot service endpoint. |
+| **Swagger UI** | <http://localhost:8081/swagger-ui/index.html> | Interactive API documentation and request runner. |
+
+### 4) Stop X-Men
+
+```bash
+docker compose down
+```
+
+### Optional Haskell derivation service
+
+```bash
+docker compose --profile haskell up --build
+```
+
+The Docker image bundles the Linux display, JavaFX media, FFmpeg/GStreamer, and
+browser-accessible VNC pieces required for the splash video, background videos,
+native UI, and API to run together. Reviewers do **not** need to install Java,
+Maven, IntelliJ IDEA, Postman, or configure local path variables for this path.
+
+</td>
+</tr>
+</table>
+
+---
+
 ## ✨ Table of Contents
 
+- [Docker Quick Start — Recommended Reviewer Path](#-docker-quick-start--recommended-reviewer-path)
 - [About The Project](#-about-the-project)
 - [Built With](#-built-with)
 - [Architecture at a Glance](#-architecture-at-a-glance)

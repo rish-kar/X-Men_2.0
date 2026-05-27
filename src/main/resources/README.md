@@ -28,7 +28,7 @@ src/main/resources    ←  you are here
 | File                               | Role |
 |------------------------------------| --- |
 | ⚙️ `application.yaml`              | Spring Boot configuration with env-var defaults (`SERVER_PORT`, `APP_CORS_ALLOWED_ORIGINS`, `DERIVATION_SERVICE_URL`, …). |
-| 🎬 `DNA-Background.mp4`            | Background video for the JavaFX main scene. |
+| 🎬 `videos/1.mp4`–`videos/6.mp4`   | Randomized background videos for the JavaFX main scene. |
 | 🎬 `X - Men 2.0.mp4`               | Splash-screen video. |
 | 📦 `X-Men.postman_collection.json` | Importable Postman collection — every mutation endpoint pre-wired. |
 | 🧪 `TrialCase.spthy`               | Sample SPTHY model used in demos and tests. |
@@ -78,7 +78,7 @@ src/main/resources    ←  you are here
 </details>
 
 <details>
-<summary>🎬 <strong>DNA-Background.mp4</strong> · <strong>X-Men-Logo.mp4</strong></summary>
+<summary>🎬 <strong>videos/*.mp4</strong> · <strong>X - Men 2.0.mp4</strong></summary>
 
 <br/>
 
@@ -99,7 +99,7 @@ Reference artefacts — research notes for Forget and packaging hints. No runtim
 
 | ⬇️ Depends on | ⬆️ Used by |
 | --- | --- |
-| Application code that performs classpath resource lookups. | `../java/com/sermas/x/men/config` (config keys) · `user_interface` (media, images, CSS) · documentation. |
+| Application code that performs classpath resource lookups. | `../java/com/xmen/config` (config keys) · `user_interface` (media, images, CSS) · documentation. |
 
 ## ⚙️ At runtime
 

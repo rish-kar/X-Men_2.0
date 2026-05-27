@@ -33,7 +33,7 @@
 @SET __MVNW_PSMODULEP_SAVE=%PSModulePath%
 @SET PSModulePath=
 @REM Escape apostrophes in the script path so PowerShell's single-quoted strings
-@REM don't break when the path contains one (e.g. "King's College London").
+@REM don't break when the path contains one.
 @REM In PowerShell, a literal ' inside '...' is written as '' (two apostrophes).
 @SET "__MVNW_DP0__=%~dp0"
 @SET "__MVNW_F0__=%~f0"

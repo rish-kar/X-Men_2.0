@@ -45,7 +45,7 @@
 
 | ⬇️ Depends on | ⬆️ Used by |
 | --- | --- |
-| JavaFX CSS support. | `../../java/com/sermas/x/men/user_interface/XMenInterface.java`. |
+| JavaFX CSS support. | `../../java/com/xmen/user_interface/XMenInterface.java`. |
 
 ## ⚙️ At runtime
 

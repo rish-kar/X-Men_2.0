@@ -7,7 +7,7 @@
     <relativePath>pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.sermas.x.men</groupId>
+  <groupId>com.xmen</groupId>
   <artifactId>X-Men_2.0</artifactId>
   <name>X-Men</name>
   <version>0.0.1-SNAPSHOT</version>
@@ -35,13 +35,14 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <mainClass>com.sermas.x.men.user_interface.XMenInterface</mainClass>
+          <mainClass>com.xmen.user_interface.XMenInterface</mainClass>
         </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M3</version>
         <configuration>
+          <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
           <systemPropertyVariables>
             <jacoco-agent.destfile>$/jacoco.exec</jacoco-agent.destfile>
           </systemPropertyVariables>
@@ -108,9 +109,45 @@
                     <exclude>META-INF/*.SF</exclude>
                     <exclude>META-INF/*.DSA</exclude>
                     <exclude>META-INF/*.RSA</exclude>
+                    <exclude>module-info.class</exclude>
+                    <exclude>META-INF/versions/*/module-info.class</exclude>
+                    <exclude>META-INF/LICENSE</exclude>
+                    <exclude>META-INF/LICENSE.txt</exclude>
+                    <exclude>META-INF/LICENSE.md</exclude>
+                    <exclude>META-INF/license.txt</exclude>
+                    <exclude>META-INF/NOTICE</exclude>
+                    <exclude>META-INF/NOTICE.txt</exclude>
+                    <exclude>META-INF/NOTICE.md</exclude>
+                    <exclude>META-INF/notice.txt</exclude>
+                    <exclude>META-INF/DEPENDENCIES</exclude>
+                    <exclude>META-INF/COPYRIGHT</exclude>
+                    <exclude>META-INF/io.netty.versions.properties</exclude>
+                    <exclude>META-INF/substrate/**</exclude>
+                    <exclude>META-INF/additional-spring-configuration-metadata.json</exclude>
+                    <exclude>META-INF/spring-autoconfigure-metadata.properties</exclude>
+                    <exclude>META-INF/spring-configuration-metadata.json</exclude>
+                    <exclude>META-INF/spring.tooling</exclude>
+                    <exclude>META-INF/spring/aot.factories</exclude>
+                    <exclude>META-INF/web-fragment.xml</exclude>
                   </excludes>
                 </filter>
               </filters>
+              <transformers>
+                <transformer />
+                <transformer />
+                <transformer>
+                  <resource>META-INF/spring.factories</resource>
+                </transformer>
+                <transformer>
+                  <resource>META-INF/spring.handlers</resource>
+                </transformer>
+                <transformer>
+                  <resource>META-INF/spring.schemas</resource>
+                </transformer>
+                <transformer>
+                  <resource>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</resource>
+                </transformer>
+              </transformers>
             </configuration>
           </execution>
         </executions>

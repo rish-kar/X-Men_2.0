@@ -1,12 +1,12 @@
 entries:
   - id: paper.jcs210075
-    title: Sempreboni and Vigano JCS paper
+    title: JCS mutation-based ceremonies paper
     category: paper
-    terms: [Sempreboni Vigano paper, JCS210075, mutation based approach paper, security ceremonies paper, X-Men paper, DOI 10.3233 JCS 210075]
+    terms: [JCS paper, JCS210075, mutation based approach paper, security ceremonies paper, X-Men paper, DOI 10.3233 JCS 210075]
     shortAnswer: |
       The paper defines X-Men as a mutation-based approach for formally and automatically analyzing security ceremonies with Tamarin.
     definition: |
-      "A mutation-based approach for the formal and automated analysis of security ceremonies" is a 2023 Journal of Computer Security paper by Diego Sempreboni and Luca Vigano. It introduces human-behavior mutations for security ceremonies, an automated X-Men workflow over Tamarin, and three case studies.
+      "A mutation-based approach for the formal and automated analysis of security ceremonies" is a 2023 Journal of Computer Security paper. It introduces human-behavior mutations for security ceremonies, an automated X-Men workflow over Tamarin, and three case studies.
     details:
       - Venue is Journal of Computer Security 31, pages 293-364.
       - The paper focuses on ceremonies where human users are first-class actors.
@@ -882,5 +882,5 @@ entries:
       - Future work includes generating recommendations and guidelines for human users.
       - The paper proposes forgetting as a possible fifth human mutation.
       - The paper also points to more complex mutation combinations and compositionality results.
-      - The authors want to improve efficiency and reduce the number of models requiring manual inspection.
+      - The paper aims to improve efficiency and reduce the number of models requiring manual inspection.
     related: [paper.efficiency, paper.exploiting-results, paper.neglect-vs-forget]

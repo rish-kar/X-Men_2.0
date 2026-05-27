@@ -2,7 +2,7 @@
  * X-Men 2.0 - UI v2 stylesheet
  *
  * Themes inject palette values via inline -fx-* variables on the .x-root node.
- * Defaults match SERMAS Classic.
+ * Defaults match the Classic theme.
  * ========================================================================== */
 
 .x-root {
@@ -13,6 +13,20 @@
     -glass-stroke:  rgba(214, 178, 255, 0.45);
     -text:          #F8F2FF;
     -text-muted:    rgba(238, 222, 255, 0.78);
+    /* Opaque base painted behind every other layer. The background video and
+       the .x-overlay pane both stretch to fill the root, but on Windows the
+       maximised window can briefly expose a sliver at the bottom edge before
+       those layers lay out — without this fill the scene's default white
+       shows through and reads as an un-themed strip. The base picks the
+       theme's overlay colour so it blends invisibly with the rest. */
+    -fx-background-color: -overlay;
+    /* Cinematic shadow convention — every directional dropshadow in this
+     * stylesheet uses:
+     *     dropshadow(gaussian, -shadow, <radius>, 0.40, 3, 8)
+     * Light source sits in the upper-left so shadows fall to the lower-right
+     * at a consistent angle and intensity. Only the blur radius varies, scaled
+     * to the element's size. Accent-coloured halos with offset (0, 0) are
+     * exempt — they are glows, not directional shadows. */
     -shadow:        rgba(10, 0, 30, 0.55);
     -fx-font-family: "Inter", "Segoe UI Variable", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     -fx-focus-color: transparent;
@@ -44,6 +58,11 @@
     -fx-background-color: transparent;
 }
 
+.x-toast-shadow-room {
+    -fx-padding: 26 30 8 30;
+    -fx-background-color: transparent;
+}
+
 /* Stroke colour for themed SVG icons. ladder() flips to black on light accents
  * (e.g. Charcoal Mono) and stays white on dark accents. */
 .x-icon-themed { -fx-stroke: -text; }
@@ -65,16 +84,16 @@
             derive(-accent, -18%) 82%,
             derive(-accent, -34%) 100%);
     -fx-text-fill: ladder(-accent, white 49%, black 50%);
-    -fx-font-size: 17px;
+    -fx-font-size: 13px;
     -fx-font-weight: 700;
-    -fx-padding: 14 28 14 22;
+    -fx-padding: 11 22 11 17;
     -fx-background-radius: 999;
     -fx-border-color: derive(-accent, 40%);
     -fx-border-radius: 999;
-    -fx-border-width: 1.5;
-    -fx-graphic-text-gap: 12;
+    -fx-border-width: 1.15;
+    -fx-graphic-text-gap: 9;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, -shadow, 22, 0.45, 0, 6);
+    -fx-effect: dropshadow(gaussian, -shadow, 22, 0.40, 3, 8);
 }
 .x-settings-btn:hover {
     -fx-background-color:
@@ -93,9 +112,10 @@
 .x-hero-left {
     -fx-padding: 30 24 80 60;
     -fx-spacing: 22;
-    /* Top-left items but content blocks themselves are centred horizontally
-     * via x-hero-center (logo + title group). */
-    -fx-alignment: TOP_LEFT;
+    /* The hero column lives in the ~35% of the screen not taken by the
+     * mutation controls glass panel — centre every child both vertically
+     * and horizontally inside that space. */
+    -fx-alignment: CENTER;
 }
 
 .x-hero-center {
@@ -108,7 +128,7 @@
 }
 
 .x-logo-img {
-    -fx-effect: dropshadow(gaussian, -shadow, 24, 0.30, 0, 6);
+    -fx-effect: dropshadow(gaussian, -shadow, 24, 0.40, 3, 8);
 }
 
 /*
@@ -140,7 +160,7 @@
     -fx-font-size: 86px;
     -fx-font-weight: 200;
     -fx-line-spacing: -16px;
-    -fx-effect: dropshadow(gaussian, -shadow, 28, 0.40, 0, 10);
+    -fx-effect: dropshadow(gaussian, -shadow, 28, 0.40, 3, 8);
     -fx-text-alignment: CENTER;
 }
 
@@ -151,6 +171,7 @@
     -fx-padding: 4 0 0 20;
     -fx-border-color: transparent transparent transparent -accent;
     -fx-border-width: 0 0 0 3;
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.40, 3, 8);
 }
 
 /* ============================================================================ */
@@ -174,7 +195,7 @@
     -fx-border-radius: 999;
     -fx-border-width: 1;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, -shadow, 20, 0.45, 0, 5);
+    -fx-effect: dropshadow(gaussian, -shadow, 20, 0.40, 3, 8);
     -fx-graphic-text-gap: 10;
 }
 .x-cta-primary:hover {
@@ -187,7 +208,7 @@
     -fx-text-fill: ladder(-accent-soft, white 49%, black 50%);
 }
 .x-cta-primary:pressed {
-    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.50, 0, 2);
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.40, 3, 8);
 }
 
 .x-cta-secondary {
@@ -203,7 +224,7 @@
     -fx-border-width: 1.5;
     -fx-cursor: hand;
     -fx-graphic-text-gap: 8;
-    -fx-effect: dropshadow(gaussian, -shadow, 16, 0.30, 0, 4);
+    -fx-effect: dropshadow(gaussian, -shadow, 16, 0.40, 3, 8);
 }
 .x-cta-secondary:hover {
     -fx-text-fill: -text;
@@ -212,13 +233,14 @@
         linear-gradient(to bottom right, derive(-glass-fill, 28%), -glass-fill);
 }
 .x-cta-secondary:pressed {
-    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 0, 2);
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 3, 8);
 }
 
 .x-hero-tagline {
     -fx-text-fill: -text-muted;
     -fx-font-size: 13px;
     -fx-padding: 4 0 0 0;
+    -fx-effect: dropshadow(gaussian, -shadow, 6, 0.40, 3, 8);
 }
 
 /* ============================================================================ */
@@ -228,36 +250,72 @@
 /* ============================================================================ */
 
 /* The mutation controls glass card sits inside this wrapper; the extra top
- * and bottom padding shrinks the visible panel ~10% so it stops touching the
- * top/bottom edge of the screen. */
+ * and bottom padding pulls the panel inside the screen edges. Kept modest so
+ * the card has enough vertical room to fit every mutation flat without a
+ * scrollbar. */
 .x-controls-wrap {
-    -fx-padding: 90 60 110 12;
+    -fx-padding: 58 60 70 12;
     -fx-alignment: CENTER;
 }
 
 .x-control-panel {
+    /* Backing layer was rgba(0,0,0,0.10); bumped to 0.22 so the checkbox text
+     * stays comfortably readable when the DNA-helix background bleeds through. */
     -fx-background-color:
             linear-gradient(to bottom right,
             rgba(255,255,255,0.045),
             rgba(255,255,255,0.015)),
-            rgba(0,0,0,0.10);
+            rgba(0,0,0,0.22);
     -fx-background-radius: 24;
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 24;
     -fx-border-width: 1.5;
-    -fx-padding: 18 30 16 30;
-    -fx-effect: dropshadow(gaussian, -shadow, 32, 0.35, 0, 10);
+    -fx-padding: 12 24 10 24;
+    -fx-effect: dropshadow(gaussian, -shadow, 46, 0.46, 4, 12);
+}
+
+.x-root.x-theme-paper-light .x-control-panel,
+.x-root.x-theme-arctic-ice .x-control-panel,
+.x-root.x-theme-powder-blue .x-control-panel {
+    -fx-background-color:
+            linear-gradient(to bottom right,
+            rgba(10,18,32,0.16),
+            rgba(10,18,32,0.07)),
+            rgba(0,0,0,0.31);
+}
+
+.x-root.x-theme-paper-light .x-control-panel .label,
+.x-root.x-theme-arctic-ice .x-control-panel .label,
+.x-root.x-theme-powder-blue .x-control-panel .label,
+.x-root.x-theme-paper-light .x-control-panel .check-box,
+.x-root.x-theme-arctic-ice .x-control-panel .check-box,
+.x-root.x-theme-powder-blue .x-control-panel .check-box,
+.x-root.x-theme-paper-light .x-control-panel .radio-button,
+.x-root.x-theme-arctic-ice .x-control-panel .radio-button,
+.x-root.x-theme-powder-blue .x-control-panel .radio-button,
+.x-root.x-theme-paper-light .x-control-title,
+.x-root.x-theme-arctic-ice .x-control-title,
+.x-root.x-theme-powder-blue .x-control-title,
+.x-root.x-theme-paper-light .x-control-sub,
+.x-root.x-theme-arctic-ice .x-control-sub,
+.x-root.x-theme-powder-blue .x-control-sub,
+.x-root.x-theme-paper-light .x-section-label,
+.x-root.x-theme-arctic-ice .x-section-label,
+.x-root.x-theme-powder-blue .x-section-label {
+    -fx-text-fill: white;
 }
 
 .x-control-title {
     -fx-text-fill: -text;
-    -fx-font-size: 25.3px;
-    -fx-font-weight: 700;
+    -fx-font-size: 34px;
+    -fx-font-weight: 800;
     -fx-wrap-text: true;
+    -fx-padding: 0 0 2 0;
 }
 .x-control-sub {
     -fx-text-fill: -text-muted;
-    -fx-font-size: 15px;
+    -fx-font-size: 17px;
+    -fx-font-weight: 500;
     -fx-wrap-text: true;
 }
 
@@ -283,14 +341,34 @@
 }
 
 /* Keep the scrollable wrapper around the controls fully transparent so the
- * glass card stays seamless when the panel needs to scroll on small windows. */
+ * glass card stays seamless. AS_NEEDED + zero-padded scroll-bar means that at
+ * normal window sizes the bar is invisible (no track, no buttons, no chrome)
+ * and only the thumb shows up after the user shrinks the window enough that
+ * content overflows. */
 .x-control-panel .scroll-pane,
 .x-control-panel .scroll-pane > .viewport {
     -fx-background-color: transparent;
     -fx-background: transparent;
+    -fx-padding: 0;
 }
 .x-control-panel .scroll-pane > .scroll-bar:vertical {
     -fx-background-color: transparent;
+    -fx-padding: 2;
+}
+.x-control-panel .scroll-pane > .scroll-bar:vertical .track,
+.x-control-panel .scroll-pane > .scroll-bar:vertical .track-background {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.x-control-panel .scroll-pane > .scroll-bar:vertical .increment-button,
+.x-control-panel .scroll-pane > .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.x-control-panel .scroll-pane > .scroll-bar:vertical .increment-arrow,
+.x-control-panel .scroll-pane > .scroll-bar:vertical .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
 }
 .x-control-panel .scroll-pane > .scroll-bar > .thumb {
     -fx-background-color: -accent-soft;
@@ -325,6 +403,13 @@
     -fx-border-radius: 4;
     -fx-background-radius: 4;
     -fx-padding: 3;
+    /* Soft drop shadow lifts the box off the glass card without making it
+     * look heavy — the offset matches the dropshadow on the CTA pills. */
+    -fx-effect: dropshadow(gaussian, -shadow, 6, 0.40, 3, 8);
+}
+.x-control-panel .check-box:hover > .box,
+.x-control-panel .radio-button:hover > .radio {
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.40, 3, 8);
 }
 .x-control-panel .check-box:selected > .box,
 .x-control-panel .radio-button:selected > .radio {
@@ -357,7 +442,7 @@
 
 .x-control-footer {
     -fx-alignment: CENTER_RIGHT;
-    -fx-padding: 8 0 0 0;
+    -fx-padding: 0;
 }
 
 /* ============================================================================ */
@@ -373,7 +458,7 @@
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 22;
     -fx-border-width: 1.5;
-    -fx-effect: dropshadow(gaussian, -shadow, 28, 0.35, 0, 8);
+    -fx-effect: dropshadow(gaussian, -shadow, 28, 0.40, 3, 8);
 }
 .x-algo-body {
     -fx-text-fill: -text;
@@ -417,7 +502,7 @@
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 26;
     -fx-border-width: 1.5;
-    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.50, 0, 12);
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.40, 3, 8);
 }
 .x-settings-title {
     -fx-text-fill: -text;
@@ -458,16 +543,16 @@
     -fx-text-overrun: clip;
     -fx-padding: 6 0 0 0;
 }
-/* Keyword chip — small pill, theme-tinted glass background. */
+/* Keyword chip — square rectangle, theme-tinted glass background. */
 .x-ref-chip {
     -fx-text-fill: -text;
     -fx-font-size: 12px;
     -fx-font-family: "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
     -fx-padding: 3 10 3 10;
     -fx-background-color: derive(-glass-fill, 8%);
-    -fx-background-radius: 999;
+    -fx-background-radius: 0;
     -fx-border-color: -glass-stroke;
-    -fx-border-radius: 999;
+    -fx-border-radius: 0;
     -fx-border-width: 1;
     -fx-text-overrun: clip;
 }
@@ -475,11 +560,12 @@
 /* TabPane chrome — softer accent pill, no protruding shadow. */
 .x-settings-pane .tab-pane {
     -fx-background-color: transparent;
-    -fx-tab-min-height: 34;
+    -fx-tab-min-height: 38;
 }
-.x-settings-pane .tab-pane > .tab-header-area { -fx-padding: 0; }
+.x-settings-pane .tab-pane > .tab-header-area { -fx-padding: 6 10 14 6; }
 .x-settings-pane .tab-pane > .tab-header-area > .headers-region > .tab {
     -fx-background-color: transparent;
+    -fx-background-insets: 0;
     -fx-background-radius: 999;
     -fx-padding: 6 18 6 18;
     -fx-cursor: hand;
@@ -501,7 +587,8 @@
             -accent 60%,
             derive(-accent, -18%) 90%,
             derive(-accent, -32%) 100%);
-    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.25, 0, 2);
+    -fx-background-insets: 0;
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.14, 1, 3);
 }
 .x-settings-pane .tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
     -fx-text-fill: ladder(-accent, white 49%, black 50%);
@@ -590,7 +677,7 @@
     -fx-border-radius: 10;
     -fx-border-width: 1.5;
     -fx-padding: 4 6 4 12;
-    -fx-effect: dropshadow(gaussian, -shadow, 6, 0.18, 0, 2);
+    -fx-effect: dropshadow(gaussian, -shadow, 6, 0.40, 3, 8);
 }
 .x-settings-pane .combo-box .list-cell,
 .x-settings-pane .combo-box-base .list-cell,
@@ -625,7 +712,7 @@
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-padding: 4;
-    -fx-effect: dropshadow(gaussian, -shadow, 18, 0.4, 0, 4);
+    -fx-effect: dropshadow(gaussian, -shadow, 18, 0.40, 3, 8);
 }
 .combo-box-popup .list-view .list-cell,
 .x-glass-choice .list-view .list-cell,
@@ -677,7 +764,7 @@
     -fx-border-radius: 12;
     -fx-background-radius: 12;
     -fx-padding: 6;
-    -fx-effect: dropshadow(gaussian, -shadow, 18, 0.35, 0, 4);
+    -fx-effect: dropshadow(gaussian, -shadow, 18, 0.40, 3, 8);
 }
 .x-settings-pane .choice-box .menu-item .label,
 .x-glass-choice .menu-item .label {
@@ -712,10 +799,10 @@
     -fx-border-radius: 12;
     -fx-border-width: 1;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 10, 0.30, 0, 3);
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.40, 3, 8);
 }
 .x-theme-swatch:hover {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 14, 0.40, 0, 4);
+    -fx-effect: dropshadow(gaussian, -shadow, 14, 0.40, 3, 8);
 }
 .x-theme-swatch.is-selected {
     -fx-border-color: white;
@@ -747,7 +834,7 @@
     -fx-border-radius: 14;
     -fx-background-radius: 14;
     -fx-padding: 0;
-    -fx-effect: dropshadow(gaussian, -shadow, 14, 0.22, 0, 3);
+    -fx-effect: dropshadow(gaussian, -shadow, 14, 0.40, 3, 8);
 }
 .x-vocab-table > .virtual-flow,
 .x-vocab-table > .virtual-flow > .clipped-container,
@@ -847,7 +934,7 @@
     -fx-border-radius: 18;
     -fx-border-width: 1.5;
     -fx-padding: 16 22 16 22;
-    -fx-effect: dropshadow(gaussian, -shadow, 22, 0.45, 0, 6);
+    -fx-effect: dropshadow(gaussian, -shadow, 22, 0.40, 3, 8);
 }
 .x-toast-message {
     -fx-text-fill: -text;
@@ -929,7 +1016,7 @@
     -fx-border-color: -glass-stroke;
     -fx-border-width: 1.2;
     -fx-border-radius: 22;
-    -fx-effect: dropshadow(gaussian, -shadow, 38, 0.45, 0, 14);
+    -fx-effect: dropshadow(gaussian, -shadow, 38, 0.40, 3, 8);
 }
 
 /* Header text. */
@@ -997,11 +1084,15 @@
 /* Bubbles — bot reads as a translucent panel; user reads as the accent. */
 .x-chat-bubble-bot,
 .x-chat-bubble-user {
-    -fx-padding: 10 14 10 14;
     -fx-font-size: 13px;
     -fx-line-spacing: 2.5px;
 }
 .x-chat-bubble-bot {
+    /* Right padding is generous (44 px) so the overlaid copy icon at the
+       bubble's top-right never sits on top of wrapped text. The icon plus
+       its 6 px margin and the button's own padding occupy ~26 px — 44 px
+       leaves ~18 px clearance between the text's right edge and the icon. */
+    -fx-padding: 10 44 10 14;
     -fx-background-color: linear-gradient(to bottom right,
         derive(-glass-fill, 12%), -glass-fill);
     -fx-text-fill: -text;
@@ -1009,9 +1100,10 @@
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 14 14 14 4;
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.15, 0, 2);
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 3, 8);
 }
 .x-chat-bubble-user {
+    -fx-padding: 10 14 10 14;
     -fx-background-color: linear-gradient(to bottom right,
         derive(-accent, 18%), -accent);
     -fx-text-fill: ladder(-accent, white 49%, black 50%);
@@ -1020,7 +1112,24 @@
     -fx-border-color: derive(-accent, 26%);
     -fx-border-radius: 14 14 4 14;
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.20, 0, 2);
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 3, 8);
+}
+
+/* Copy-message affordance: small icon anchored to the bubble's top-right. */
+.x-chat-copy-icon {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-padding: 2 2 2 2;
+    -fx-cursor: hand;
+    -fx-opacity: 0.55;
+}
+.x-chat-copy-icon:hover { -fx-opacity: 1.0; }
+.x-chat-copy-icon:focused { -fx-background-color: transparent; }
+/* The SVG glyph picks up the bubble's text colour so it sits invisibly in the bubble. */
+.x-chat-copy-icon .x-chat-copy-glyph {
+    -fx-stroke: -text;
+    -fx-fill: transparent;
 }
 
 /* Suggestion chips. */
@@ -1057,6 +1166,7 @@
     -fx-background-radius: 999;
     -fx-padding: 9 16 9 16;
     -fx-font-size: 13px;
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 3, 8);
 }
 .x-chat-input:focused {
     -fx-border-color: -accent;
@@ -1075,7 +1185,7 @@
     -fx-max-width: 38; -fx-max-height: 38;
     -fx-padding: 0;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, -shadow, 14, 0.35, 0, 4);
+    -fx-effect: dropshadow(gaussian, -shadow, 14, 0.40, 3, 8);
 }
 /* Send icon must contrast against its accent button — flips with theme. */
 .x-chat-send .x-icon-themed { -fx-stroke: ladder(-accent, white 49%, black 50%); }
@@ -1085,7 +1195,7 @@
 }
 .x-chat-send:pressed {
     -fx-translate-y: 1;
-    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.25, 0, 2);
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 3, 8);
 }
 
 /* Two-column shell wrapping sidebar + transcript inside the chat popup. */
@@ -1100,7 +1210,7 @@
     -fx-border-color: -glass-stroke;
     -fx-border-width: 1.2;
     -fx-border-radius: 22;
-    -fx-effect: dropshadow(gaussian, -shadow, 38, 0.45, 0, 14);
+    -fx-effect: dropshadow(gaussian, -shadow, 38, 0.40, 3, 8);
 }
 
 /* Sidebar — a darker translucent rail on the left. */
@@ -1131,7 +1241,7 @@
     -fx-border-radius: 999;
     -fx-padding: 8 14 8 14;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.25, 0, 3);
+    -fx-effect: dropshadow(gaussian, -shadow, 10, 0.40, 3, 8);
 }
 .x-chat-newchat:hover {
     -fx-background-color: linear-gradient(to bottom right,
@@ -1218,7 +1328,7 @@
     -fx-border-color: -glass-stroke;
     -fx-border-radius: 22;
     -fx-border-width: 1.5;
-    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.50, 0, 12);
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.40, 3, 8);
 }
 .x-dialog-success { -fx-border-color: -accent-soft; }
 .x-dialog-error {
@@ -1261,7 +1371,7 @@
     -fx-border-radius: 18;
     -fx-border-width: 1.5;
     -fx-padding: 18 22 18 22;
-    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.50, 0, 12);
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.40, 3, 8);
 }
 .x-derivation-title {
     -fx-text-fill: -text;
@@ -1310,7 +1420,7 @@
     -fx-border-radius: 14;
     -fx-border-width: 1.5;
     -fx-border-color: rgba(255,255,255,0.18);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.40), 12, 0.32, 0, 4);
+    -fx-effect: dropshadow(gaussian, -shadow, 12, 0.40, 3, 8);
     -fx-min-height: 64;
     -fx-pref-height: 64;
     -fx-min-width: 112;
@@ -1363,6 +1473,7 @@
     -fx-border-radius: 999;
     -fx-graphic-text-gap: 0;
     -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, -shadow, 22, 0.40, 3, 8);
 }
 
 .x-chat-trigger-label {
@@ -1372,5 +1483,161 @@
     -fx-wrap-text: true;
     -fx-text-overrun: clip;
     -fx-padding: 2 0 0 0;
-    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.35, 0, 2);
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 3, 8);
+}
+
+/* ============================================================================ */
+/* Metrics dialog (Memory / CPU / Threads / Runtime)                            */
+/* ============================================================================ */
+
+/* Outer glass card — mirrors .x-settings-pane so the dialog reads as part of
+ * the same family. */
+.x-metrics-pane {
+    -fx-background-color:
+        linear-gradient(to bottom right, derive(-glass-fill, 18%), -glass-fill),
+        rgba(12, 12, 20, 0.10),
+        -overlay;
+    -fx-background-radius: 26;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 26;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, -shadow, 40, 0.40, 3, 8);
+}
+
+.x-root.x-theme-paper-light .x-metrics-pane,
+.x-root.x-theme-arctic-ice .x-metrics-pane,
+.x-root.x-theme-powder-blue .x-metrics-pane {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            rgba(10,18,32,0.16),
+            rgba(10,18,32,0.07)),
+        rgba(0,0,0,0.31),
+        -overlay;
+}
+
+.x-root.x-theme-paper-light .x-metrics-pane .label,
+.x-root.x-theme-arctic-ice .x-metrics-pane .label,
+.x-root.x-theme-powder-blue .x-metrics-pane .label,
+.x-root.x-theme-paper-light .x-metrics-pane .x-settings-title,
+.x-root.x-theme-arctic-ice .x-metrics-pane .x-settings-title,
+.x-root.x-theme-powder-blue .x-metrics-pane .x-settings-title,
+.x-root.x-theme-paper-light .x-metrics-pane .x-settings-sub,
+.x-root.x-theme-arctic-ice .x-metrics-pane .x-settings-sub,
+.x-root.x-theme-powder-blue .x-metrics-pane .x-settings-sub {
+    -fx-text-fill: white;
+}
+
+/* Section cards inside the metrics grid. */
+.x-metric-card {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            rgba(255, 255, 255, 0.06),
+            rgba(255, 255, 255, 0.02)),
+        rgba(0, 0, 0, 0.20);
+    -fx-background-radius: 18;
+    -fx-border-color: -glass-stroke;
+    -fx-border-radius: 18;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -shadow, 18, 0.40, 3, 8);
+}
+
+.x-root.x-theme-paper-light .x-metric-card,
+.x-root.x-theme-arctic-ice .x-metric-card,
+.x-root.x-theme-powder-blue .x-metric-card {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            rgba(255, 255, 255, 0.06),
+            rgba(255, 255, 255, 0.02)),
+        rgba(0, 0, 0, 0.31);
+}
+
+.x-metric-card .x-icon-themed {
+    -fx-stroke: -accent-soft;
+}
+
+.x-metric-section-title {
+    -fx-text-fill: -text;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-letter-spacing: 0.06em;
+}
+
+.x-metric-value {
+    -fx-text-fill: -text;
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-effect: dropshadow(gaussian, -shadow, 6, 0.40, 3, 8);
+}
+
+.x-metric-unit {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-padding: 0 0 2 0;
+}
+
+.x-metric-label {
+    -fx-text-fill: -text-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0.10em;
+}
+
+.x-metric-mono {
+    -fx-text-fill: -text;
+    -fx-font-family: "JetBrains Mono", "Consolas", "Menlo", monospace;
+    -fx-font-size: 12px;
+}
+
+/* Threads section — progress bar showing active/peak. */
+.x-metric-bar-track {
+    -fx-background-color: rgba(0, 0, 0, 0.32);
+    -fx-background-radius: 8;
+    -fx-border-color: -glass-stroke;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+.x-metric-bar-fill {
+    -fx-fill: linear-gradient(to right,
+        derive(-accent, 16%), -accent, derive(-accent, -14%));
+    -fx-effect: dropshadow(gaussian, -shadow, 8, 0.40, 3, 8);
+}
+
+/* JavaFX chart theming — make the built-in chart skin match the glass look. */
+.x-metric-chart {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.x-metric-chart .chart-plot-background { -fx-background-color: rgba(0, 0, 0, 0.18); }
+.x-metric-chart .chart-content { -fx-padding: 6; }
+.x-metric-chart .axis {
+    -fx-tick-label-fill: -text-muted;
+    -fx-tick-label-font-size: 10px;
+    -fx-border-color: transparent;
+}
+.x-metric-chart .axis .axis-tick-mark,
+.x-metric-chart .axis .axis-minor-tick-mark { -fx-stroke: -glass-stroke; }
+.x-metric-chart .axis-label { -fx-text-fill: -text-muted; -fx-font-size: 10px; -fx-font-weight: 700; }
+.x-metric-chart .chart-vertical-grid-lines,
+.x-metric-chart .chart-horizontal-grid-lines { -fx-stroke: rgba(255, 255, 255, 0.08); }
+.x-metric-chart .chart-alternative-row-fill,
+.x-metric-chart .chart-alternative-column-fill { -fx-fill: transparent; }
+.x-metric-chart .chart-vertical-zero-line,
+.x-metric-chart .chart-horizontal-zero-line { -fx-stroke: rgba(255, 255, 255, 0.10); }
+
+/* Line + area chart series — accent-tinted. */
+.x-metric-chart .chart-series-line {
+    -fx-stroke: -accent;
+    -fx-stroke-width: 2px;
+    -fx-effect: dropshadow(gaussian, -shadow, 6, 0.40, 3, 8);
+}
+.x-metric-chart .chart-series-area-line {
+    -fx-stroke: -accent;
+    -fx-stroke-width: 2px;
+}
+.x-metric-chart .chart-series-area-fill {
+    -fx-fill: linear-gradient(to bottom,
+        derive(-accent, 16%) 0%,
+        rgba(0, 0, 0, 0) 100%);
+    -fx-opacity: 0.55;
 }

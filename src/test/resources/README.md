@@ -83,7 +83,7 @@
 
 | ⬇️ Depends on | ⬆️ Used by |
 | --- | --- |
-| `src/main/java/com/sermas/x/men/utilities/ModelLoader` for parsing inputs. | Integration and service tests under `src/test/java`. |
+| `src/main/java/com/xmen/utilities/ModelLoader` for parsing inputs. | Integration and service tests under `src/test/java`. |
 
 ## ⚙️ At runtime
 

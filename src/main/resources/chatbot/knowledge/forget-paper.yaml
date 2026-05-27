@@ -328,7 +328,7 @@ entries:
   - id: paper.forget.related-work
     title: Forget related work
     category: paper
-    terms: [Forget related work, availability sets, non monotonic knowledge, user memory studies, Fortis UPPAAL Bella Basin]
+    terms: [Forget related work, availability sets, non monotonic knowledge, user memory studies]
     definition: |
       The paper positions Forget against related approaches for ceremony mutation, human error modeling, epistemic reasoning, and non-monotonic knowledge.
     details:

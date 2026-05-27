@@ -2,7 +2,7 @@ entries:
   - id: manual.xmen2.overview
     title: X-Men 2.0 manual overview
     category: manual
-    terms: [X-Men 2.0 manual, SERMAS X Men manual, X-Men 2.0, XMen 2.0, X Men 2, mutation generator manual, security ceremony manual, what is X-Men 2.0, explain X-Men 2.0, what does X-Men do, X-Men overview, project overview, manual overview]
+    terms: [X-Men 2.0, XMen 2.0, X Men 2, what is X-Men 2.0, explain X-Men 2.0, what does X-Men do, X-Men overview, project overview, manual overview]
     shortAnswer: |
       X-Men 2.0 is a Java 21 and Spring Boot based tool for generating mutated Tamarin ceremony models.
     definition: |
@@ -713,7 +713,7 @@ entries:
   - id: manual.file-splitter
     title: FileSplitterService
     category: helper
-    terms: [FileSplitterService, split file, preamble rules postamble, RULES marker, ENDOFRULES marker, what does FileSplitterService do, split spthy file, extract rules section, preserve preamble postamble, why split the file]
+    terms: [FileSplitterService, FileSplitterService X-Men manual, what does FileSplitterService do in the X-Men manual, split file, preamble rules postamble, RULES marker, ENDOFRULES marker, what does FileSplitterService do, split spthy file, extract rules section, preserve preamble postamble, why split the file]
     definition: |
       `FileSplitterService` splits a ceremony file into structured segments such as preamble, rules, and postamble.
     details:

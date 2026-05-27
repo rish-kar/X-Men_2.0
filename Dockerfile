@@ -28,16 +28,49 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 
 # ---------- Stage 2: runtime ----------
-FROM eclipse-temurin:21-jre AS runtime
+FROM eclipse-temurin:21-jre-noble AS runtime
 
 LABEL org.opencontainers.image.title="X-Men" \
       org.opencontainers.image.description="X-Men: Mutation-Based Analysis of Security Ceremonies" \
-      org.opencontainers.image.source="https://github.kcl.ac.uk/SERMAS/X-Men_2.0" \
       org.opencontainers.image.licenses="UNLICENSED"
 
-# Tiny tool needed for the HEALTHCHECK; keep the layer small.
+# Tiny tool needed for the HEALTHCHECK plus the native Linux libraries JavaFX needs
+# when the JVM starts with -Djava.awt.headless=false inside Docker. JavaFX media
+# uses the Linux GStreamer/FFmpeg stack for MP4/H.264/AAC playback, so those
+# plugins are part of the runtime image rather than an optional host dependency.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends netcat-openbsd \
+    && apt-get install -y --no-install-recommends \
+        netcat-openbsd \
+        xvfb \
+        xauth \
+        x11vnc \
+        novnc \
+        websockify \
+        fluxbox \
+        ffmpeg \
+        gstreamer1.0-libav \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-bad \
+        gstreamer1.0-plugins-ugly \
+        libasound2t64 \
+        libavcodec-extra \
+        libavformat60 \
+        libavutil58 \
+        libglib2.0-0 \
+        libgl1 \
+        libgstreamer-plugins-base1.0-0 \
+        libgstreamer1.0-0 \
+        libgtk-3-0 \
+        libpulse0 \
+        libswscale7 \
+        libx11-6 \
+        libxext6 \
+        libxi6 \
+        libxrandr2 \
+        libxrender1 \
+        libxtst6 \
+        libxxf86vm1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Run as a non-root user.
@@ -54,12 +87,12 @@ ENV SERVER_PORT=8081 \
     APP_NAME="X-Men" \
     APP_CORS_ALLOWED_ORIGINS="http://localhost:8081,http://localhost:8082,http://localhost:8083,http://localhost:5173" \
     DERIVATION_SERVICE_URL="http://localhost:9091" \
-    JAVA_OPTS="" \
+    JAVA_OPTS="-Djava.awt.headless=false" \
     SPRING_PROFILES_ACTIVE=default
 
-EXPOSE 8081
+EXPOSE 8081 6080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
   CMD nc -z 127.0.0.1 $SERVER_PORT || exit 1
 
-ENTRYPOINT ["sh","-c","exec java $JAVA_OPTS -Dserver.port=$SERVER_PORT -jar app.jar"]
+ENTRYPOINT ["sh","-c","Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp >/tmp/xvfb.log 2>&1 & export DISPLAY=:99; sleep 1; fluxbox >/tmp/fluxbox.log 2>&1 & x11vnc -display :99 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 & websockify --web=/usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/novnc.log 2>&1 & exec java $JAVA_OPTS -Dserver.port=$SERVER_PORT -jar app.jar"]

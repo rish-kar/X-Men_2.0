@@ -2,6 +2,7 @@
 #
 # Brings up:
 #   • xmen          – the Spring Boot application (port 8081)
+#                     and browser-accessible JavaFX UI (port 6080)
 #   • derivation    – the optional Haskell derivation microservice (port 9091)
 #
 # The `derivation` service is in the `haskell` profile so it doesn't start by
@@ -20,6 +21,7 @@ services:
     container_name: x-men
     ports:
       - "8081:8081"
+      - "127.0.0.1:6080:6080"
     environment:
       SERVER_PORT: 8081
       APP_NAME: X-Men
@@ -27,7 +29,7 @@ services:
       # When the haskell profile is active, the service name `derivation`
       # resolves over Compose's default bridge network.
       DERIVATION_SERVICE_URL: "http://derivation:9091"
-      JAVA_OPTS: ""
+      JAVA_OPTS: "-Djava.awt.headless=false"
     healthcheck:
       test: ["CMD-SHELL", "nc -z 127.0.0.1 8081 || exit 1"]
       interval: 30s
@@ -38,7 +40,7 @@ services:
 
   derivation:
     profiles: ["haskell"]
-    image: sermas/derivation-service:latest
+    image: derivation-service:latest
     container_name: x-men-derivation
     ports:
       - "9091:9091"

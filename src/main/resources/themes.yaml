@@ -20,12 +20,12 @@
 
 xmen:
   themes:
-    default: "sermas-classic"
+    default: "classic"
 
     catalog:
 
-      - id: sermas-classic
-        name: "SERMAS Classic"
+      - id: classic
+        name: "Classic"
         accent:       "#A56BFF"
         accent-soft:  "#D4B4FF"
         overlay:      "rgba(26, 10, 48, 0.70)"
