@@ -266,8 +266,8 @@ public final class MainSceneFactory {
       if (!resources.isEmpty()) {
         BackgroundVideoRotator rotator =
             new BackgroundVideoRotator(container, fallback, stage, resources);
-        rotator.start();
         container.getProperties().put("xmen.backgroundVideoRotator", rotator);
+        startRotatorWhenAttached(container, rotator);
         return container;
       }
     } catch (Exception e) {
@@ -275,6 +275,27 @@ public final class MainSceneFactory {
     }
 
     return container;
+  }
+
+  private static void startRotatorWhenAttached(
+      StackPane container, BackgroundVideoRotator rotator) {
+    if (container.getScene() != null) {
+      javafx.application.Platform.runLater(rotator::start);
+      return;
+    }
+    ChangeListener<javafx.scene.Scene> listener =
+        new ChangeListener<>() {
+          @Override
+          public void changed(
+              javafx.beans.value.ObservableValue<? extends javafx.scene.Scene> obs,
+              javafx.scene.Scene oldScene,
+              javafx.scene.Scene newScene) {
+            if (newScene == null) return;
+            container.sceneProperty().removeListener(this);
+            javafx.application.Platform.runLater(rotator::start);
+          }
+        };
+    container.sceneProperty().addListener(listener);
   }
 
   private static ImageView buildBackgroundFallback(StackPane container) {
@@ -486,6 +507,8 @@ public final class MainSceneFactory {
     private boolean transitionPending;
     private boolean loadingNext;
     private boolean preloadRequested;
+    private boolean started;
+    private javafx.animation.PauseTransition retryDelay;
     private ChangeListener<Duration> preloadListener;
     private MediaPlayer preloadListenerPlayer;
 
@@ -508,6 +531,8 @@ public final class MainSceneFactory {
     }
 
     private void start() {
+      if (disposed || started) return;
+      started = true;
       playNext(false);
     }
 
@@ -547,7 +572,7 @@ public final class MainSceneFactory {
         javafx.application.Platform.runLater(
             () -> {
               loadingNext = false;
-              launchIncoming(resource, ready);
+              launchIncoming(resource, ready, 0);
             });
       }, "xmen-bg-load");
       loader.setDaemon(true);
@@ -561,7 +586,7 @@ public final class MainSceneFactory {
      * This eliminates the black frame between videos that the old "dispose
      * first, then build new" flow produced.
      */
-    private void launchIncoming(String resource, File tmp) {
+    private void launchIncoming(String resource, File tmp, int attempt) {
       if (disposed) return;
       if (pausedByStage) {
         transitionPending = true;
@@ -590,9 +615,8 @@ public final class MainSceneFactory {
               if (!disposed
                   && incomingPlayer == player
                   && player.getStatus() != MediaPlayer.Status.PLAYING) {
-                log.warn("Background video {} did not start cleanly; skipping.", resource);
-                discardIncoming(player, view);
-                playNext(false);
+                retryIncomingOrPlayNext(
+                    resource, tmp, player, view, attempt, "did not start cleanly");
               }
             });
         player.setOnReady(
@@ -605,6 +629,7 @@ public final class MainSceneFactory {
             () -> {
               if (disposed || incomingPlayer != player) return;
               watchdog.stop();
+              log.info("Background video {} playback started.", resource);
               promoteIncoming(player, view);
             });
         player.setOnEndOfMedia(
@@ -618,22 +643,24 @@ public final class MainSceneFactory {
             });
         player.setOnStalled(
             () -> {
-              log.warn("Background video {} stalled; skipping.", resource);
               if (incomingPlayer == player) {
-                discardIncoming(player, view);
-                playNext(false);
+                retryIncomingOrPlayNext(resource, tmp, player, view, attempt, "stalled");
               } else if (currentPlayer == player) {
+                log.warn("Background video {} stalled; rotating.", resource);
                 playNext(false);
               }
             });
         player.setOnError(
             () -> {
               watchdog.stop();
-              log.warn("Background video error for {}: {}", resource, player.getError());
+              String errorMessage =
+                  player.getError() == null
+                      ? "unknown media error"
+                      : player.getError().getMessage();
               if (incomingPlayer == player) {
-                discardIncoming(player, view);
-                playNext(false);
+                retryIncomingOrPlayNext(resource, tmp, player, view, attempt, errorMessage);
               } else if (currentPlayer == player) {
+                log.warn("Background video error for {}; rotating: {}", resource, errorMessage);
                 playNext(false);
               }
             });
@@ -644,6 +671,31 @@ public final class MainSceneFactory {
       } catch (Exception e) {
         log.warn("Skipping background video {}: {}", resource, e.getMessage());
         playNext(true);
+      }
+    }
+
+    private void retryIncomingOrPlayNext(
+        String resource,
+        File tmp,
+        MediaPlayer player,
+        MediaView view,
+        int attempt,
+        String reason) {
+      discardIncoming(player, view);
+      if (attempt < 1 && !disposed) {
+        log.warn("Background video {} failed to start ({}); retrying once.", resource, reason);
+        javafx.animation.PauseTransition retry =
+            new javafx.animation.PauseTransition(Duration.millis(500));
+        retry.setOnFinished(
+            e -> {
+              if (retryDelay == retry) retryDelay = null;
+              if (!disposed) launchIncoming(resource, tmp, attempt + 1);
+            });
+        retryDelay = retry;
+        retry.play();
+      } else {
+        log.warn("Background video {} failed after retry ({}); rotating.", resource, reason);
+        playNext(false);
       }
     }
 
@@ -808,12 +860,7 @@ public final class MainSceneFactory {
                       log.warn(
                           "Background video stuck at {} ms; attempting seek-recover.",
                           (long) now.toMillis());
-                      try {
-                        player.seek(now);
-                        player.play();
-                      } catch (Exception ignored) {
-                        // best-effort recovery
-                      }
+                      recoverStuckPlayer(player, now);
                     } else if (heartbeatStuckTicks >= 6) {
                       log.warn("Background video did not recover from stall; rotating.");
                       heartbeatStuckTicks = 0;
@@ -824,6 +871,24 @@ public final class MainSceneFactory {
       t.setCycleCount(javafx.animation.Animation.INDEFINITE);
       t.play();
       heartbeatTimeline = t;
+    }
+
+    private void recoverStuckPlayer(MediaPlayer player, Duration now) {
+      try {
+        Duration target = Duration.ZERO;
+        Duration total = player.getTotalDuration();
+        if (isFinite(now) && now.toMillis() > 250) {
+          target = now.add(Duration.millis(33));
+          if (isFinite(total) && target.toMillis() >= Math.max(0, total.toMillis() - 250)) {
+            target = Duration.ZERO;
+          }
+        }
+        player.pause();
+        player.seek(target);
+        player.play();
+      } catch (Exception ignored) {
+        // best-effort recovery
+      }
     }
 
     private void detachHeartbeat() {
@@ -844,7 +909,7 @@ public final class MainSceneFactory {
       return duration != null
           && !duration.isUnknown()
           && !duration.isIndefinite()
-          && duration.toMillis() > 0;
+          && duration.toMillis() >= 0;
     }
 
     private MediaView createView(MediaPlayer player) {
@@ -887,6 +952,14 @@ public final class MainSceneFactory {
 
     private void dispose() {
       disposed = true;
+      if (retryDelay != null) {
+        try {
+          retryDelay.stop();
+        } catch (Exception ignored) {
+          // best-effort
+        }
+        retryDelay = null;
+      }
       detachPreloadTrigger();
       detachHeartbeat();
       disposePlayer(currentPlayer, currentView);

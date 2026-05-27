@@ -43,10 +43,6 @@ RUN apt-get update \
         netcat-openbsd \
         xvfb \
         xauth \
-        x11vnc \
-        novnc \
-        websockify \
-        fluxbox \
         ffmpeg \
         gstreamer1.0-libav \
         gstreamer1.0-plugins-base \
@@ -88,11 +84,12 @@ ENV SERVER_PORT=8081 \
     APP_CORS_ALLOWED_ORIGINS="http://localhost:8081,http://localhost:8082,http://localhost:8083,http://localhost:5173" \
     DERIVATION_SERVICE_URL="http://localhost:9091" \
     JAVA_OPTS="-Djava.awt.headless=false" \
+    XMEN_UI_ENABLED=false \
     SPRING_PROFILES_ACTIVE=default
 
-EXPOSE 8081 6080
+EXPOSE 8081
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
   CMD nc -z 127.0.0.1 $SERVER_PORT || exit 1
 
-ENTRYPOINT ["sh","-c","Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp >/tmp/xvfb.log 2>&1 & export DISPLAY=:99; sleep 1; fluxbox >/tmp/fluxbox.log 2>&1 & x11vnc -display :99 -forever -shared -nopw -rfbport 5900 >/tmp/x11vnc.log 2>&1 & websockify --web=/usr/share/novnc 0.0.0.0:6080 localhost:5900 >/tmp/novnc.log 2>&1 & exec java $JAVA_OPTS -Dserver.port=$SERVER_PORT -jar app.jar"]
+ENTRYPOINT ["sh","-c","Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp >/tmp/xvfb.log 2>&1 & export DISPLAY=:99; exec java $JAVA_OPTS -Dserver.port=$SERVER_PORT -jar app.jar"]

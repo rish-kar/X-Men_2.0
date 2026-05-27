@@ -22,62 +22,8 @@
 
 ---
 
-## 🐳 Docker Quick Start — Recommended Reviewer Path
-
-<table>
-<tr>
-<td>
-
-> **Use this path if you simply want to run and review X-Men.**  
-> Docker builds the Java application, starts the Spring Boot API, launches the
-> JavaFX interface with `-Djava.awt.headless=false`, and exposes the full UI in
-> your browser through a bundled virtual display.
-
-### 1) Prerequisite
-
-Install **Docker Desktop** on Windows/macOS, or **Docker Engine + Docker Compose**
-on Linux.
-
-### 2) Run X-Men
-
-```bash
-docker compose up --build
-```
-
-### 3) Open the application
-
-| Surface | URL | Purpose |
-| --- | --- | --- |
-| **JavaFX UI** | <http://localhost:6080/vnc.html?autoconnect=1&resize=scale> | Full X-Men desktop interface in the browser. |
-| **REST API** | <http://localhost:8081> | Spring Boot service endpoint. |
-| **Swagger UI** | <http://localhost:8081/swagger-ui/index.html> | Interactive API documentation and request runner. |
-
-### 4) Stop X-Men
-
-```bash
-docker compose down
-```
-
-### Optional Haskell derivation service
-
-```bash
-docker compose --profile haskell up --build
-```
-
-The Docker image bundles the Linux display, JavaFX media, FFmpeg/GStreamer, and
-browser-accessible VNC pieces required for the splash video, background videos,
-native UI, and API to run together. Reviewers do **not** need to install Java,
-Maven, IntelliJ IDEA, Postman, or configure local path variables for this path.
-
-</td>
-</tr>
-</table>
-
----
-
 ## ✨ Table of Contents
 
-- [Docker Quick Start — Recommended Reviewer Path](#-docker-quick-start--recommended-reviewer-path)
 - [About The Project](#-about-the-project)
 - [Built With](#-built-with)
 - [Architecture at a Glance](#-architecture-at-a-glance)
@@ -321,7 +267,7 @@ The server comes up on **`http://localhost:8081`**.
 In IntelliJ:
 
 1. **Run ▸ Edit Configurations…**
-2. **+** ▸ **Application** ▸ Main class `com.sermas.x.men.Application`.
+2. **+** ▸ **Application** ▸ Main class `com.xmen.Application`.
 3. **Modify options ▸ Add VM options:** `-Djava.awt.headless=false`.
 4. **Environment variables (optional):** `JAVA_OPTS=-Djava.awt.headless=false`.
 5. **Apply**, then **Run ▶**.
@@ -457,7 +403,7 @@ curl -X POST "http://localhost:8081/api/forget/mutations" \
 
 > 💡 The Swagger metadata (tags, descriptions, request models) is defined
 > by `@OpenAPIDefinition` in
-> [`config/OpenApiConfig.java`](src/main/java/com/sermas/x/men/config/OpenApiConfig.java)
+> [`config/OpenApiConfig.java`](src/main/java/com/xmen/config/OpenApiConfig.java)
 > and the `@Operation`/`@Tag` annotations on each controller. Update those
 > if you add or rename an endpoint — the docs will refresh on the next
 > server start.
@@ -532,11 +478,27 @@ curl -X POST "http://localhost:8081/api/generateMutations" \
 
 ## 🐳 Docker
 
+<table>
+<tr>
+<td>
+
+> **Docker is for API testing and service-mode runs only.**  
+> X-Men's primary interface is a native JavaFX desktop application. Docker
+> Desktop cannot open that JavaFX UI as a normal Windows/macOS/Linux desktop
+> window from inside a Linux container. Use Docker when you want a reproducible
+> Spring Boot API runtime for Swagger, Postman, curl, or integration testing.
+> Use the local Java/Maven launch path in [Getting Started](#-getting-started)
+> when you need the full native desktop application.
+
+</td>
+</tr>
+</table>
+
 X-Men ships with a production-grade **multi-stage `Dockerfile`**:
 
 - **Stage 1** uses `maven:3.9.9-eclipse-temurin-21` to compile and package.
 - **Stage 2** runs the resulting jar on a slim `eclipse-temurin:21-jre` image
-  as a **non-root** user, with a built-in `HEALTHCHECK`.
+  as a **non-root** API/service process, with a built-in `HEALTHCHECK`.
 
 A `.dockerignore` keeps the build context tight (no `target/`, no IDE files,
 no docs) so image builds are fast and reproducible.
@@ -557,11 +519,18 @@ docker run -d -p 8081:8081 --name x-men x-men:latest
 curl http://localhost:8081/actuator/health/
 ```
 
+Once the container is running, API documentation is available at:
+
+```text
+http://localhost:8081/swagger-ui/index.html
+```
+
 ### Docker Compose
 
-A reference `docker-compose.yml` is included. It runs X-Men by itself, and —
-under the optional `haskell` profile — also brings up the Haskell derivation
-service on `9091`, wired together over Compose's default network.
+A reference `docker-compose.yml` is included. It runs the X-Men Spring Boot API
+service by itself, and — under the optional `haskell` profile — also brings up
+the Haskell derivation service on `9091`, wired together over Compose's default
+network.
 
 ```bash
 # X-Men only
@@ -582,7 +551,8 @@ docker compose down
 | `APP_NAME` | `X-Men` | Application display name. |
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:8081,…,http://localhost:5173` | Allowed CORS origins (comma-separated). |
 | `DERIVATION_SERVICE_URL` | `http://localhost:9091` | Endpoint of the Haskell service. |
-| `JAVA_OPTS` | *(empty)* | Extra JVM flags. |
+| `JAVA_OPTS` | `-Djava.awt.headless=false` | Extra JVM flags. |
+| `XMEN_UI_ENABLED` | `false` in Docker, `true` locally | Controls whether the JavaFX desktop UI is launched. Docker uses service mode; local desktop runs keep the UI enabled. |
 | `SPRING_PROFILES_ACTIVE` | `default` | Spring profile selector. |
 
 Pass them at run-time like:
@@ -719,7 +689,7 @@ the failure-handling contract, and a focused troubleshooting table.
 X-Men_2.0/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/sermas/x/men/
+│   │   ├── java/com/xmen/
 │   │   │   ├── controller/        # REST controllers
 │   │   │   ├── service/           # Mutation engines, derivation services
 │   │   │   │   ├── forget/        # Forget mutation helpers

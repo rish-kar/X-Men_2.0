@@ -46,6 +46,9 @@ import java.util.zip.ZipInputStream;
 public class XMenInterface extends Application {
 
   private MediaPlayer mediaPlayer;
+  private Timeline splashPlaybackWatchdog;
+  private Duration splashWatchdogLastTime;
+  private int splashWatchdogStuckTicks;
   private File selectedFile; // Holds the selected file
 
   // Last mutation zip held in memory so the user can re-download it.
@@ -167,6 +170,7 @@ public class XMenInterface extends Application {
         () -> {
           if (handedOff[0]) return;
           handedOff[0] = true;
+          detachSplashPlaybackWatchdog();
           if (splashPlayer != null) {
             try {
               splashPlayer.stop();
@@ -190,6 +194,11 @@ public class XMenInterface extends Application {
         };
 
     if (splashPlayer != null) {
+      splashPlayer.setOnPlaying(
+          () -> {
+            log.info("Splash video playback started.");
+            armSplashPlaybackWatchdog(splashPlayer, handOff);
+          });
       splashPlayer.setOnEndOfMedia(() -> Platform.runLater(handOff));
       splashPlayer.setOnError(() -> Platform.runLater(handOff));
     }
@@ -259,6 +268,7 @@ public class XMenInterface extends Application {
 
   private void disposeMediaOnly() {
     try {
+      detachSplashPlaybackWatchdog();
       if (mediaPlayer != null) {
         mediaPlayer.stop();
         mediaPlayer.dispose();
@@ -316,9 +326,17 @@ public class XMenInterface extends Application {
       };
       mp.setOnReady(
           () -> {
-            applyCover.run();
-            splashMediaView.setVisible(true);
-            mp.play();
+            Platform.runLater(
+                () -> {
+                  applyCover.run();
+                  splashMediaView.setVisible(true);
+                  try {
+                    mp.seek(Duration.ZERO);
+                    mp.play();
+                  } catch (Exception e) {
+                    log.warn("Splash video could not start playback: {}", e.getMessage());
+                  }
+                });
           });
       mp.statusProperty()
           .addListener(
@@ -330,7 +348,14 @@ public class XMenInterface extends Application {
       mp.setOnStalled(
           () -> {
             if (fallbackImage != null) fallbackImage.setVisible(true);
-            mp.play();
+            log.warn("Splash video stalled; restarting decoder.");
+            try {
+              mp.stop();
+              mp.seek(Duration.ZERO);
+              mp.play();
+            } catch (Exception e) {
+              log.warn("Splash video stalled recovery failed: {}", e.getMessage());
+            }
           });
       splashRoot.widthProperty().addListener((o, a, b) -> applyCover.run());
       splashRoot.heightProperty().addListener((o, a, b) -> applyCover.run());
@@ -348,7 +373,7 @@ public class XMenInterface extends Application {
 
       splashRoot.getChildren().add(splashMediaView);
       videoLoaded = true;
-      log.info("Splash video '{}' loaded; playing at {}x{} with audio.",
+      log.info("Splash video '{}' loaded at {}x{} with audio.",
           SPLASH_VIDEO_RESOURCE, MAIN_WIDTH, MAIN_HEIGHT);
     } catch (Exception e) {
       log.warn("Splash video '{}' not playable; falling back to image: {}",
@@ -367,6 +392,78 @@ public class XMenInterface extends Application {
     }
     splashRoot.setAlignment(Pos.CENTER);
     return splashPlayer;
+  }
+
+  private void armSplashPlaybackWatchdog(MediaPlayer player, Runnable handOff) {
+    detachSplashPlaybackWatchdog();
+    splashWatchdogLastTime = null;
+    splashWatchdogStuckTicks = 0;
+    Timeline watchdog =
+        new Timeline(
+            new KeyFrame(
+                Duration.millis(500),
+                e -> {
+                  if (mediaPlayer != player || player.getStatus() != MediaPlayer.Status.PLAYING) {
+                    splashWatchdogLastTime = null;
+                    splashWatchdogStuckTicks = 0;
+                    return;
+                  }
+                  Duration now = player.getCurrentTime();
+                  if (!isFiniteMediaTime(now)) {
+                    return;
+                  }
+                  Duration total = player.getTotalDuration();
+                  if (isFiniteMediaTime(total)
+                      && total.toMillis() > 0
+                      && total.toMillis() - now.toMillis() <= 750) {
+                    Platform.runLater(handOff);
+                    return;
+                  }
+                  if (splashWatchdogLastTime != null
+                      && Math.abs(now.toMillis() - splashWatchdogLastTime.toMillis()) < 1.0) {
+                    splashWatchdogStuckTicks++;
+                  } else {
+                    splashWatchdogStuckTicks = 0;
+                  }
+                  splashWatchdogLastTime = now;
+                  if (splashWatchdogStuckTicks == 3) {
+                    log.warn(
+                        "Splash video stuck at {} ms; restarting decoder.",
+                        (long) now.toMillis());
+                    try {
+                      player.stop();
+                      player.seek(Duration.ZERO);
+                      player.play();
+                    } catch (Exception ex) {
+                      log.warn("Splash video restart failed: {}", ex.getMessage());
+                    }
+                  } else if (splashWatchdogStuckTicks >= 8) {
+                    log.warn("Splash video remained stuck after restart; continuing to main scene.");
+                    Platform.runLater(handOff);
+                  }
+                }));
+    watchdog.setCycleCount(Animation.INDEFINITE);
+    watchdog.play();
+    splashPlaybackWatchdog = watchdog;
+  }
+
+  private void detachSplashPlaybackWatchdog() {
+    if (splashPlaybackWatchdog != null) {
+      try {
+        splashPlaybackWatchdog.stop();
+      } catch (Exception ignored) {
+      }
+    }
+    splashPlaybackWatchdog = null;
+    splashWatchdogLastTime = null;
+    splashWatchdogStuckTicks = 0;
+  }
+
+  private static boolean isFiniteMediaTime(Duration duration) {
+    return duration != null
+        && !duration.isUnknown()
+        && !duration.isIndefinite()
+        && duration.toMillis() >= 0;
   }
 
   private static synchronized File ensureCachedSplashVideo() throws IOException {

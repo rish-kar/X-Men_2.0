@@ -57,6 +57,11 @@ public class Application implements CommandLineRunner {
   public void run(String... args) {
     System.out.println("Is Headless: " + java.awt.GraphicsEnvironment.isHeadless());
 
+    if (!isUiEnabled()) {
+      System.out.println("JavaFX UI disabled by xmen.ui.enabled/XMEN_UI_ENABLED.");
+      return;
+    }
+
     if (!java.awt.GraphicsEnvironment.isHeadless()) {
       // Blocks until the JavaFX app exits (last stage closed or Platform.exit()).
       XMenInterface.launch(XMenInterface.class);
@@ -87,5 +92,12 @@ public class Application implements CommandLineRunner {
     return System.getProperty("surefire.test.class.path") != null
         || System.getProperty("org.gradle.test.worker") != null
         || System.getProperty("java.class.path", "").contains("surefire");
+  }
+
+  private static boolean isUiEnabled() {
+    String value =
+        System.getProperty(
+            "xmen.ui.enabled", System.getenv().getOrDefault("XMEN_UI_ENABLED", "true"));
+    return Boolean.parseBoolean(value);
   }
 }

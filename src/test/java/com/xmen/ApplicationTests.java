@@ -26,6 +26,11 @@ class ApplicationTests {
     System.setProperty("java.awt.headless", "true");
   }
 
+  @AfterEach
+  void clearUiFlag() {
+    System.clearProperty("xmen.ui.enabled");
+  }
+
   /* 1 ─ main(..) prints flag and delegates to SpringApplication.run */
   @Test
   @DisplayName("01 main() delegates to SpringApplication.run")
@@ -96,6 +101,31 @@ class ApplicationTests {
       new com.xmen.Application().run();
 
       fx.verify(() -> javafx.application.Application.launch(XMenInterface.class));
+    }
+  }
+
+  @Test
+  @DisplayName("04 run() can disable JavaFX launch for service-only runtimes")
+  void run_uiDisabledBranch() {
+    System.setProperty("xmen.ui.enabled", "false");
+    try (MockedStatic<GraphicsEnvironment> ge = Mockito.mockStatic(GraphicsEnvironment.class);
+        MockedStatic<javafx.application.Application> fx =
+            Mockito.mockStatic(javafx.application.Application.class)) {
+
+      ge.when(GraphicsEnvironment::isHeadless).thenReturn(false);
+
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      PrintStream oldOut = System.out;
+      System.setOut(new PrintStream(out));
+
+      try {
+        new com.xmen.Application().run();
+      } finally {
+        System.setOut(oldOut);
+      }
+
+      fx.verifyNoInteractions();
+      assertTrue(out.toString().contains("JavaFX UI disabled"));
     }
   }
 }
