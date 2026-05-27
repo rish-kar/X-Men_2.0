@@ -113,10 +113,7 @@ Key Java collaborators on the X-Men side:
 
 ### 4.1 Service prerequisites
 
-The Haskell derivation microservice is maintained in its own repository:
-
-- **Repository:** `https://github.kcl.ac.uk/SERMAS/Derivation-Service`
-
+The Haskell derivation microservice is maintained in its own repository.
 Build and run it according to its own README. The contract X-Men relies on is:
 
 | Property | Value |
@@ -168,7 +165,7 @@ From the Derivation-Service repository:
 # Typical invocation – follow the upstream README for specifics
 ./derivation-service
 # or, if you containerize it
-docker run -p 9091:9091 sermas/derivation-service:latest
+docker run -p 9091:9091 derivation-service:latest
 ```
 
 ### 4.5 Health check
@@ -376,7 +373,7 @@ not the host. Either:
         DERIVATION_SERVICE_URL: http://derivation:9091
 
     derivation:
-      image: sermas/derivation-service:latest
+      image: derivation-service:latest
       ports: ["9091:9091"]
   ```
 

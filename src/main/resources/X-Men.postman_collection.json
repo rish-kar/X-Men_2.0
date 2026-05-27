@@ -179,7 +179,7 @@
 							]
 						},
 						"url": {
-							"raw": "http://localhost:8081/api/skip/receiveSendReceive",
+							"raw": "http://localhost:8081/api/skip/receiveSendReceiveMutations",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -188,7 +188,7 @@
 							"path": [
 								"api",
 								"skip",
-								"receiveSendReceive"
+								"receiveSendReceiveMutations"
 							]
 						},
 						"description": "Generated from cURL: curl -X POST -F \"file=@/path/to/your/file\" http://localhost:8080/api/skipSendMutation"
@@ -756,12 +756,12 @@
 								"type": "text"
 							},
 							{
-								"key": "Skip-Recieve-Send",
+								"key": "Skip-Receive-Send",
 								"value": "true",
 								"type": "text"
 							},
 							{
-								"key": "Skip-Recieve-Send-Receive",
+								"key": "Skip-Receive-Send-Receive",
 								"value": "true",
 								"type": "text"
 							},

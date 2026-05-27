@@ -49,7 +49,7 @@
 - [Haskell Derivation Service](#-haskell-derivation-service)
 - [Project Structure](#-project-structure)
 - [Troubleshooting](#-troubleshooting)
-- [Acknowledgements](#-acknowledgements)
+- [Test Coverage with JaCoCo](#-test-coverage-with-jacoco)
 
 ---
 
@@ -219,11 +219,11 @@ git --version
 ### Cloning the Project
 
 ```bash
-git clone https://github.kcl.ac.uk/SERMAS/X-Men_2.0.git
+git clone <repository-url>
 cd X-Men_2.0
 ```
 
-> Paths containing apostrophes (e.g. `King's College London`) are supported
+> Paths containing apostrophes (e.g. `a folder named O'Reilly`) are supported
 > on Windows — `mvnw.cmd` already escapes them before invoking PowerShell.
 
 ---
@@ -285,22 +285,7 @@ From the UI:
 3. Click **Start Mutation** — a `.zip` containing all mutated `.m` files is
    produced in the working directory.
 
-<table>
-<tr>
-<td align="center">
-  <img src="src/main/resources/images/warning_mutation.png" alt="Mutation warning" width="280"/><br/>
-  <sub><em>Warning when an input file looks suspicious</em></sub>
-</td>
-<td align="center">
-  <img src="src/main/resources/images/error_mutation.png" alt="Mutation error" width="280"/><br/>
-  <sub><em>Error feedback during processing</em></sub>
-</td>
-<td align="center">
-  <img src="src/main/resources/images/forget_not_found.png" alt="No Forget action found" width="280"/><br/>
-  <sub><em>No <code>Forget</code> action detected</em></sub>
-</td>
-</tr>
-</table>
+
 
 ---
 
@@ -391,22 +376,6 @@ curl -X POST "http://localhost:8081/api/forget/mutations" \
 
 …which you can copy verbatim into a terminal or CI pipeline.
 
-#### 🔌 Wiring Swagger into other tools
-
-- **Postman** — *File ▸ Import ▸ Link* → paste the OpenAPI JSON URL above.
-  Every endpoint is regenerated as a Postman request, headers and all.
-- **Bruno / Insomnia / Hoppscotch** — import the same OpenAPI URL; they all
-  speak springdoc out of the box.
-- **Client SDK generation** — feed `/v3/api-docs` to
-  [openapi-generator-cli](https://openapi-generator.tech/) to scaffold a
-  typed client in TypeScript, Python, Go, etc.
-
-> 💡 The Swagger metadata (tags, descriptions, request models) is defined
-> by `@OpenAPIDefinition` in
-> [`config/OpenApiConfig.java`](src/main/java/com/xmen/config/OpenApiConfig.java)
-> and the `@Operation`/`@Tag` annotations on each controller. Update those
-> if you add or rename an endpoint — the docs will refresh on the next
-> server start.
 
 ### Health checks
 
@@ -591,7 +560,7 @@ runtime.
 ### 🎨 Themes (28 built-in palettes)
 
 [`src/main/resources/themes.yaml`](src/main/resources/themes.yaml) ships twenty-eight named
-themes — SERMAS Classic (default), Garden Mint, Midnight Violet, Ocean Cobalt, Sunset
+themes — Classic (default), Garden Mint, Midnight Violet, Ocean Cobalt, Sunset
 Coral, Amber Grove, Rose Quartz, Forest Emerald, Cyber Teal, Solar Yellow, Indigo Night,
 Lavender Mist, Charcoal Mono, Paper Light, Arctic Ice, Volcanic Red, Mocha Brown, Slate
 Blue, Neon Pink, Sage Green, Copper Bronze, Crimson Wine, Powder Blue, Sandstone, Magenta
@@ -719,7 +688,7 @@ X-Men_2.0/
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| `mvnw.cmd` errors on Windows: *"Unexpected token 's' in expression or statement."* | Project path contains an apostrophe (e.g. `King's College London`). | Already patched — `mvnw.cmd` escapes `'` before calling PowerShell. If you re-ran `mvn -N wrapper:wrapper`, re-apply the patch. |
+| `mvnw.cmd` errors on Windows: *"Unexpected token 's' in expression or statement."* | Project path contains an apostrophe. | Already patched — `mvnw.cmd` escapes `'` before calling PowerShell. If you re-ran `mvn -N wrapper:wrapper`, re-apply the patch. |
 | Native UI doesn't open. | Headless mode left on. | Add VM option `-Djava.awt.headless=false` to the run configuration. |
 | `Forget` mutation produces no changes. | The `.spthy` rule has no `Forget(...)` action. | Add an explicit `Forget(<term>)` annotation to the rule of interest. |
 | `Haskell-Activate: true` has no effect. | External Haskell service not reachable. | See [`HASKELL_DERIVATION_SERVICE.md`](./HASKELL_DERIVATION_SERVICE.md#9-troubleshooting). |
@@ -728,20 +697,31 @@ X-Men_2.0/
 
 ---
 
-## 🙏 Acknowledgements
+## 📊 Test Coverage with JaCoCo
 
-- **Swagger UI** & **springdoc-openapi** — interactive API documentation
-  shipped at `/swagger-ui/index.html`. The OpenAPI spec is also available as
-  JSON / YAML at `/v3/api-docs` and `/v3/api-docs.yaml`.
-- **Tamarin Prover** — the downstream symbolic protocol verifier consuming
-  the mutated `.m` files.
-- **Eclipse Temurin** — the JDK / JRE distributions used by both the local
-  build and the container image.
-- **SERMAS / King's College London** — the project context within which X-Men
-  is developed.
+The build is wired up with the [**JaCoCo**](https://www.jacoco.org/jacoco/) Maven
+plugin so that every `mvn test` (or `mvn verify` / `mvn install`) run produces a
+full code-coverage report alongside the usual Surefire test results.
 
----
+### Run the tests and generate the report
 
-<div align="center">
-<sub>X-Men — built with ☕, formal methods, and a healthy respect for human fallibility.</sub>
-</div>
+```bash
+# Using the wrapper
+./mvnw clean test            # macOS / Linux
+mvnw.cmd clean test          # Windows
+
+# Or your system Maven
+mvn clean test
+```
+
+### Where to find the results
+
+| Artifact | Path | Use it for |
+| --- | --- | --- |
+| 🧪 **Surefire test results** | `target/surefire-reports/` | JUnit XML + plain-text per-test reports. |
+| 📈 **JaCoCo HTML report** | `target/site/jacoco/index.html` | Open in any browser to drill into per-package / per-class line & branch coverage. |
+| 📄 **JaCoCo XML report** | `target/site/jacoco/jacoco.xml` | Machine-readable feed for CI dashboards (Codecov, SonarQube, etc.). |
+| 🧷 **Raw execution data** | `target/jacoco.exec` | Binary coverage data the report goal consumes. |
+
+> 💡 Model classes (`com.xmen.model.*`) are intentionally excluded from the
+> coverage figures because they are mostly generated parsers and DTOs.
