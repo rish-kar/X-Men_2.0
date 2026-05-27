@@ -1,0 +1,48 @@
+# X-Men — Docker Compose reference stack
+#
+# Brings up:
+#   • xmen          – the Spring Boot application (port 8081)
+#   • derivation    – the optional Haskell derivation microservice (port 9091)
+#
+# The `derivation` service is in the `haskell` profile so it doesn't start by
+# default. Enable it with:  docker compose --profile haskell up --build
+#
+# Run only X-Men:                docker compose up --build
+# Run X-Men + Haskell service:   docker compose --profile haskell up --build
+# Tear down:                     docker compose down
+
+services:
+  xmen:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: x-men:latest
+    container_name: x-men
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      APP_NAME: X-Men
+      APP_CORS_ALLOWED_ORIGINS: "http://localhost:8081,http://localhost:5173"
+      # When the haskell profile is active, the service name `derivation`
+      # resolves over Compose's default bridge network.
+      DERIVATION_SERVICE_URL: "http://derivation:9091"
+      JAVA_OPTS: "-Djava.awt.headless=false"
+      XMEN_UI_ENABLED: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8081 || exit 1"]
+      interval: 30s
+      timeout: 3s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+
+  derivation:
+    profiles: ["haskell"]
+    image: derivation-service:latest
+    container_name: x-men-derivation
+    ports:
+      - "9091:9091"
+    restart: unless-stopped
+    # If your local Derivation-Service repo provides a Dockerfile, swap
+    # `image:` above for a `build:` block pointing at it.

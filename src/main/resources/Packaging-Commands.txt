@@ -7,12 +7,12 @@ jlink --module-path "$env:JAVA_HOME\jmods;.\javafx-libs" --add-modules java.base
 
 2. Command to test the application using the runtime image:
 
- .\myruntime\bin\java -jar target\X-Men_3.0-0.0.1-SNAPSHOT.jar
+ .\myruntime\bin\java -jar target\X-Men_2.0-0.0.1-SNAPSHOT.jar
 
 
 3. Command to build the executable file for the application:
 
-jpackage --type exe --name "X-Men" --input target --main-jar X-Men_3.0-0.0.1-SNAPSHOT.jar --runtime-image .\myruntime --app-version 1.0.0 --win-shortcut --win-menu --win-dir-chooser --win-console
+jpackage --type exe --name "X-Men" --input target --main-jar X-Men_2.0-0.0.1-SNAPSHOT.jar --runtime-image .\myruntime --app-version 1.0.0 --win-shortcut --win-menu --win-dir-chooser --win-console
 
 4. Command to remove the runtime image:
 

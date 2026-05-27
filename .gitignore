@@ -1,5 +1,6 @@
 HELP.md
 target/
+dependency-reduced-pom.xml
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -18,6 +19,8 @@ target/
 *.iws
 *.iml
 *.ipr
+production/
+
 
 ### NetBeans ###
 /nbproject/private/
@@ -35,5 +38,46 @@ build/
 javafx-libs/
 myruntime/
 
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+application-local.yaml
+application-secret.properties
+application-secret.yml
+application-secret.yaml
+secrets.properties
+secrets.yml
+secrets.yaml
+secrets.json
+credentials.properties
+credentials.yml
+credentials.yaml
+credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.cer
+*.der
+
+# Runtime logs and local generated data
+log/
+logs/
+*.log
+*.sqlite
+*.sqlite3
+*.db
+hs_err_pid*
+replay_pid*
+
 # Ignore all .exe files
 *.exe
+
+# Claude
+.claude/

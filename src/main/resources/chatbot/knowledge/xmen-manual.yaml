@@ -1,0 +1,1689 @@
+entries:
+  - id: manual.xmen2.overview
+    title: X-Men 2.0 manual overview
+    category: manual
+    terms: [X-Men 2.0, XMen 2.0, X Men 2, what is X-Men 2.0, explain X-Men 2.0, what does X-Men do, X-Men overview, project overview, manual overview]
+    shortAnswer: |
+      X-Men 2.0 is a Java 21 and Spring Boot based tool for generating mutated Tamarin ceremony models.
+    definition: |
+      The manual describes X-Men 2.0 as a re-engineered and extended mutation generator for security ceremonies. It takes `.spthy` ceremony specifications, applies selected human-behavior mutations, writes mutated ceremony models, and relies on Tamarin Prover for formal analysis.
+    details:
+      - "A security ceremony extends a protocol with human users, systems, communication channels, and user actions."
+      - "Mutations model unexpected, incorrect, or missing human behavior during the ceremony."
+      - "The tool is built on top of Tamarin Prover and generates mutated ceremony theories for later verification."
+      - "Case studies include Oyster Card, SAML SSO, and Coach Service ticket inspection."
+      - "The manual covers local setup, mutation operation, helper services, model classes, integration tests, project structure, advanced Forget/derivation logic, troubleshooting, FAQs, glossary, and acronyms."
+    why: |
+      Use this source for questions about how X-Men 2.0 is implemented and operated, especially when the question names Java services, model classes, generated files, tests, or setup commands.
+    related: [manual.architecture.backend-flow, manual.local-build, manual.mutation.workflow]
+    followups:
+      - What is the X-Men mutation workflow?
+      - What are the X-Men case studies?
+      - How do I build X-Men 2.0?
+
+  - id: manual.security-ceremony
+    title: Security ceremony
+    category: concept
+    terms: [security ceremony, ceremony definition, protocol with human users, human ceremony, ceremony vs protocol, what is a security ceremony, explain ceremony, why ceremony not protocol, human in protocol, human user model, socio technical ceremony]
+    definition: |
+      A security ceremony is a security protocol extended with explicit human users and their interactions with computing systems.
+    details:
+      - "Ceremonies include messages, data, communication channels, and user actions."
+      - "The human participant is modeled as part of the system, not as an external assumption."
+      - "This matters because vulnerabilities can come from user mistakes even when the cryptographic protocol is sound."
+      - "Typical domains include payment, voting, authentication, transport, and critical infrastructure."
+    why: |
+      X-Men exists because human behavior can change the security outcome of a ceremony; mutations are the mechanism for exploring those changes.
+    related: [manual.mutation.definition, manual.xmen2.overview]
+    followups:
+      - What is a mutation?
+      - What is a human rule?
+      - What is a Tamarin theory?
+
+  - id: manual.mutation.definition
+    title: Mutation in X-Men 2.0
+    category: mutation
+    terms: [mutation definition, mutation in X-Men, human mutation, user mistake, mutated ceremony, what is a mutation, explain mutation, what does mutation mean, human behavior mistake, altered ceremony behavior, wrong human action, deviation from ceremony]
+    definition: |
+      A mutation models a potential mistake or altered behavior by a human participant compared with the behavior specified in the original ceremony.
+    details:
+      - "Examples include skipping actions, adding extra sends, replacing messages, neglecting checks, or forgetting knowledge."
+      - "The result is a mutated ceremony model that can be analyzed for changed security properties."
+      - "Mutated rules are marked as mutated and commonly receive an `M` suffix."
+      - "X-Men also updates later rules so the mutated trace remains structurally executable."
+    why: |
+      Mutations let analysts test whether a ceremony remains secure when human behavior deviates from the ideal flow.
+    related: [manual.skip.overview, manual.add.overview, manual.replace.overview, manual.forget.overview]
+    followups:
+      - What mutations are available?
+      - What is Skip Send Receive?
+      - What is Replace Type?
+
+  - id: manual.architecture.backend-flow
+    title: X-Men architecture flow
+    category: architecture
+    terms: [X-Men architecture, backend flow, mutation generator architecture, service layer, model classes, mutated file generator, how X-Men is structured, explain architecture flow, how request becomes mutated file, service helper model flow, components of X-Men]
+    definition: |
+      X-Men 2.0 routes a mutation request through controller components, service-layer logic, model objects, helper utilities, and a mutated-file generator.
+    details:
+      - "Mutation Generator represents the application repository and starts mutated file generation through internal layers."
+      - "Spring Boot controllers accept requests, extract inputs, configure mutation flags, and delegate to services."
+      - "The Service Layer contains the mutation business logic and coordinates model parsing, mutation strategies, and file generation."
+      - "The Mutated File Generator writes reconstructed mutated theories, including preamble, functions, builtins, rules, and postamble."
+      - "Model classes define facts, rules, values, variables, functions, and mutation state."
+      - "Utility functions support cloning, file handling, data processing, state rebuilding, and recursive propagation."
+    why: |
+      This flow explains why a mutation question may involve multiple classes: parsing, tagging, strategy selection, rule rewriting, propagation, and output generation are separated.
+    related: [manual.service-layer, manual.model-classes, manual.mutated-file-generator]
+    followups:
+      - What does MutationGeneratorService do?
+      - What does MutatedFileGenerator do?
+      - What does ParametersBundle store?
+
+  - id: manual.tamarin.role
+    title: Tamarin in X-Men 2.0
+    category: tamarin
+    terms: [Tamarin Prover role, Tamarin in X-Men, mutated files in Tamarin, analyze mutated ceremony, why does X-Men use Tamarin, what happens after mutation generation, where does Tamarin fit, Tamarin analysis stage]
+    definition: |
+      Tamarin Prover is the formal verification tool used to analyze the mutated ceremony models generated by X-Men 2.0.
+    details:
+      - "X-Men generates mutated `.spthy` ceremony theories."
+      - "The generated theories are analyzed in Tamarin to identify possible vulnerabilities."
+      - "The manual positions Tamarin as the analysis stage after mutation generation."
+      - "X-Men focuses on creating behavior variants; Tamarin checks the resulting formal model."
+    why: |
+      X-Men is not a replacement for Tamarin. It prepares mutated models so Tamarin can verify whether the changed ceremony still satisfies its security goals.
+    related: [manual.spthy.file, manual.mutated-file-generator, manual.derivation.check]
+    followups:
+      - What is a .spthy file?
+      - How are mutated files generated?
+      - What is a Tamarin theory?
+
+  - id: manual.case-studies
+    title: X-Men 2.0 case studies
+    category: case-study
+    terms: [X-Men case studies, case studies in manual, X-Men 2.0 manual case studies, Oyster SSO Coach, evaluated ceremonies, what examples are in the manual, what ceremonies were tested, case study list, Oyster Google SSO Coach examples]
+    definition: |
+      The manual evaluates X-Men 2.0 on three ceremonies: Oyster Card, SAML-based SSO for Google Apps, and a Coach Service ticket ceremony.
+    details:
+      - "Oyster Card models passenger, entrance gate, and exit gate interactions."
+      - "SAML SSO models a client, service provider, and identity provider."
+      - "Coach Service models customer, server-side ticket issuing, and driver inspection."
+      - "Each case study highlights how realistic human or implementation deviations can become security-relevant."
+    why: |
+      These examples ground the mutation categories in concrete ceremonies where missing steps, simplified data, or weak checks produce meaningful attacks.
+    related: [manual.case.oyster, manual.case.saml, manual.case.coach]
+    followups:
+      - What is the Oyster case study?
+      - What is the SAML SSO case study?
+      - What is the Coach Service case study?
+
+  - id: manual.case.oyster
+    title: Oyster Card case study
+    category: case-study
+    terms: [Oyster Card ceremony manual, Oyster case study, touch in touch out, GateIn GateOut, card clash]
+    definition: |
+      The Oyster Card case study models a passenger using a contactless card with an entrance gate and an exit gate.
+    details:
+      - "The passenger touches the card at the entrance and sends the card number to GateIn."
+      - "GateIn writes an identifier to the card and responds with that identifier."
+      - "At exit, the passenger sends the card number, balance, and entrance gate identifier to GateOut."
+      - "GateOut calculates the fare, updates the balance, and sends the new balance to the passenger."
+      - "The model abstracts low-level cryptography to focus on user actions and vulnerabilities."
+      - "Highlighted issues include forgetting to touch in or out and card clash from tapping multiple cards at once."
+    why: |
+      Oyster demonstrates how shifting responsibility to a human can create incomplete journeys, maximum fares, unintended payments, or double charges.
+    related: [manual.forget.overview, manual.skip.overview]
+    followups:
+      - What is Forget in the Oyster example?
+      - What is Skip Receive?
+      - What is a security ceremony?
+
+  - id: manual.case.saml
+    title: SAML SSO case study
+    category: case-study
+    terms: [SAML SSO manual, Google Apps SSO case, AuthAssert, service provider identity provider, SSO vulnerability]
+    definition: |
+      The SAML SSO case study models authentication among a client, a service provider, and an identity provider.
+    details:
+      - "The client requests a resource from the service provider."
+      - "The service provider sends an authentication request to the identity provider."
+      - "After successful authentication, the identity provider issues a digitally signed assertion."
+      - "The service provider verifies the assertion and grants resource access."
+      - "The 2008 Google Apps simplification removed ID and SP fields from `AuthAssert(ID, C, IdP, SP)`, yielding `AuthAssert(C, IdP)`."
+      - "That simplification let a malicious service provider reuse an assertion to impersonate the client at another service provider."
+    why: |
+      The case study shows why removing contextual fields for efficiency can enable a man-in-the-middle attack and why assertions should remain unique and context-specific.
+    related: [manual.replace.overview, manual.replace.submessages, manual.replace.type]
+    followups:
+      - What is Replace Submessages?
+      - What is Replace Type?
+      - What is a submessage?
+
+  - id: manual.case.coach
+    title: Coach Service case study
+    category: case-study
+    terms: [Coach Service ceremony manual, e ticket case study, driver ticket inspection, forged ticket, paper ticket]
+    definition: |
+      The Coach Service case study models ticket inspection for paper tickets and electronic tickets.
+    details:
+      - "Customers can buy paper tickets at stations, shops, or from the driver."
+      - "Customers can also buy electronic tickets with fields such as customer name, ticket number, journey details, barcode, or QR code."
+      - "The modeled roles are Customer, ticket issuing service, and Driver."
+      - "The customer selects and pays for a journey, receives an encrypted ticket, and presents it during boarding."
+      - "Drivers may check unique details against an authorized list or scan visual fields if present."
+      - "Weak inspection can allow attackers to travel using forged tickets."
+    why: |
+      Coach Service demonstrates that a credential can be present but still fail if the human check is superficial or ignores uniqueness.
+    related: [manual.neglect.definition, manual.case-studies]
+    followups:
+      - What is Neglect?
+      - What is a case study?
+      - What is a human rule?
+
+  - id: manual.local-build
+    title: Build and run X-Men 2.0
+    category: setup
+    terms: [build X-Men 2.0, run X-Men 2.0, local setup, Java 21 Maven, mvn spring-boot run, how do I run X-Men, how do I build X-Men, setup steps, install Java Maven, start the application, local build commands]
+    definition: |
+      X-Men 2.0 is built with Java 21, Maven, and Spring Boot.
+    steps:
+      - "Install Java 21 and Maven."
+      - "Set `JAVA_HOME` to the Java installation path and `MAVEN_HOME` to the Maven installation path."
+      - "Add the Java and Maven `bin` directories to the system path."
+      - "Install Git and verify it with `git --version`."
+      - "Clone the repository and enter the project directory."
+      - "Run `mvn clean install` to build the project."
+      - "Run `mvn spring-boot:run` to start the Spring Boot application."
+    details:
+      - "On Windows, configure variables through Advanced system settings and Environment variables."
+      - "On macOS, export `JAVA_HOME`, `MAVEN_HOME`, and update `PATH` in the shell profile."
+      - "A non-headless launch can use `mvn spring-boot:run \"-Dspring-boot.run.jvmArguments=-Djava.awt.headless=false\"`."
+      - "The Postman collection is located at `src/main/resources/X-Men.postmancollection.json`."
+    why: |
+      Build problems are usually environmental: Java version, Maven path, dependency download, or project import configuration.
+    related: [manual.troubleshoot.build, manual.troubleshoot.tests]
+    followups:
+      - Why does the Maven build fail?
+      - How do I run tests?
+      - Where are dependencies defined?
+
+  - id: manual.technical-upgrades
+    title: X-Men 2.0 technical upgrades
+    category: architecture
+    terms: [technical upgrades, Java 21 upgrade, Spring Boot upgrade, Maven based project, integration tests MockMvc]
+    definition: |
+      X-Men 2.0 upgrades the earlier tool into a Java 21, Spring Boot, Maven-based, modular application with documented code and integration tests.
+    details:
+      - "Java 21 improves performance, security patch level, and developer productivity."
+      - "Spring Boot simplifies configuration, startup, and service-oriented development."
+      - "Maven centralizes dependency management and supports repeatable builds."
+      - "The modular repository separates controller, service, helper, and model responsibilities."
+      - "Integration tests use MockMvc to verify endpoints and generated outputs."
+      - "Javadocs and readable implementation structure support onboarding and maintenance."
+    why: |
+      These upgrades explain why mutation behavior is now distributed across strategies, services, controllers, and model classes instead of one monolithic implementation.
+    related: [manual.service-layer, manual.integration-tests]
+    followups:
+      - What is the service layer?
+      - What is MockMvc used for?
+      - What is MutationStrategyFactory?
+
+  - id: manual.mutation.workflow
+    title: Mutation workflow
+    category: mutation
+    terms: [mutation workflow, how mutations are generated, generated mutated model, mutation processing flow, how does X-Men generate mutants, from spthy to mutated file, mutation pipeline, mutation generation steps, how are output files created]
+    definition: |
+      The mutation workflow parses a `.spthy` ceremony, selects mutation strategies, rewrites human rules, propagates changes, and writes mutated theories.
+    steps:
+      - "Receive a ceremony specification file and selected mutation options."
+      - "Split the file into preamble, rules, and postamble sections where needed."
+      - "Load the rules through the Tamarin parser into Java model objects."
+      - "Set mutation flags in `ParametersBundle`."
+      - "Choose mutation strategies through `MutationStrategyFactory`."
+      - "Clone and mutate eligible human rules."
+      - "Propagate state, receive, send, and action changes through dependent rules."
+      - "Reconstruct and write mutated output files."
+    details:
+      - "The original theory is cloned to isolate mutations from the base ceremony."
+      - "Mutated rules are marked with an `M` suffix and `Type.MUTATED`."
+      - "State updates are rebuilt so later rules remain aligned."
+      - "Generated files are stored through `MutatedFileGenerator`."
+    why: |
+      This is why X-Men answers should not treat a mutation as a simple text replacement; the tool rewrites structured model objects and then repairs dependent state.
+    related: [manual.file-splitter, manual.model-loader, manual.mutated-file-generator]
+    followups:
+      - What does FileSplitterService do?
+      - What does ModelLoader do?
+      - What does MutatedFileGenerator do?
+
+  - id: manual.skip.overview
+    title: Skip mutation implementation
+    category: mutation
+    terms: [Skip mutation manual, skip implementation, skipping Snd Rcv, skip strategy variants, how Skip is implemented, what does Skip remove, skip workflow, skipped send receive implementation]
+    definition: |
+      Skip mutation omits selected message-handling operations, such as `Snd` or `Rcv`, to test whether a ceremony remains robust when expected human steps are missing.
+    details:
+      - "The strategy clones the original theory to isolate mutations."
+      - "Mutated rules receive an `M` suffix and are marked `Type.MUTATED`."
+      - "Utility functions support cloning, state rebuilding, and variable analysis."
+      - "The `ParametersBundle` tracks the mutated rules and generated collections."
+      - "Required facts are validated before mutation; missing preconditions are logged as warnings or errors."
+    why: |
+      Skip is about missing actions, not wrong values. It removes or suppresses actions and then adapts later state so the mutated trace can still be analyzed.
+    related: [manual.skip.send, manual.skip.receive, manual.skip.receive-send, manual.skip.send-receive]
+    followups:
+      - What is Skip Send?
+      - What is Skip Receive Send?
+      - What is Skip Receive Send Receive?
+
+  - id: manual.skip.send
+    title: Skip Send
+    category: mutation
+    terms: [Skip Send manual, Skip-Send, SkipSendMutationStrategy, skip Snd, remove send action]
+    definition: |
+      Skip Send removes a human `Snd` operation from a rule.
+    details:
+      - "It removes `Snd` postconditions and `To` actions."
+      - "It adjusts variables that depended on the skipped send."
+      - "It uses `SkipSendMutationStrategy`."
+      - "The state and later rules may need alignment so the ceremony remains executable."
+    why: |
+      Use Skip Send when modeling a human who should send a message but fails to do so.
+    related: [manual.skip.overview, manual.skip.send-receive]
+    followups:
+      - What is Skip Send Receive?
+      - What is Snd?
+      - How does propagation work?
+
+  - id: manual.skip.receive
+    title: Skip Receive
+    category: mutation
+    terms: [Skip Receive manual, Skip-Receive, SkipReceiveMutationStrategy, skip Rcv, remove receive action]
+    definition: |
+      Skip Receive removes a human `Rcv` operation from a rule.
+    details:
+      - "It removes `Rcv` preconditions and `From` actions."
+      - "It rebuilds `State` postconditions to reflect the missing receive."
+      - "It uses `SkipReceiveMutationStrategy`."
+      - "It is different from Forget, because the receive event itself is skipped rather than received and then forgotten."
+    why: |
+      Use Skip Receive when modeling a human who never receives or processes an expected incoming message.
+    related: [manual.skip.overview, manual.forget.overview]
+    followups:
+      - How is Skip Receive different from Forget?
+      - What is Rcv?
+      - What is State?
+
+  - id: manual.skip.receive-send
+    title: Skip Receive Send
+    category: mutation
+    terms: [Skip Receive Send manual, Skip-Receive-Send, SkipReceiveSendMutationStrategy, skip receive then send, receive send variant]
+    definition: |
+      Skip Receive Send skips both the receive action and the send action that would normally follow within the same human subtrace.
+    details:
+      - "It removes the `Rcv` side and the later `Snd` side from the affected rule sequence."
+      - "It also removes related `From` and `To` action facts."
+      - "It updates state facts when the removed receive/send pair affected knowledge."
+      - "It uses `SkipReceiveSendMutationStrategy`."
+    why: |
+      This variant is specific: it starts with a receive, then removes the send that depends on that receive. A spaced or misspelled query should still resolve here, not to generic Skip.
+    related: [manual.skip.receive, manual.skip.send]
+    followups:
+      - What is Skip Send Receive?
+      - What is Skip Receive Send Receive?
+      - How does X-Men update state after Skip?
+
+  - id: manual.skip.receive-send-receive
+    title: Skip Receive Send Receive
+    category: mutation
+    terms: [Skip Receive Send Receive manual, Skip-Receive-Send-Receive, SkipReceiveSendReceiveMutationStrategy, chained skip receive send receive]
+    definition: |
+      Skip Receive Send Receive skips a chained sequence where a receive is skipped in the original rule and subsequent send/receive operations in dependent rules are also skipped.
+    details:
+      - "It propagates state updates across a chain of related rules."
+      - "It is designed for cases where removing the first receive invalidates later message handling."
+      - "It uses `SkipReceiveSendReceiveMutationStrategy`."
+      - "Dependent state facts and grouped parameters must be adjusted recursively."
+    why: |
+      This variant represents a longer behavioral cascade rather than a single missing action.
+    related: [manual.skip.receive-send, manual.skip.propagation]
+    followups:
+      - What is propagation?
+      - What is Skip Receive Send?
+      - How are integration tests written for Skip?
+
+  - id: manual.skip.send-receive
+    title: Skip Send Receive
+    category: mutation
+    terms: [Skip Send Receive manual, Skip-Send-Receive, SkipSendReceiveMutationStrategy, skip send then receive, dependent receive]
+    definition: |
+      Skip Send Receive skips a human send in one rule and the corresponding receive in arriving or dependent rules.
+    details:
+      - "It starts with a send-side omission."
+      - "It uses `findNextRules` to identify dependent arrival rules."
+      - "It removes or marks related `Snd`, `Rcv`, `To`, and `From` facts as removed."
+      - "It uses `SkipSendReceiveMutationStrategy`."
+    why: |
+      This variant models a missing outgoing message and the downstream receive that would no longer make sense.
+    related: [manual.skip.send, manual.skip.receive-send, manual.skip.propagation]
+    followups:
+      - What is Skip Receive Send?
+      - What is findNextRules?
+      - What is Snd?
+
+  - id: manual.skip.propagation
+    title: Skip propagation
+    category: mutation
+    terms: [Skip propagation, buildNewState, previousRuleFact, PSpecial update, Value parameter update, postSndVariables]
+    definition: |
+      Skip propagation recursively updates later rules after a send or receive operation has been removed.
+    details:
+      - "X-Men rebuilds `State` postconditions using `UtilityFunctions.buildNewState`."
+      - "It aligns later preconditions with modified states such as `previousRuleFact`."
+      - "It removes variables tied to skipped actions, such as `postSndVariables`."
+      - "It adjusts `PSpecial` groups and `Value` parameters in dependent facts."
+      - "It stores the resulting mutated rules in `ParametersBundle` collections."
+    why: |
+      Without propagation, the mutated trace could contain impossible later receives, stale variables, or inconsistent state facts.
+    related: [manual.utility-functions, manual.parameters-bundle]
+    followups:
+      - What does buildNewState do?
+      - What is ParametersBundle?
+      - What are PSpecial values?
+
+  - id: manual.add.overview
+    title: Add mutation implementation
+    category: mutation
+    terms: [Add mutation manual, Add-Mutation, AddMutationStrategy, add new send, knowledge permutations, how Add is implemented, Add workflow, how Add creates messages, Add power set, extra send implementation]
+    definition: |
+      Add mutation inserts additional send behavior derived from the human participant's current knowledge.
+    details:
+      - "The input `.spthy` file is split into sections using `FileSplitterService`."
+      - "The rule section is wrapped into an in-memory file object for loading."
+      - "The target rule is cloned and marked with an `M` suffix."
+      - "State, `Rcv`, and `Snd` facts are identified and processed."
+      - "Unused variables are removed by comparing send and receive parameters."
+      - "The mutated rule can re-inject receive actions while clearing other actions."
+    why: |
+      Add tests whether additional information sent by a human, even if redundant or derived from knowledge, changes the ceremony outcome.
+    related: [manual.add.permutations, manual.add.arrival-adaptation]
+    followups:
+      - How does Add generate permutations?
+      - How does Add adapt arrival rules?
+      - What is FileSplitterService?
+
+  - id: manual.add.permutations
+    title: Add mutation knowledge permutations
+    category: mutation
+    terms: [Add knowledge permutations, non-empty subsets, State PSpecial, role based add mutation, Add permutations]
+    definition: |
+      Add mutation extracts knowledge from the `State` fact and generates non-empty subsets of that knowledge as candidate messages.
+    details:
+      - "Knowledge content is read from the `State` fact's `PSpecial` parameter."
+      - "The tool generates all non-empty subsets of knowledge indices, such as `0`, `01`, or `12`."
+      - "For each permutation, X-Men constructs `Snd` facts."
+      - "For each role, it updates the receiver parameter and adds the mutated `Snd` fact to postconditions and actions."
+    why: |
+      The permutation step is what makes Add exhaustive over possible extra messages from the human's current knowledge.
+    related: [manual.add.overview, manual.pspecial]
+    followups:
+      - What is PSpecial?
+      - What is State?
+      - What is Snd?
+
+  - id: manual.add.arrival-adaptation
+    title: Add mutation arrival rule adaptation
+    category: mutation
+    terms: [Add arrival rule adaptation, Add propagation, convert Snd to Rcv, rebuild State after Add]
+    definition: |
+      After Add creates extra send facts, X-Men adapts arrival and subsequent rules so the extra message can be represented consistently.
+    details:
+      - "Generated `Snd` messages are converted to `Rcv` preconditions in arrival rules."
+      - "Existing `Rcv` preconditions may be replaced or new ones added."
+      - "Legacy `Rcv`, `Snd`, and `Commit` actions can be marked as removed."
+      - "New receive actions are injected and `State` postconditions are rebuilt."
+      - "Subsequent rules are updated recursively, including state index increments."
+    why: |
+      Add is not only an extra send; it also needs a matching receive-side model for later ceremony state.
+    related: [manual.add.overview, manual.skip.propagation]
+    followups:
+      - What is mutation propagation?
+      - What is State?
+      - What is Commit?
+
+  - id: manual.replace.overview
+    title: Replace mutation implementation
+    category: mutation
+    terms: [Replace mutation manual, Replace-Mutation, ReplaceMutationService, Replace Type, Replace Sub Messages, how Replace is implemented, Replace workflow, wrong same type value, partial message variant, replacement service]
+    definition: |
+      Replace mutation changes the message sent by a human either by substituting a same-type value or by sending a submessage of the original message.
+    details:
+      - "The original theory is cloned so the base ceremony is preserved."
+      - "The implementation supports `replaceType` and `replaceSubmessages` flags."
+      - "Values are extracted from the `Snd` postcondition."
+      - "Extraction handles `PSpecial` groups, variables explored through `UtilityFunctions`, and single `Value` instances."
+      - "Replacement changes are propagated through later `State`, `Rcv`, `Snd`, and action facts."
+    why: |
+      Replace captures humans sending the wrong but structurally related data, or sending only part of what should have been sent.
+    related: [manual.replace.type, manual.replace.submessages, manual.replace.propagation]
+    followups:
+      - What is Replace Type?
+      - What is Replace Submessages?
+      - How does Replace propagate?
+
+  - id: manual.replace.type
+    title: Replace Type
+    category: mutation
+    terms: [Replace Type manual, Replace Type from the X-Men manual, define Replace Type from the X-Men manual, Replace-Type, replaceType, same type different name, type replacement, same type different name Mutants]
+    definition: |
+      Replace Type swaps a sent value with another value from the human state knowledge that has the same type but a different name.
+    details:
+      - "The workflow compares `State` postcondition knowledge with `Snd` parameters."
+      - "A valid replacement has a matching tag or type but a different value name."
+      - "The implementation creates `Mutants` pairs containing old and new values."
+      - "It updates actions and `Snd` postconditions in cloned rules."
+      - "Complex cases use `UtilityFunctions.checkFunctionReplacement`."
+    why: |
+      Replace Type models confusion between values of the same kind, such as one key-like or password-like value being used instead of another.
+    related: [manual.mutants, manual.replace.propagation]
+    followups:
+      - What are Mutants?
+      - What is Replace Submessages?
+      - What is checkFunctionReplacement?
+
+  - id: manual.replace.submessages
+    title: Replace Submessages
+    category: mutation
+    terms: [Replace Submessages manual, Replace-Sub-Messages, replaceSubmessages, submessage replacement, partial message variants]
+    definition: |
+      Replace Submessages generates partial-message variants by selecting subsets of the original sent message parameters.
+    details:
+      - "It generates power-set permutations of `Snd` parameter indices, such as `0` or `01`."
+      - "It uses `generateArrayofValuetoSend` to map selected indices to values."
+      - "It updates `Snd` postconditions with the new partial content."
+      - "It propagates changes by aligning `Rcv` preconditions and rebuilding state."
+    why: |
+      This mutation models a human sending only part of a required structured message while preserving enough format to remain meaningful.
+    related: [manual.replace.overview, manual.submessage, manual.replace.propagation]
+    followups:
+      - What is a submessage?
+      - How does Replace Type differ?
+      - What is PSpecial?
+
+  - id: manual.replace.propagation
+    title: Replace propagation
+    category: mutation
+    terms: [Replace propagation, propagationReplace, propagationReplaceSubmessages, ensureConsistency, switchFlag]
+    definition: |
+      Replace propagation recursively updates later rules after a value or submessage has changed.
+    details:
+      - "For type replacement, `propagationReplace` updates preconditions, actions, `State`, `Rcv`, and `Snd` facts."
+      - "For submessage replacement, `propagationReplaceSubmessages` aligns receive-side content with the modified send."
+      - "State postconditions are rebuilt through `UtilityFunctions.buildNewState`."
+      - "`ensureConsistency` keeps `State` and `Rcv` agents aligned."
+      - "`ReplaceTypeStrategy` and `ReplaceSubMessagesStrategy` delegate to `ReplaceMutationService` and set `switchFlag`."
+    why: |
+      Replacement without propagation would leave later rules expecting a message that no longer exists.
+    related: [manual.replace.type, manual.replace.submessages, manual.utility-functions]
+    followups:
+      - What is ReplaceMutationService?
+      - What is ensureConsistency?
+      - What is switchFlag?
+
+  - id: manual.combine.add-replace
+    title: Add and Replace combinations
+    category: mutation
+    terms: [Combine Add Replace, Combination in Addition, Combination Only, combineAddReplace, combineAddReplaceOnly]
+    definition: |
+      X-Men supports combined Add/Replace behavior through flags that control whether cloned replacement rules are added to the theory alongside addition-generated variants.
+    details:
+      - "`combineAddReplace` and `combineAddReplaceOnly` are stored in `Flags`."
+      - "`TagSetter` sets Add, Replace, and Combine flags in `ParametersBundle`."
+      - "Skip is not handled by `TagSetter` because Skip has its own send/receive sequence variants rather than combinations with Add or Replace."
+      - "`switchFlag` controls replacement logic activation."
+    why: |
+      Combination flags let the tool explore richer human deviations than a single mutation family can express alone.
+    related: [manual.tag-setter, manual.flags, manual.replace.overview, manual.add.overview]
+    followups:
+      - What is TagSetter?
+      - What are Flags?
+      - What is Replace mutation?
+
+  - id: manual.forget.overview
+    title: Forget mutation in the manual
+    category: mutation
+    terms: [Forget mutation manual, Forget-Mutation, ForgetMutationStrategy, knowledge loss, forget propagation, how Forget is implemented, Forget workflow, memory loss implementation, forgotten value propagation, reintroduced forgotten knowledge]
+    definition: |
+      Forget mutation models knowledge loss by removing a value from the agent's usable state and propagating that loss through subsequent rules.
+    details:
+      - "It can remove specific knowledge from an agent state."
+      - "If the forgotten value is not derivable, it can be replaced by another value of the same type extracted from setup knowledge."
+      - "The loss is propagated through later agent rules."
+      - "Forgotten knowledge can be reintroduced if it is received again later."
+      - "The implementation cooperates with `SetupKnowledgeExtractor`, `DerivationCheckService`, `UtilityFunctions`, and `ReplaceMutationService`."
+    why: |
+      Forget is for memory loss, not skipped communication. The trace may still contain receives and sends, but derivability and usable knowledge change.
+    related: [manual.forget.algorithm, manual.derivation.process, paper.forget.definition]
+    followups:
+      - How does Forget work step by step?
+      - What is SetupKnowledgeExtractor?
+      - What is derivability?
+
+  - id: manual.forget.algorithm
+    title: Forget mutation algorithm
+    category: mutation
+    terms: [Forget algorithm manual, Forget(x), sanitize Forget literal, forget set, reacquire forgotten value]
+    definition: |
+      The Forget algorithm detects `Forget(x)`, removes the literal from Tamarin syntax, updates usable knowledge, checks derivability, and propagates substitutions.
+    steps:
+      - "Detect every `Forget(x)` literal in agent rules."
+      - "Sanitize the input by deleting those literals from the Tamarin-facing syntax."
+      - "Track forgotten values in a per-rule set."
+      - "Update postcondition knowledge by removing the forgotten value from usable state."
+      - "If the value is not derivable, fetch a same-type alternative from `SetupKnowledgeExtractor` and substitute it."
+      - "Propagate the substitution to all subsequent agent rules."
+      - "If the original value is received again, remove it from the forget tracking set and allow its use."
+    details:
+      - "The Oyster example forgets `bal($oyster)` in `H_2` and replaces it with `bal($ccard)` of the same `balance` type."
+      - "If `bal($oyster)` is received again in `H_3`, it is re-added."
+      - "Propagation keeps the absence of the forgotten value active until explicit reacquisition."
+    why: |
+      This algorithm preserves ceremony validity while modeling a participant who no longer has usable access to a specific value.
+    related: [manual.forget.overview, manual.derivation.process]
+    followups:
+      - What is the Oyster Forget example?
+      - What is derivability?
+      - What is a same-type replacement?
+
+  - id: manual.derivation.process
+    title: Derivation check process
+    category: derivation
+    terms: [Derivation process manual, DerivationCheckService, derivability check, Dolev Yao derivation, derive target message, can this message be derived, why derivation failed, how derivability works, build target from knowledge, derivation tree]
+    definition: |
+      The derivation process checks whether a target message can be built from known messages under Dolev-Yao style symbolic rules.
+    steps:
+      - "Start with a target message and a list of known messages."
+      - "Check whether the target is already known."
+      - "Use backward search with a bounded depth to avoid infinite loops."
+      - "If a pair is known, derive either component individually."
+      - "If ciphertext `{M}K` is known and key `K` can be found, derive `M` by decryption."
+      - "For a target pair `(X,Y)`, derive both `X` and `Y`."
+      - "For encryption `{M}K`, derive both `M` and `K`."
+      - "For function `f(a1,...,an)`, derive every argument."
+      - "Fail on an unknown simple atom."
+      - "Record the successful or failed proof path in a small derivation tree."
+    details:
+      - "Repeated goals are tracked so the search does not loop."
+      - "If the depth limit is exhausted, that branch fails."
+      - "When checking from a rule, the target is taken from the last postcondition's last parameter."
+      - "The knowledge set is built from matching rule state values, and forgotten tilde-marked values are excluded."
+      - "Setup and channel rules are skipped as special cases."
+    why: |
+      Derivation checking lets Forget decide whether losing a value really breaks the later message construction or whether the value is still derivable from remaining knowledge.
+    related: [manual.forget.algorithm, manual.haskell-derivation-service]
+    followups:
+      - What is the Haskell derivation service?
+      - What is Dolev-Yao?
+      - How does Forget use derivability?
+
+  - id: manual.haskell-derivation-service
+    title: Haskell derivation service
+    category: derivation
+    terms: [Haskell script manual, DerivationService.hs, Main.hs, derive endpoint, example endpoint, health endpoint]
+    definition: |
+      The Haskell derivation service implements a Dolev-Yao intruder deduction model and exposes derivation behavior through lightweight endpoints.
+    details:
+      - "`DerivationService.hs` defines constructors, destructors, frames, recipes, and the main deduction algorithm."
+      - "`Main.hs` wraps the derivation logic using the Scotty framework."
+      - "`/example` returns a canonical derivation trace."
+      - "`/derive` accepts a POST body and executes the derivation function."
+      - "`/health` provides a lightweight health check."
+      - "The algorithm uses frames as associative lists of intruder knowledge."
+      - "Constructors include cryptographic operations such as asymmetric encryption, symmetric encryption, and signatures."
+      - "Destructors include symbolic inverses such as decryption and signature verification."
+    why: |
+      The service provides an executable and transparent reference for symbolic protocol derivation used alongside X-Men's Forget and derivation logic.
+    related: [manual.derivation.process, manual.dolev-yao]
+    followups:
+      - What is a derivation tree?
+      - What is Dolev-Yao?
+      - What does /derive do?
+
+  - id: manual.service-layer
+    title: Service layer
+    category: architecture
+    terms: [service layer manual, service layer classes, business logic layer, X-Men services]
+    definition: |
+      The service layer contains the business logic that parses input models, selects mutation strategies, performs mutation, checks derivability, and generates output files.
+    details:
+      - "Implementation classes include `AddMutationStrategy`, `DerivationCheckServiceImpl`, `MutationGeneratorServiceImpl`, `ReplaceMutationService`, `ReplaceSubMessagesStrategy`, `ReplaceTypeStrategy`, and Skip strategies."
+      - "Interfaces include `FileSplitterService`, `MutationGeneratorService`, `MutationStrategyFactory`, `DerivationService`, `FileLoadingService`, and `DerivationCheckService`."
+      - "The service layer coordinates file splitting, rule loading, mutation generation, replacement propagation, and derivation checking."
+      - "It separates mutation logic from controller request handling and model data structures."
+    why: |
+      If a question asks where mutation behavior lives, the answer is usually in the service layer and its strategy implementations.
+    related: [manual.mutation-generator-service, manual.replace.overview, manual.file-loading-service]
+    followups:
+      - What is MutationGeneratorServiceImpl?
+      - What is ReplaceMutationService?
+      - What is FileLoadingService?
+
+  - id: manual.file-loading-service
+    title: FileLoadingService
+    category: helper
+    terms: [FileLoadingService, load model file, validate model file, preliminary validation]
+    definition: |
+      `FileLoadingService` manages loading and preliminary validation of ceremony model files.
+    details:
+      - "It checks basic file structure, including non-null and non-empty content."
+      - "It delegates parsing to `ModelLoader`."
+      - "It logs detailed errors during loading and validation."
+    why: |
+      Loading errors should be checked before blaming a mutation strategy, because invalid or empty input cannot be mutated correctly.
+    related: [manual.model-loader, manual.troubleshoot.derivation]
+    followups:
+      - What does ModelLoader do?
+      - What is a .spthy file?
+      - Why does mutation generation fail?
+
+  - id: manual.file-handler
+    title: FileHandler
+    category: helper
+    terms: [FileHandler, persistent knowledge, merge tags, spread tags, arrange variables, similar rules]
+    definition: |
+      `FileHandler` arranges rules and variables, manages tags, and tracks persistent knowledge across the loaded theory.
+    details:
+      - "It connects sequential rules through previous and next pointers."
+      - "It merges tags with their values for uniform handling."
+      - "It spreads tags consistently across rules."
+      - "It links variables to corresponding values."
+      - "It tracks persistent knowledge by state number."
+      - "It identifies roles from setup rules."
+      - "It processes similarly named rules and updates persistent knowledge."
+      - "It can demerge tags and values in a theory."
+    why: |
+      Many mutation strategies depend on FileHandler's rule links and normalized knowledge representation before they can safely propagate changes.
+    related: [manual.rule-class, manual.value-variable, manual.parameters-bundle]
+    followups:
+      - What is persistent knowledge?
+      - What is a Rule?
+      - What is a Value?
+
+  - id: manual.file-splitter
+    title: FileSplitterService
+    category: helper
+    terms: [FileSplitterService, FileSplitterService X-Men manual, what does FileSplitterService do in the X-Men manual, split file, preamble rules postamble, RULES marker, ENDOFRULES marker, what does FileSplitterService do, split spthy file, extract rules section, preserve preamble postamble, why split the file]
+    definition: |
+      `FileSplitterService` splits a ceremony file into structured segments such as preamble, rules, and postamble.
+    details:
+      - "It uses predefined markers such as `/RULES/` and `/ENDOFRULES/`."
+      - "It returns targeted segments for mutation processing."
+      - "It supports reconstruction of mutated files after rule mutation."
+      - "Controllers use it before wrapping rule content into an in-memory file representation."
+    why: |
+      Mutation logic should operate on rules without losing the original preamble, functions, builtins, lemmas, or postamble needed for valid output.
+    related: [manual.mutated-file-generator, manual.inmemory-multipart-file]
+    followups:
+      - What does MutatedFileGenerator do?
+      - What is InMemoryMultipartFile?
+      - What is a .spthy file?
+
+  - id: manual.mutated-file-generator
+    title: MutatedFileGenerator
+    category: helper
+    terms: [MutatedFileGenerator, generated mutation files, write mutated theory, output files, file creator, what does MutatedFileGenerator do, who writes output files, creates mutated files, cleanup generated files, reconstruct mutated theory]
+    definition: |
+      `MutatedFileGenerator` writes mutated ceremony theories to files and manages previously generated mutation outputs.
+    details:
+      - "It writes mutated theory content using systematic file naming."
+      - "It includes preamble, functions, builtins, rules, and postamble."
+      - "It cleans previously generated mutation files before creating new ones."
+      - "It logs file operation errors."
+    why: |
+      This class is responsible for turning in-memory mutated rules back into usable Tamarin input files.
+    related: [manual.file-splitter, manual.mutation.workflow]
+    followups:
+      - Why are mutation files missing?
+      - What is FileSplitterService?
+      - What is a Tamarin theory?
+
+  - id: manual.mutation-generator-service
+    title: MutationGeneratorServiceImpl
+    category: service
+    terms: [MutationGeneratorServiceImpl, MutationGeneratorService, generate model mutations, mutation generator service]
+    definition: |
+      `MutationGeneratorServiceImpl` is the main service implementation for generating model mutations.
+    details:
+      - "It selects appropriate strategies through a factory pattern."
+      - "It applies mutations to cloned human rules."
+      - "It coordinates with utility functions for cloning and mutation operations."
+      - "It saves mutated models through `MutatedFileGenerator`."
+    why: |
+      This service is the orchestration point between parsed model objects, mutation strategies, helper utilities, and output files.
+    related: [manual.mutation-strategy-factory, manual.utility-functions, manual.mutated-file-generator]
+    followups:
+      - What is MutationStrategyFactory?
+      - What are mutation strategies?
+      - What does MutatedFileGenerator do?
+
+  - id: manual.model-loader
+    title: ModelLoader
+    category: helper
+    terms: [ModelLoader, parse spthy, Tamarin parser, ANTLR parser, load theory, what does ModelLoader do, how spthy is parsed, load ceremony model, parse Tamarin file, build Java model]
+    definition: |
+      `ModelLoader` loads `.spthy` files and parses them into structured Java model objects.
+    details:
+      - "It validates file extensions."
+      - "It parses input using the ANTLR lexer and parser."
+      - "It organizes loaded components into functions, builtins, and rules."
+      - "It uses `FileHandler` to arrange and process the loaded theory."
+      - "It logs loading operations and exceptions."
+    why: |
+      ModelLoader is the bridge from textual Tamarin syntax to the Java objects that mutation strategies can inspect and rewrite.
+    related: [manual.tamarin-parser-classes, manual.file-handler, manual.spthy.file]
+    followups:
+      - What is TamVisitor?
+      - What is a .spthy file?
+      - What is a Rule?
+
+  - id: manual.mutation-strategy-factory
+    title: MutationStrategyFactory
+    category: service
+    terms: [MutationStrategyFactory, strategy factory, register mutation strategies, get mutation strategy]
+    definition: |
+      `MutationStrategyFactory` provides mutation strategy instances based on the selected mutation type.
+    details:
+      - "It registers strategies such as Skip Send, Skip Receive, and Replace Type."
+      - "It provides a flexible way to retrieve strategy implementations."
+      - "It makes adding a new mutation strategy easier because selection logic is centralized."
+    why: |
+      Strategy selection is separated from mutation execution, so the controller and generator service do not need to hard-code each algorithm.
+    related: [manual.mutation-generator-service, manual.mutation-strategy]
+    followups:
+      - What is a MutationStrategy?
+      - What is MutationGeneratorServiceImpl?
+      - What mutation types exist?
+
+  - id: manual.rules-modifier
+    title: RulesModifier
+    category: helper
+    terms: [RulesModifier, modify rules, mutated preconditions, mutated actions, mutated postconditions]
+    definition: |
+      `RulesModifier` modifies existing rules based on selected mutation strategies.
+    details:
+      - "It applies mutations such as Skip Send or Skip Receive."
+      - "It clones and modifies rules, marking them as mutated."
+      - "It updates preconditions, actions, and postconditions."
+      - "It manages different parameter types such as variables, values, and `PSpecial`."
+      - "It maintains logs for debugging mutation processing."
+    why: |
+      RulesModifier captures the actual structured changes to rule components rather than treating the theory as plain text.
+    related: [manual.rule-class, manual.fact-class, manual.pspecial]
+    followups:
+      - What is a Rule?
+      - What is a Fact?
+      - What is PSpecial?
+
+  - id: manual.tag-setter
+    title: TagSetter
+    category: helper
+    terms: [TagSetter, set mutation tags, add replace combine flags, mutation flags]
+    definition: |
+      `TagSetter` sets mutation-related flags inside `ParametersBundle`.
+    details:
+      - "It defines flags for Add, Replace, and combined mutation modes."
+      - "It updates the parameter bundle so later services know which strategy behavior to activate."
+      - "It does not handle Skip because Skip has dedicated send/receive sequence variants."
+      - "It supports complex scenarios involving mutation combinations."
+    why: |
+      Correct flags are necessary for the generator service to apply the intended mutation behavior.
+    related: [manual.flags, manual.parameters-bundle, manual.combine.add-replace]
+    followups:
+      - What are Flags?
+      - What is ParametersBundle?
+      - What is Combine Add Replace?
+
+  - id: manual.utility-functions
+    title: UtilityFunctions
+    category: helper
+    terms: [UtilityFunctions, clone rules, buildNewState, power sets, find required rules, variable analysis]
+    definition: |
+      `UtilityFunctions` provides shared operations for cloning, inspecting, rebuilding, and navigating ceremony model objects.
+    details:
+      - "It deep clones models and rules."
+      - "It extracts and recursively explores variables and nested structures."
+      - "It checks actions for variable presence and consistency."
+      - "It builds new agent states after mutations."
+      - "It computes power sets for exhaustive mutation combinations."
+      - "It logs complex recursive operations."
+      - "It finds and returns required rules."
+    why: |
+      Shared utilities prevent each mutation strategy from reimplementing cloning, state rebuilding, and recursive traversal logic.
+    related: [manual.skip.propagation, manual.replace.propagation, manual.add.permutations]
+    followups:
+      - What is buildNewState?
+      - What is Replace propagation?
+      - What is Add permutation?
+
+  - id: manual.controllers.overview
+    title: Mutation API controllers
+    category: architecture
+    terms: [MutationController, SkipMutationController, AddMutationController, ReplaceMutationController, API controllers]
+    definition: |
+      X-Men controller components receive mutation requests, configure mutation options, parse input sections, and invoke the service layer.
+    details:
+      - "`MutationController` is the primary controller for generating ceremony mutations."
+      - "`SkipMutationController` exposes dedicated skip mutation paths for Send, Receive, SendReceive, ReceiveSend, and ReceiveSendReceive."
+      - "`AddMutationController` handles Add mutation processing."
+      - "`ReplaceMutationController` handles Replace Submessages and Replace Type processing."
+      - "Controllers rely on file splitting, in-memory rule content, tagging, model loading, and mutation generation services."
+    why: |
+      Controller questions are about request orchestration, not the mutation algorithm itself. The algorithm lives in strategies and services.
+    related: [manual.mutation-controller, manual.skip-controller, manual.add-controller, manual.replace-controller]
+    followups:
+      - What does MutationController do?
+      - What does SkipMutationController do?
+      - What does ReplaceMutationController do?
+
+  - id: manual.mutation-controller
+    title: MutationController
+    category: controller
+    terms: [MutationController manual, generateMutations, mutation headers, uploaded spthy file]
+    definition: |
+      `MutationController` is the primary controller for generating ceremony mutations from uploaded `.spthy` content and selected mutation headers.
+    details:
+      - "It accepts headers that configure mutation types."
+      - "It extracts rule sections using a file splitter service."
+      - "It wraps rule sections into an in-memory file object for downstream processing."
+      - "It invokes tagging and rule-loading services."
+      - "It coordinates mutation strategies through the central generator service."
+      - "It preserves additional sections such as preamble and postamble for accurate output reconstruction."
+    why: |
+      If all selected mutations go through one request path, this controller is the orchestrator that prepares inputs for service-layer execution.
+    related: [manual.file-splitter, manual.inmemory-multipart-file, manual.mutation-generator-service]
+    followups:
+      - What headers select mutations?
+      - What is FileSplitterService?
+      - What is ParametersBundle?
+
+  - id: manual.skip-controller
+    title: SkipMutationController
+    category: controller
+    terms: [SkipMutationController, skip endpoints, sendMutations, receiveMutations, receiveSendMutations, receiveSendReceiveMutations]
+    definition: |
+      `SkipMutationController` handles dedicated Skip mutation requests for the available skip variants.
+    details:
+      - "It supports Send, Receive, SendReceive, ReceiveSend, and ReceiveSendReceive variants."
+      - "It accepts `.spthy` ceremony specifications."
+      - "It extracts the rules section using a file splitter service."
+      - "It delegates to the central mutation generator service with the correct mutation type."
+      - "It clears and manages `ParametersBundle` collections to avoid stale data and preserve output labels."
+    why: |
+      Dedicated skip paths make it clear which ordered send/receive variant is being tested.
+    related: [manual.skip.overview, manual.parameters-bundle]
+    followups:
+      - What is Skip Send Receive?
+      - What is Skip Receive Send?
+      - Why clear ParametersBundle collections?
+
+  - id: manual.add-controller
+    title: AddMutationController
+    category: controller
+    terms: [AddMutationController, addMutations, Add-Mutation endpoint, Add controller]
+    definition: |
+      `AddMutationController` handles Add mutation requests for ceremony rule files.
+    details:
+      - "It accepts uploaded `.spthy` ceremony specification files."
+      - "It splits preamble, rules, and postamble sections using `FileSplitterService`."
+      - "It wraps extracted rules into an in-memory file representation."
+      - "It loads and parses rule content with `FileLoadingService`."
+      - "It invokes `MutationGeneratorService` to apply Add mutation."
+    why: |
+      This controller prepares the exact rule content Add needs before the Add strategy generates knowledge permutations and output files.
+    related: [manual.add.overview, manual.file-loading-service, manual.file-splitter]
+    followups:
+      - What is Add mutation?
+      - What is FileLoadingService?
+      - What is FileSplitterService?
+
+  - id: manual.replace-controller
+    title: ReplaceMutationController
+    category: controller
+    terms: [ReplaceMutationController, subMessagesMutations, typeMutations, Replace controller]
+    definition: |
+      `ReplaceMutationController` handles Replace Submessages and Replace Type mutation requests.
+    details:
+      - "It provides a dedicated path for Replace Submessages."
+      - "It provides a specialized path for Replace Type."
+      - "It processes uploaded `.spthy` files, splits them, and creates virtual rule-file representations."
+      - "It applies mutation-specific tags before loading rules."
+      - "It delegates the mutation logic to `MutationGeneratorService`."
+    why: |
+      The controller chooses the replacement mode; `ReplaceMutationService` performs the replacement logic and propagation.
+    related: [manual.replace.overview, manual.replace.type, manual.replace.submessages]
+    followups:
+      - What is Replace Type?
+      - What is Replace Submessages?
+      - What is ReplaceMutationService?
+
+  - id: manual.model-classes
+    title: Model classes
+    category: model
+    terms: [model classes manual, X-Men model package, domain classes, ceremony data structures]
+    definition: |
+      X-Men model classes represent the parsed ceremony theory, including rules, facts, values, variables, messages, functions, builtins, and mutation metadata.
+    details:
+      - "Core rule structures include `Rule`, `Fact`, `Type`, and `TypeFact`."
+      - "Value structures include `Abs_Value`, `Value`, `Variable`, `Special`, `PSpecial`, and `FSpecial`."
+      - "Message structures include `Message`, `Atom`, `Pair`, `Encrypt`, `PredictiveFunction`, and `Nary_app`."
+      - "Configuration and mutation state are stored in `Flags`, `Mutants`, `Mutations`, and `ParametersBundle`."
+      - "Parser support classes include `TamarinLexer`, `TamarinParser`, `TamarinVisitor`, `TamarinBaseVisitor`, and `TamVisitor`."
+    why: |
+      Mutation strategies operate on these structured objects, not on raw strings.
+    related: [manual.rule-class, manual.fact-class, manual.parameters-bundle]
+    followups:
+      - What is a Rule?
+      - What is a Fact?
+      - What is ParametersBundle?
+
+  - id: manual.fact-class
+    title: Fact class
+    category: model
+    terms: [Fact.java, Fact class, Snd Rcv State facts, pre post action fact, mutation flags on facts]
+    definition: |
+      `Fact` represents an atomic ceremony statement with a name, type, parameters, and mutation state.
+    details:
+      - "The fact name identifies statements such as `Snd`, `Rcv`, or `State`."
+      - "The type classifies facts as precondition, postcondition, or action."
+      - "Parameters can include `Value`, `Variable`, or `PSpecial` objects."
+      - "Mutation flags track whether a fact is removed, added, or modified."
+      - "Methods support deep copying, single-parameter replacement, value lookup, removal state, and custom comparison."
+    why: |
+      Facts are the units mutation strategies remove, add, replace, or propagate.
+    related: [manual.typefact, manual.value-variable, manual.pspecial]
+    followups:
+      - What is TypeFact?
+      - What is PSpecial?
+      - What is Snd?
+
+  - id: manual.rule-class
+    title: Rule class
+    category: model
+    terms: [Rule.java, Rule class, ceremony rule, preconditions actions postconditions, findNextRule]
+    definition: |
+      `Rule` models a ceremony transition with preconditions, actions, postconditions, variables, adjacent-rule links, and mutation state.
+    details:
+      - "Each rule has an identifier, name, type, channel flag, mutation flag, and associated mutation reference."
+      - "It stores variables, preconditions, actions, and postconditions."
+      - "It links previous and next rules to support ordered rule traversal."
+      - "It can mutate preconditions, actions, and postconditions using cloned facts."
+      - "It supports lookup methods for facts, removed values, mutated values, and next applicable rules."
+      - "`consistencyCheck` validates internal consistency, especially around removal states."
+    why: |
+      Human-rule mutation is the central operation in X-Men; Rule is the object that gets cloned, marked, changed, and propagated.
+    related: [manual.fact-class, manual.skip.propagation]
+    followups:
+      - What is a human rule?
+      - What is a Fact?
+      - What is findNextRule?
+
+  - id: manual.parameters-bundle
+    title: ParametersBundle
+    category: model
+    terms: [ParametersBundle, parameters bundle, theory collections flags roles, forgetMutationSet, extraContent, what is ParametersBundle, what does ParametersBundle store, central mutation state, mutation data container, stale ParametersBundle]
+    definition: |
+      `ParametersBundle` is the central container for parsed theory data, mutation flags, generated collections, roles, functions, builtins, and extra mutation metadata.
+    details:
+      - "It stores the file name and the list of `Rule` objects representing the theory."
+      - "It keeps nested collections used by mutation strategies and output generation."
+      - "It stores functions, builtins, roles, and whether the model has tags."
+      - "It holds a `Flags` instance controlling Add, Replace, Combine, and other behavior."
+      - "It stores `forgetMutationSet`, sample replacement data, and arbitrary extra content."
+      - "It provides helpers to add and retrieve extra content by key."
+    why: |
+      Many classes communicate mutation state through ParametersBundle, so stale or incorrect bundle data can cause wrong outputs.
+    related: [manual.flags, manual.mutants, manual.tag-setter]
+    followups:
+      - What are Flags?
+      - What is forgetMutationSet?
+      - Why clear ParametersBundle collections?
+
+  - id: manual.flags
+    title: Flags class
+    category: model
+    terms: [Flags.java, mutation flags, add replaceTags replaceSubmessages, switchFlag, trueReplace]
+    definition: |
+      `Flags` stores boolean switches that govern mutation behavior.
+    details:
+      - "Important flags include `add`, `replaceTags`, `replaceSubmessages`, `combineAddReplace`, `combineAddReplaceOnly`, `switchFlag`, and `trueReplace`."
+      - "Flags allow fine-grained control over how facts and messages are mutated."
+      - "Controllers and tag-setting logic configure flags before services run."
+    why: |
+      A wrong flag means the service layer may run the wrong mutation mode or skip the intended behavior.
+    related: [manual.tag-setter, manual.parameters-bundle]
+    followups:
+      - What is TagSetter?
+      - What is Combine Add Replace?
+      - What is switchFlag?
+
+  - id: manual.value-variable
+    title: Value and Variable classes
+    category: model
+    terms: [Value.java, Variable.java, value class, variable class, symbolic value, inKnowledge]
+    definition: |
+      `Value` represents a symbolic term or literal, while `Variable` extends it with optional special structured content.
+    details:
+      - "`Value` stores name, tag, mutation flags, and whether it is in knowledge."
+      - "`Value` can toggle persistent or normal knowledge, clone itself, test constants, and compare normalized names."
+      - "`Variable` stores a reference to a `Special` object such as `PSpecial` or `FSpecial`."
+      - "`Variable` clones both itself and its special properties."
+      - "Both support string output that respects removal state."
+    why: |
+      Replacement, Forget, and propagation depend on knowing whether a symbolic item is a value, variable, known item, removed item, or structured term.
+    related: [manual.pspecial, manual.fspecial, manual.replace.type]
+    followups:
+      - What is PSpecial?
+      - What is FSpecial?
+      - What is Replace Type?
+
+  - id: manual.pspecial
+    title: PSpecial
+    category: model
+    terms: [PSpecial, PSpecial in X-Men 2.0, what is PSpecial in X-Men 2.0, Parameter Special, group values, structured message, PSpecial group]
+    definition: |
+      `PSpecial` groups multiple values into a structured parameter and supports mutation-aware search, update, removal, cloning, and comparison.
+    details:
+      - "It stores an ordered group of `Value` objects."
+      - "It can add, count, retrieve, remove, and update specific values."
+      - "Its string form encloses grouped values in angle brackets while skipping removed values."
+      - "It supports several search helpers for finding values by name."
+      - "It deep clones its contained values."
+    why: |
+      PSpecial is common in `State`, `Snd`, and structured message handling, so Add, Replace, and Skip propagation often need to inspect or rewrite it.
+    related: [manual.add.permutations, manual.replace.submessages, manual.fact-class]
+    followups:
+      - What is State?
+      - What is Replace Submessages?
+      - What is Add permutation?
+
+  - id: manual.fspecial
+    title: FSpecial
+    category: model
+    terms: [FSpecial, Function Special, grouped function arguments, special fact]
+    definition: |
+      `FSpecial` represents a specialized function-like fact or message with grouped parameters and an optional key modifier.
+    details:
+      - "It stores a function name, a group of parameters, and a key-like value."
+      - "Its group can include variables, values, or `PSpecial` objects."
+      - "It supports adding values, deep cloning, and custom string construction."
+    why: |
+      FSpecial handles structured function-shaped content that does not fit a simple flat value representation.
+    related: [manual.pspecial, manual.value-variable, manual.message-classes]
+    followups:
+      - What is PSpecial?
+      - What is Nary_app?
+      - What is a structured message?
+
+  - id: manual.message-classes
+    title: Message model classes
+    category: model
+    terms: [Message.java, Atom, Pair, Encrypt, PredictiveFunction, Nary_app, message model]
+    definition: |
+      X-Men message classes give a uniform `represent()` behavior for atomic, paired, encrypted, predictive, and n-ary message structures.
+    details:
+      - "`Message` defines the common `represent()` method."
+      - "`Atom` stores an immutable string and represents indivisible messages."
+      - "`Pair` combines left and right messages and represents them as `(left, right)`."
+      - "`Encrypt` stores a message and key and represents encrypted content."
+      - "`PredictiveFunction` stores a function name and argument messages, producing `name(arg1, arg2, ...)`."
+      - "`Nary_app` represents n-ary function applications with a function name and a list of `Value` arguments."
+    why: |
+      Derivation and mutation logic must understand message structure to replace submessages, derive pairs, and reason about encryption.
+    related: [manual.derivation.process, manual.replace.submessages]
+    followups:
+      - What is Pair?
+      - What is Encrypt?
+      - What is PredictiveFunction?
+
+  - id: manual.function-builtins
+    title: Function and Builtins classes
+    category: model
+    terms: [Function.java, Builtins.java, builtins, function arity, ceremony functions]
+    definition: |
+      `Function` records a ceremony function signature, while `Builtins` stores groups of built-in theory features.
+    details:
+      - "`Function` stores a name and number of parameters, and prints as `name/arity`."
+      - "`Builtins` stores a name and a group of related built-in elements."
+      - "Builtins can include predefined constructs such as pairing, hashing, or encryption support."
+      - "Both are loaded into the model so mutated output can preserve required theory declarations."
+    why: |
+      Mutated files must retain function and builtin declarations or Tamarin will not parse the resulting theory correctly.
+    related: [manual.model-loader, manual.mutated-file-generator]
+    followups:
+      - What is a Tamarin theory?
+      - What does ModelLoader load?
+      - What does MutatedFileGenerator write?
+
+  - id: manual.mutants
+    title: Mutants class
+    category: model
+    terms: [Mutants.java, oldValue newValue, replacement pair, mutation pair]
+    definition: |
+      `Mutants` stores a mutation pair representing an original value and its replacement, or a removed value.
+    details:
+      - "`oldValue` is the value before mutation."
+      - "`newValue` is the replacement value, or the removed value when `oldValue` is null."
+      - "Its string form describes the mutation operation."
+      - "Replace Type uses mutant pairs for valid same-type substitutions."
+    why: |
+      Replacement propagation needs an explicit old/new mapping so later facts can be updated consistently.
+    related: [manual.replace.type, manual.replace.propagation]
+    followups:
+      - What is Replace Type?
+      - What is Replace propagation?
+      - What is Value?
+
+  - id: manual.mutations-enum
+    title: Mutations enum
+    category: model
+    terms: [Mutations.java, mutation enum, SKIP_SEND, SKIP_RECEIVE, ADD, REPLACE_TYPE]
+    definition: |
+      `Mutations` enumerates the mutation types supported by the application logic.
+    details:
+      - "Skip variants include Skip Send, Skip Receive, Skip Send Receive, Skip Receive Send, and Skip Receive Send Receive."
+      - "Add is represented as its own mutation type."
+      - "Replace variants include Replace Sub Messages and Replace Type."
+      - "Combination modes include Combine Add Replace Only and Combine Add Replace."
+    why: |
+      A shared enum gives controllers and services a standardized vocabulary for selecting mutation behavior.
+    related: [manual.skip.overview, manual.add.overview, manual.replace.overview]
+    followups:
+      - What are the Skip variants?
+      - What is Add mutation?
+      - What is Replace mutation?
+
+  - id: manual.inmemory-multipart-file
+    title: InMemoryMultipartFile
+    category: model
+    terms: [InMemoryMultipartFile, MultipartFile, virtual MultipartFile, in memory file]
+    definition: |
+      `InMemoryMultipartFile` provides an in-memory implementation of Spring's multipart file abstraction.
+    details:
+      - "It stores file bytes, parameter name, original filename, and content type."
+      - "It exposes metadata through getters."
+      - "It reports emptiness and size."
+      - "It provides bytes, input stream, resource representation, and transfer methods."
+      - "It lets split rule content be processed without creating an intermediate disk file."
+    why: |
+      Controllers use it to pass extracted rule sections into services that expect multipart-style input.
+    related: [manual.file-splitter, manual.file-loading-service]
+    followups:
+      - What is FileSplitterService?
+      - What is FileLoadingService?
+      - What is ModelLoader?
+
+  - id: manual.tamarin-parser-classes
+    title: Tamarin parser classes
+    category: parser
+    terms: [TamarinLexer, TamarinParser, TamarinVisitor, TamarinBaseVisitor, TamVisitor, ANTLR parser]
+    definition: |
+      The Tamarin parser classes tokenize and parse `.spthy` input and convert parse trees into X-Men model objects.
+    details:
+      - "`TamarinLexer` tokenizes input according to the Tamarin grammar."
+      - "`TamarinParser` builds parse trees from lexer tokens."
+      - "`TamarinVisitor` declares visitor methods for grammar rules."
+      - "`TamarinBaseVisitor` provides default visitor behavior by delegating to child nodes."
+      - "`TamVisitor` overrides visitor methods and constructs domain objects such as `Rule`, `Fact`, `Variable`, and special constructs."
+      - "`TamVisitor` distinguishes ceremony rules from generic rules and handles let blocks."
+    why: |
+      Parser classes are why X-Men can manipulate a Tamarin theory structurally instead of relying on fragile string edits.
+    related: [manual.model-loader, manual.rule-class, manual.fact-class]
+    followups:
+      - What is TamVisitor?
+      - What is ModelLoader?
+      - What is a Rule?
+
+  - id: manual.type-typefact
+    title: Type and TypeFact
+    category: model
+    terms: [Type.java, TypeFact.java, META, P_RULE, MUTATED, PRE POST ACTION]
+    definition: |
+      `Type` categorizes model components, while `TypeFact` categorizes facts inside rules.
+    details:
+      - "`Type.META` represents metadata or auxiliary information."
+      - "`Type.P_RULE` denotes primary or ceremony rules."
+      - "`Type.MUTATED` marks components that have undergone mutation."
+      - "`TypeFact.PRE` marks preconditions."
+      - "`TypeFact.POST` marks postconditions."
+      - "`TypeFact.ACTION` marks action facts."
+    why: |
+      These enums let mutation logic know whether it is editing a rule, a precondition, an action, or an output state.
+    related: [manual.rule-class, manual.fact-class]
+    followups:
+      - What is a Fact?
+      - What is a Rule?
+      - What does MUTATED mean?
+
+  - id: manual.snd-rcv-state
+    title: Snd Rcv and State
+    category: concept
+    terms: [Snd Rcv State, send fact, receive fact, state fact, ceremony fact names, what is Snd, what is Rcv, what is State, explain send receive state facts, Snd vs Rcv, State knowledge context]
+    definition: |
+      `Snd`, `Rcv`, and `State` are key fact forms used to model sending, receiving, and an agent's knowledge context.
+    details:
+      - "`Snd` is a send fact indicating that a participant sends data."
+      - "`Rcv` is a receive fact indicating that a participant receives data."
+      - "`State` represents the knowledge context of an agent at a ceremony point."
+      - "Skip mutations remove or mark `Snd`, `Rcv`, `To`, and `From` facts depending on the variant."
+      - "Add and Replace often rebuild `State` or align `Rcv` with changed `Snd` content."
+    why: |
+      Most mutation behavior can be understood as structured changes to send, receive, and state facts.
+    related: [manual.skip.overview, manual.add.arrival-adaptation, manual.replace.propagation]
+    followups:
+      - What is Skip Receive?
+      - What is State?
+      - What is Replace propagation?
+
+  - id: manual.spthy.file
+    title: .spthy file
+    category: tamarin
+    terms: [.spthy, Security Protocol Theory, spthy file, Tamarin model file, theory file, what is .spthy, what file should I upload, security protocol theory extension, Tamarin input extension, spthy meaning]
+    definition: |
+      A `.spthy` file is a Tamarin Security Protocol Theory file containing ceremony rules, facts, builtins, functions, lemmas, and related definitions.
+    details:
+      - "X-Men processes `.spthy` files to load ceremony models."
+      - "ModelLoader validates the extension and parses the content."
+      - "FileSplitterService can isolate rule sections while preserving preamble and postamble."
+      - "Generated mutation files are also intended for Tamarin analysis."
+    why: |
+      If the input is not valid Tamarin syntax or not a `.spthy` theory, parsing and mutation generation can fail.
+    related: [manual.model-loader, manual.file-splitter, manual.tamarin.role]
+    followups:
+      - What is ModelLoader?
+      - Why does mutation generation fail?
+      - What is a Tamarin theory?
+
+  - id: manual.integration-tests
+    title: Integration tests
+    category: testing
+    terms: [integration tests manual, MockMvc tests, mutation tests, expected output files, Oyster tests]
+    definition: |
+      X-Men integration tests validate mutation behavior by running requests with MockMvc and comparing generated files against expected outputs.
+    details:
+      - "The manual ties the listed integration tests to the Oyster card ceremony."
+      - "Skip tests cover Skip Send, Skip Receive, Skip Send Receive, Skip Receive Send, and Skip Receive Send Receive."
+      - "Add tests generate many Oyster outputs and compare selected files against expected Add outputs."
+      - "Replace Submessages tests compare Oyster M0 through M7 against expected files."
+      - "Replace Type tests compare Oyster M0 through M2 against expected files."
+      - "Tests clean generated mutation files after execution."
+    why: |
+      Integration tests are the evidence that the refactored service layer still generates the expected mutation files.
+    related: [manual.test.skip, manual.test.add, manual.test.replace]
+    followups:
+      - How do Skip tests work?
+      - How do Add tests work?
+      - How do Replace tests work?
+
+  - id: manual.test.skip
+    title: Skip integration tests
+    category: testing
+    terms: [SkipSendTests, SkipReceiveTests, SkipSendReceiveTests, SkipReceiveSendTests, SkipReceiveSendReceiveTests]
+    definition: |
+      Skip integration tests verify that each ordered skip variant generates the expected Oyster mutation files.
+    details:
+      - "`SkipSendTests` uses `Skip-Send=true` and compares `SkipSend_0.m` and `SkipSend_1.m` style expected content."
+      - "`SkipReceiveTests` uses `Skip-Receive=true` and compares two expected outputs."
+      - "`SkipSendReceiveTests` uses `Skip-Send-Receive=true` and compares three expected outputs."
+      - "`SkipReceiveSendTests` uses `Skip-Receive-Send=true` and compares one expected output."
+      - "`SkipReceiveSendReceiveTests` uses `Skip-Receive-Send-Receive=true` and compares one expected output."
+      - "Single-variant paths are also tested for each skip family."
+    why: |
+      These tests protect the exact ordering of send/receive variants, which is easy to confuse in chatbot answers and code.
+    related: [manual.skip.receive-send, manual.skip.send-receive]
+    followups:
+      - What is Skip Receive Send?
+      - What is Skip Send Receive?
+      - Why does order matter?
+
+  - id: manual.test.add
+    title: Add integration tests
+    category: testing
+    terms: [AddMutationTests, Add test, Oyster M0 to M91, Add expected outputs]
+    definition: |
+      Add integration tests verify that Add mutation generation produces Oyster output files matching expected Add mutations.
+    details:
+      - "The tests initialize MockMvc through Spring Boot testing annotations and `WebApplicationContext`."
+      - "Setup prepares the test environment."
+      - "Cleanup deletes generated Oyster files from `Oyster_M0.m` through `Oyster_M91.m` style ranges."
+      - "The multi path sends `Add-Mutation=true`."
+      - "The single path calls the Add-specific mutation route."
+      - "Generated content is compared with expected Add files."
+    why: |
+      Add can generate many permutations, so tests verify generated content rather than only checking that a request succeeded.
+    related: [manual.add.overview, manual.add.permutations]
+    followups:
+      - How does Add generate permutations?
+      - What is Add mutation?
+      - How do integration tests compare output?
+
+  - id: manual.test.replace
+    title: Replace integration tests
+    category: testing
+    terms: [ReplaceSubmessagesTests, ReplaceTypeTests, Replace tests, Replace expected outputs]
+    definition: |
+      Replace integration tests verify both submessage replacement and type replacement outputs.
+    details:
+      - "`ReplaceSubmessagesTests` uses `Replace-Sub-Messages=true` and compares generated Oyster M0 through M7 against expected files."
+      - "The submessage tests also cover the Replace-specific submessage route."
+      - "`ReplaceTypeTests` uses `Replace-Type=true` and compares Oyster M0 through M2 against expected files."
+      - "The type tests also cover the Replace-specific type route."
+      - "Generated files are deleted after tests."
+    why: |
+      Replace behavior is propagation-heavy, so expected-output tests are important for catching subtle consistency regressions.
+    related: [manual.replace.type, manual.replace.submessages]
+    followups:
+      - What is Replace Type?
+      - What is Replace Submessages?
+      - How does Replace propagate?
+
+  - id: manual.project-structure
+    title: Project structure
+    category: architecture
+    terms: [project structure manual, service layer structure, model class structure, X-Men repository organization]
+    definition: |
+      The manual presents the project structure around service-layer classes and model classes.
+    details:
+      - "Service implementations include Add, Derivation, Mutation Generator, Replace, and Skip strategies."
+      - "Service interfaces include file splitting, file loading, derivation checking, derivation service, generator service, and strategy factory."
+      - "Model classes cover abstract values, atoms, builtins, facts, flags, special structures, functions, messages, mutants, mutation enums, pairs, predictive functions, rules, Tamarin parser visitors, types, values, and variables."
+      - "The structure separates business logic from data representation."
+    why: |
+      Knowing this split helps locate where an issue belongs: services for behavior, models for representation, parsers for syntax, and helpers for shared operations.
+    related: [manual.service-layer, manual.model-classes]
+    followups:
+      - What is the service layer?
+      - What are model classes?
+      - What is TamVisitor?
+
+  - id: manual.troubleshoot.build
+    title: Troubleshoot build failures
+    category: troubleshooting
+    terms: [build failure, Maven build fails, mvn clean install error, Java Maven issue]
+    shortAnswer: |
+      Build failures usually come from Java version, Maven installation, dependency download, or local Maven cache issues.
+    steps:
+      - "Ensure Java 21 or higher is installed."
+      - "Run `mvn -version` to verify Maven is installed and using the expected Java."
+      - "Check internet access because Maven may need to download dependencies."
+      - "If dependencies are corrupted, delete the local `.m2/repository` cache and rebuild."
+      - "Re-import the project as a Maven project if the IDE cannot resolve it."
+      - "Refresh Maven dependencies and verify the project JDK setting."
+    why: |
+      X-Men 2.0 relies on Maven and Java 21; if either is wrong, mutation logic may never start.
+    related: [manual.local-build, manual.troubleshoot.tests]
+    followups:
+      - How do I build X-Men 2.0?
+      - Why do tests fail?
+      - Where are dependencies defined?
+
+  - id: manual.troubleshoot.mutation-files
+    title: Troubleshoot missing mutation files
+    category: troubleshooting
+    terms: [mutation files not generated, missing mutated files, generated files missing, no output files]
+    shortAnswer: |
+      Missing mutation files usually mean the input model is invalid, output permissions are blocked, or an earlier processing error stopped generation.
+    steps:
+      - "Confirm the input ceremony file is a valid `.spthy` model."
+      - "Check file permissions on output directories."
+      - "Inspect application logs for errors during request processing, parsing, mutation, or file writing."
+      - "Check whether FileSplitterService found the expected rule sections."
+      - "Check whether MutatedFileGenerator cleaned old files and wrote new files."
+    why: |
+      Generation requires a valid parsed model and a writable destination; failures before file generation can look like an empty result.
+    related: [manual.spthy.file, manual.file-splitter, manual.mutated-file-generator]
+    followups:
+      - What is FileSplitterService?
+      - What does MutatedFileGenerator do?
+      - What is a .spthy file?
+
+  - id: manual.troubleshoot.incorrect-results
+    title: Troubleshoot incorrect mutation results
+    category: troubleshooting
+    terms: [incorrect mutation results, generated mutations differ, output order differs, backwards compatibility]
+    shortAnswer: |
+      If generated mutations differ from expected outputs, first verify the selected mutation options and then compare generated files with test resources.
+    steps:
+      - "Confirm the correct mutation headers or options were selected."
+      - "Run integration tests with `mvn test` and compare generated outputs with expected resources."
+      - "Check output file order before assuming the content is wrong."
+      - "A file such as `output4.M` may correspond to an expected file with a different number if ordering changed."
+      - "Inspect logs around the specific strategy and propagation path."
+    why: |
+      Content correctness and file ordering are separate issues; ordering differences do not automatically mean the mutation is wrong.
+    related: [manual.integration-tests, manual.test.skip, manual.test.replace]
+    followups:
+      - How do integration tests verify mutations?
+      - Why does Skip order matter?
+      - What is mutation propagation?
+
+  - id: manual.troubleshoot.derivation
+    title: Troubleshoot derivation failures
+    category: troubleshooting
+    terms: [derivation check failures, unexpected derivation outcomes, derivation inconsistency, logical output diverges]
+    shortAnswer: |
+      Derivation failures usually point to invalid Tamarin syntax, incorrect ceremony semantics, or a mismatch between expected and actual knowledge flow.
+    steps:
+      - "Verify the input model follows Tamarin syntax rules."
+      - "Check the Tamarin semantics of rules, facts, and lemmas."
+      - "Review the logical specification in the input model."
+      - "Use debug logs to find where derivation diverges from expected output."
+      - "Check whether forgotten values, state facts, or replacements changed the available knowledge set."
+    why: |
+      Derivation is sensitive to the exact knowledge available at each rule; small state or message changes can block a proof path.
+    related: [manual.derivation.process, manual.forget.algorithm, manual.spthy.file]
+    followups:
+      - What is derivability?
+      - How does Forget use derivation?
+      - What is State?
+
+  - id: manual.troubleshoot.tests
+    title: Troubleshoot tests
+    category: troubleshooting
+    terms: [integration tests fail, unit tests do not run, mvn test, skipped tests, test resources]
+    shortAnswer: |
+      Test failures should be checked against the environment, expected resources, logs, and whether tests were accidentally skipped.
+    steps:
+      - "Ensure the test environment matches project requirements."
+      - "Review and update expected resource files if the intended output changed."
+      - "Inspect test logs for the first concrete error."
+      - "Retry a single failing test to separate flakiness from deterministic failure."
+      - "Check whether the build used a skip flag such as `-DskipTests=true`."
+      - "Confirm test configuration in `pom.xml`."
+      - "Run tests explicitly with `mvn test`."
+    why: |
+      X-Men uses generated files in integration tests, so cleanup, ordering, and expected resources matter.
+    related: [manual.integration-tests, manual.troubleshoot.incorrect-results]
+    followups:
+      - How are mutations verified?
+      - What is MockMvc?
+      - How do Replace tests work?
+
+  - id: manual.troubleshoot.logs
+    title: Troubleshoot logs
+    category: troubleshooting
+    terms: [missing logs, incomplete logs, interpreting logs, debug mode, SLF4J]
+    shortAnswer: |
+      Logging issues should be checked through logging configuration, write permissions, console output, and debug mode.
+    steps:
+      - "Verify the project's logging configuration."
+      - "Ensure the application has permission to create and write logs."
+      - "Check terminal console output."
+      - "Run with debug mode using the IDE debugger or `--debug`."
+      - "Search specific Java exceptions or consult documentation for the affected library."
+    details:
+      - "X-Men uses Lombok `@Slf4j` annotations for logging."
+      - "Logs are important for parsing errors, mutation strategy failures, derivation divergence, and output file issues."
+    why: |
+      The quickest path to a mutation bug is usually the first logged parsing, strategy, propagation, or file-writing error.
+    related: [manual.troubleshoot.mutation-files, manual.troubleshoot.derivation]
+    followups:
+      - Why are mutation files missing?
+      - Why did derivation fail?
+      - How is logging handled?
+
+  - id: manual.faq.general
+    title: X-Men 2.0 FAQ basics
+    category: faq
+    terms: [X-Men FAQ, what is X-Men 2.0, programming language, frameworks, dependencies pom.xml]
+    definition: |
+      X-Men 2.0 is a Java-based tool for generating and analyzing mutated security ceremony models.
+    details:
+      - "The main language is Java."
+      - "Integrated frameworks and libraries include Spring Boot, Lombok, ANTLR, and JUnit."
+      - "Dependencies are defined in `pom.xml`."
+      - "The build command is `mvn clean install`."
+      - "The run command is `mvn spring-boot:run`."
+    why: |
+      These are the baseline facts to answer setup and dependency questions without guessing.
+    related: [manual.local-build, manual.technical-upgrades]
+    followups:
+      - How do I build X-Men 2.0?
+      - Where are dependencies defined?
+      - What is ANTLR used for?
+
+  - id: manual.faq.services
+    title: X-Men service FAQ
+    category: faq
+    terms: [service FAQ, what services does X-Men provide, FileSplitterService purpose, DerivationCheckService purpose]
+    definition: |
+      X-Men services provide ceremony splitting, model loading, mutation generation, derivation checking, and file handling.
+    details:
+      - "`FileSplitterService` splits large ceremony files into manageable processing parts."
+      - "`DerivationCheckService` checks logical consistency in derived ceremony models."
+      - "`FileHandler` handles file reading, writing, arrangement, and knowledge-related processing."
+      - "`ModelLoader` loads and initializes ceremony models."
+      - "`MutatedFileGenerator` creates files containing applied mutations."
+    why: |
+      Service questions should be answered by mapping the task to the class responsible for that stage of the pipeline.
+    related: [manual.file-splitter, manual.derivation.check, manual.model-loader]
+    followups:
+      - What does FileSplitterService do?
+      - What does DerivationCheckService do?
+      - What does ModelLoader do?
+
+  - id: manual.derivation.check
+    title: DerivationCheckService
+    category: service
+    terms: [DerivationCheckService, logical consistency, derived ceremony model, derivation consistency]
+    definition: |
+      `DerivationCheckService` checks whether derived or mutated ceremony models remain logically consistent with the available knowledge and symbolic derivation rules.
+    details:
+      - "It is used around derivation-sensitive behavior such as Forget."
+      - "It checks whether targets are derivable from known messages."
+      - "It helps identify when a mutation blocks required knowledge flow."
+      - "It works with the broader Dolev-Yao style derivation process."
+    why: |
+      A mutated ceremony can be syntactically valid but logically inconsistent; derivation checking catches that distinction.
+    related: [manual.derivation.process, manual.forget.overview]
+    followups:
+      - What is derivability?
+      - How does Forget use derivation?
+      - What is Dolev-Yao?
+
+  - id: manual.glossary.core
+    title: Core glossary
+    category: glossary
+    terms: [glossary, agent, adversary, authentication, authorization, role, participant, knowledge]
+    definition: |
+      The manual glossary defines the core ceremony vocabulary used by X-Men 2.0.
+    details:
+      - "Agent means a participant modeled as a role in the ceremony."
+      - "Participant is another word for an agent taking part in the ceremony."
+      - "Adversary is an entity trying to subvert security guarantees, often with Dolev-Yao network power."
+      - "Authentication verifies the identity of an agent."
+      - "Authorization decides whether a participant may perform an action."
+      - "Role is the named part played by an agent, such as Human, Gate, or Verifier."
+      - "Knowledge is the set of facts, messages, and secrets known to an agent at a point in the ceremony."
+    why: |
+      Many Tamarin and X-Men questions become clearer once agent, role, knowledge, and adversary are separated.
+    related: [manual.security-ceremony, manual.dolev-yao]
+    followups:
+      - What is a security ceremony?
+      - What is Dolev-Yao?
+      - What is State?
+
+  - id: manual.dolev-yao
+    title: Dolev-Yao model
+    category: concept
+    terms: [Dolev Yao model, Dolev-Yao, symbolic adversary, intruder deduction]
+    definition: |
+      The Dolev-Yao model is a symbolic adversary model for analyzing cryptographic protocols and ceremonies.
+    details:
+      - "It treats cryptographic operations symbolically."
+      - "The adversary reasons with constructors and destructors rather than breaking cryptography mathematically."
+      - "The derivation service uses this style to decide what can be derived from known messages."
+      - "Forget analysis asks how honest-agent knowledge loss changes what can be derived."
+    why: |
+      Dolev-Yao gives a precise way to ask whether a message is obtainable from available symbolic knowledge.
+    related: [manual.derivation.process, manual.haskell-derivation-service]
+    followups:
+      - What is derivability?
+      - What is the Haskell derivation service?
+      - What is attacker knowledge?
+
+  - id: manual.ast
+    title: Abstract Syntax Tree
+    category: parser
+    terms: [AST, Abstract Syntax Tree, parsed ceremony file, parse tree model]
+    definition: |
+      An Abstract Syntax Tree is a structured representation of a parsed `.spthy` ceremony file.
+    details:
+      - "It captures rules, facts, terms, and their relationships."
+      - "X-Men parser classes build parse structures from Tamarin syntax."
+      - "`TamVisitor` converts parse nodes into domain-specific model objects."
+      - "Mutation strategies then operate on model objects rather than raw text."
+    why: |
+      AST-style processing makes mutations safer and more precise than keyword-based rewriting.
+    related: [manual.tamarin-parser-classes, manual.model-loader]
+    followups:
+      - What is TamVisitor?
+      - What is ModelLoader?
+      - What is a Rule?
+
+  - id: manual.submessage
+    title: Submessage
+    category: concept
+    terms: [submessage, nested value, grouped message, partial message, sub message]
+    definition: |
+      A submessage is a nested value or group within a larger ceremony message.
+    details:
+      - "Pairs, grouped parameters, predictive functions, and structured values can contain submessages."
+      - "Replace Submessages selects subsets of send parameters to create partial message variants."
+      - "Submessage mutation preserves enough structure to model a human sending part of the intended data."
+    why: |
+      Submessage questions usually refer to Replace Submessages rather than Replace Type.
+    related: [manual.replace.submessages, manual.message-classes, manual.pspecial]
+    followups:
+      - What is Replace Submessages?
+      - What is PSpecial?
+      - What is Pair?
+
+  - id: manual.mutation-strategy
+    title: MutationStrategy
+    category: architecture
+    terms: [MutationStrategy, strategy pattern, mutation strategy interface, SkipMutationStrategy, ForgetMutationStrategy]
+    definition: |
+      `MutationStrategy` is the common strategy abstraction implemented by specific mutation algorithms.
+    details:
+      - "Concrete strategies include Skip, Add, Replace, and Forget variants."
+      - "The strategy pattern keeps each mutation family isolated."
+      - "`MutationStrategyFactory` chooses the correct implementation."
+      - "`MutationGeneratorServiceImpl` invokes strategies after input parsing and flag setup."
+    why: |
+      This design lets new mutation types be added without rewriting the whole generator pipeline.
+    related: [manual.mutation-strategy-factory, manual.mutation-generator-service]
+    followups:
+      - What is MutationStrategyFactory?
+      - What mutation types exist?
+      - What is ForgetMutationStrategy?

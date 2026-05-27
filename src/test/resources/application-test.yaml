@@ -1,0 +1,20 @@
+logging:
+  level:
+    root: WARN
+    web: WARN
+    org.springframework: WARN
+    org.springframework.web: WARN
+    org.springframework.boot.autoconfigure.security: ERROR
+    org.springframework.boot.autoconfigure.thymeleaf: ERROR
+    javafx: ERROR
+    com.xmen: WARN
+spring:
+  main:
+    banner-mode: off
+  thymeleaf:
+    check-template-location: false
+  security:
+    user:
+      name: test
+      password: test
+

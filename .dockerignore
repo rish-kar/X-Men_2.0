@@ -1,0 +1,58 @@
+# Keep the build context lean — only ship what Maven needs to build the app.
+
+# Build outputs
+target/
+**/target/
+*.jar
+*.war
+*.class
+
+# IDE / editor
+.idea/
+.vscode/
+.iml
+*.iml
+.project
+.classpath
+.settings/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local config & secrets
+.env
+.env.local
+.env.*.local
+
+# Logs and caches
+*.log
+logs/
+.cache/
+.m2/
+
+# Test artefacts and coverage
+**/surefire-reports/
+**/jacoco.exec
+**/test-classes/
+
+# Docker meta
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentation that shouldn't be baked into the image
+*.md
+docs/
+production/
+*.zip
+*.exe
+
+# Worktrees / scratch directories
+.claude/
+$/

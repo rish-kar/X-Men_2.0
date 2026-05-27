@@ -1,0 +1,421 @@
+# X-Men Themes
+# -------------------------------------------------------------------
+# A theme = a colour palette applied to the JavaFX UI and (optionally)
+# served back to web clients via /api/settings/themes.
+#
+# Fields:
+#   id           – stable identifier used by the API and CSS classes
+#   name         – human-readable label shown in the settings dialog
+#   accent       – primary accent colour
+#   accent-soft  – muted variant used on hover/secondary states
+#   overlay      – translucent overlay drawn over the background video
+#   glass-fill   – translucent fill of glass panels
+#   glass-stroke – soft border of glass panels
+#   text         – primary text colour
+#   text-muted   – secondary text colour
+#   shadow       – drop-shadow colour for elevated panels
+#
+# Every colour must be a valid JavaFX/CSS colour.
+# -------------------------------------------------------------------
+
+xmen:
+  themes:
+    default: "classic"
+
+    catalog:
+
+      - id: classic
+        name: "Classic"
+        accent:       "#A56BFF"
+        accent-soft:  "#D4B4FF"
+        overlay:      "rgba(26, 10, 48, 0.70)"
+        glass-fill:   "rgba(155, 93, 229, 0.22)"
+        glass-stroke: "rgba(214, 178, 255, 0.45)"
+        text:         "#F8F2FF"
+        text-muted:   "rgba(238, 222, 255, 0.78)"
+        shadow:       "rgba(10, 0, 30, 0.55)"
+
+      - id: garden-mint
+        name: "Garden Mint"
+        accent:       "#4ED49E"
+        accent-soft:  "#A2E9CB"
+        overlay:      "rgba(8, 36, 26, 0.65)"
+        glass-fill:   "rgba(78, 212, 158, 0.22)"
+        glass-stroke: "rgba(162, 233, 203, 0.45)"
+        text:         "#F1FFF9"
+        text-muted:   "rgba(220, 248, 234, 0.78)"
+        shadow:       "rgba(0, 18, 12, 0.55)"
+
+      - id: toxic-orchid
+        name: "Toxic Orchid"
+        accent:       "#D7FF00"
+        accent-soft:  "#FF4FD8"
+        overlay:      "rgba(25, 5, 48, 0.76)"
+        glass-fill:   "rgba(215, 255, 0, 0.18)"
+        glass-stroke: "rgba(255, 79, 216, 0.46)"
+        text:         "#FAFFF2"
+        text-muted:   "rgba(245, 255, 210, 0.78)"
+        shadow:       "rgba(10, 0, 24, 0.62)"
+
+      - id: midnight-violet
+        name: "Midnight Violet"
+        accent:       "#8E7BFF"
+        accent-soft:  "#BFB4FF"
+        overlay:      "rgba(14, 8, 48, 0.78)"
+        glass-fill:   "rgba(142, 123, 255, 0.20)"
+        glass-stroke: "rgba(191, 180, 255, 0.42)"
+        text:         "#F4F1FF"
+        text-muted:   "rgba(229, 222, 255, 0.78)"
+        shadow:       "rgba(0, 0, 24, 0.60)"
+
+      - id: ocean-cobalt
+        name: "Ocean Cobalt"
+        accent:       "#3FA9FF"
+        accent-soft:  "#A8D6FF"
+        overlay:      "rgba(6, 24, 58, 0.72)"
+        glass-fill:   "rgba(63, 169, 255, 0.22)"
+        glass-stroke: "rgba(168, 214, 255, 0.45)"
+        text:         "#F0F8FF"
+        text-muted:   "rgba(216, 234, 255, 0.78)"
+        shadow:       "rgba(0, 12, 40, 0.55)"
+
+      - id: ultraviolet-lagoon
+        name: "Ultraviolet Lagoon"
+        accent:       "#00E5FF"
+        accent-soft:  "#FF2BD6"
+        overlay:      "rgba(4, 18, 42, 0.76)"
+        glass-fill:   "rgba(0, 229, 255, 0.18)"
+        glass-stroke: "rgba(255, 43, 214, 0.46)"
+        text:         "#EFFFFF"
+        text-muted:   "rgba(207, 250, 255, 0.78)"
+        shadow:       "rgba(0, 8, 22, 0.62)"
+
+      - id: sunset-coral
+        name: "Sunset Coral"
+        accent:       "#FF7A6B"
+        accent-soft:  "#FFB1A6"
+        overlay:      "rgba(50, 14, 18, 0.68)"
+        glass-fill:   "rgba(255, 122, 107, 0.22)"
+        glass-stroke: "rgba(255, 177, 166, 0.45)"
+        text:         "#FFF4F1"
+        text-muted:   "rgba(255, 232, 224, 0.78)"
+        shadow:       "rgba(30, 0, 6, 0.55)"
+
+      - id: amber-grove
+        name: "Amber Grove"
+        accent:       "#F5B042"
+        accent-soft:  "#FAD08A"
+        overlay:      "rgba(44, 28, 6, 0.70)"
+        glass-fill:   "rgba(245, 176, 66, 0.22)"
+        glass-stroke: "rgba(250, 208, 138, 0.45)"
+        text:         "#FFF8EC"
+        text-muted:   "rgba(255, 242, 218, 0.78)"
+        shadow:       "rgba(28, 14, 0, 0.55)"
+
+      - id: rusted-aqua
+        name: "Rusted Aqua"
+        accent:       "#FF6B35"
+        accent-soft:  "#00F5D4"
+        overlay:      "rgba(38, 16, 10, 0.76)"
+        glass-fill:   "rgba(255, 107, 53, 0.20)"
+        glass-stroke: "rgba(0, 245, 212, 0.46)"
+        text:         "#FFF4ED"
+        text-muted:   "rgba(255, 226, 210, 0.78)"
+        shadow:       "rgba(20, 6, 0, 0.62)"
+
+      - id: rose-quartz
+        name: "Rose Quartz"
+        accent:       "#F472B6"
+        accent-soft:  "#FBB6CE"
+        overlay:      "rgba(56, 14, 38, 0.68)"
+        glass-fill:   "rgba(244, 114, 182, 0.22)"
+        glass-stroke: "rgba(251, 182, 206, 0.45)"
+        text:         "#FFF3F8"
+        text-muted:   "rgba(255, 225, 238, 0.78)"
+        shadow:       "rgba(34, 0, 20, 0.55)"
+
+      - id: forest-emerald
+        name: "Forest Emerald"
+        accent:       "#22C55E"
+        accent-soft:  "#86EFAC"
+        overlay:      "rgba(6, 32, 18, 0.72)"
+        glass-fill:   "rgba(34, 197, 94, 0.22)"
+        glass-stroke: "rgba(134, 239, 172, 0.45)"
+        text:         "#EFFDF4"
+        text-muted:   "rgba(214, 248, 224, 0.78)"
+        shadow:       "rgba(0, 18, 8, 0.55)"
+
+      - id: deep-reef-ember
+        name: "Deep Reef Ember"
+        accent:       "#00F5D4"
+        accent-soft:  "#FF8A3D"
+        overlay:      "rgba(2, 22, 36, 0.76)"
+        glass-fill:   "rgba(0, 245, 212, 0.18)"
+        glass-stroke: "rgba(255, 138, 61, 0.46)"
+        text:         "#EFFFFC"
+        text-muted:   "rgba(210, 255, 247, 0.78)"
+        shadow:       "rgba(0, 8, 16, 0.62)"
+
+      - id: cyber-teal
+        name: "Cyber Teal"
+        accent:       "#14B8A6"
+        accent-soft:  "#5EEAD4"
+        overlay:      "rgba(4, 34, 34, 0.70)"
+        glass-fill:   "rgba(20, 184, 166, 0.22)"
+        glass-stroke: "rgba(94, 234, 212, 0.45)"
+        text:         "#EAFEFB"
+        text-muted:   "rgba(204, 244, 235, 0.78)"
+        shadow:       "rgba(0, 16, 16, 0.55)"
+
+      - id: solar-yellow
+        name: "Solar Yellow"
+        accent:       "#CA8A04"
+        accent-soft:  "#FDE68A"
+        overlay:      "rgba(40, 30, 0, 0.68)"
+        glass-fill:   "rgba(250, 204, 21, 0.22)"
+        glass-stroke: "rgba(253, 230, 138, 0.45)"
+        text:         "#FFFBE7"
+        text-muted:   "rgba(255, 244, 196, 0.78)"
+        shadow:       "rgba(24, 16, 0, 0.55)"
+
+      - id: acid-noir
+        name: "Acid Noir"
+        accent:       "#C8FF00"
+        accent-soft:  "#7C3AED"
+        overlay:      "rgba(5, 4, 14, 0.80)"
+        glass-fill:   "rgba(200, 255, 0, 0.17)"
+        glass-stroke: "rgba(124, 58, 237, 0.48)"
+        text:         "#FAFFE8"
+        text-muted:   "rgba(235, 255, 190, 0.78)"
+        shadow:       "rgba(0, 0, 0, 0.68)"
+
+      - id: indigo-night
+        name: "Indigo Night"
+        accent:       "#6366F1"
+        accent-soft:  "#A5B4FC"
+        overlay:      "rgba(8, 10, 50, 0.76)"
+        glass-fill:   "rgba(99, 102, 241, 0.22)"
+        glass-stroke: "rgba(165, 180, 252, 0.42)"
+        text:         "#EEF0FF"
+        text-muted:   "rgba(214, 220, 255, 0.78)"
+        shadow:       "rgba(0, 0, 20, 0.62)"
+
+      - id: lavender-mist
+        name: "Lavender Mist"
+        accent:       "#A78BFA"
+        accent-soft:  "#DDD6FE"
+        overlay:      "rgba(30, 22, 56, 0.66)"
+        glass-fill:   "rgba(167, 139, 250, 0.22)"
+        glass-stroke: "rgba(221, 214, 254, 0.45)"
+        text:         "#F6F3FF"
+        text-muted:   "rgba(230, 222, 255, 0.78)"
+        shadow:       "rgba(16, 8, 32, 0.55)"
+
+      - id: charcoal-mono
+        name: "Charcoal Mono"
+        accent:       "#F3F4F6"
+        accent-soft:  "#9CA3AF"
+        overlay:      "rgba(6, 8, 12, 0.78)"
+        glass-fill:   "rgba(255, 255, 255, 0.12)"
+        glass-stroke: "rgba(255, 255, 255, 0.28)"
+        text:         "#FAFAFB"
+        text-muted:   "rgba(240, 240, 244, 0.72)"
+        shadow:       "rgba(0, 0, 0, 0.65)"
+
+      - id: paper-light
+        name: "Paper Light"
+        accent:       "#0284C7"
+        accent-soft:  "#38BDF8"
+        overlay:      "rgba(240, 244, 250, 0.78)"
+        glass-fill:   "rgba(255, 255, 255, 0.70)"
+        glass-stroke: "rgba(2, 132, 199, 0.30)"
+        text:         "#0F172A"
+        text-muted:   "rgba(15, 23, 42, 0.72)"
+        shadow:       "rgba(15, 23, 42, 0.20)"
+
+      - id: arctic-ice
+        name: "Arctic Ice"
+        accent:       "#0EA5E9"
+        accent-soft:  "#7DD3FC"
+        overlay:      "rgba(214, 234, 250, 0.72)"
+        glass-fill:   "rgba(255, 255, 255, 0.55)"
+        glass-stroke: "rgba(14, 165, 233, 0.32)"
+        text:         "#0F172A"
+        text-muted:   "rgba(15, 23, 42, 0.68)"
+        shadow:       "rgba(15, 23, 42, 0.22)"
+
+      - id: ink-melon
+        name: "Ink Melon"
+        accent:       "#FF4D6D"
+        accent-soft:  "#B8FF3D"
+        overlay:      "rgba(8, 10, 24, 0.78)"
+        glass-fill:   "rgba(255, 77, 109, 0.19)"
+        glass-stroke: "rgba(184, 255, 61, 0.45)"
+        text:         "#FFF2F5"
+        text-muted:   "rgba(255, 218, 226, 0.78)"
+        shadow:       "rgba(0, 0, 10, 0.66)"
+
+      - id: volcanic-red
+        name: "Volcanic Red"
+        accent:       "#EF4444"
+        accent-soft:  "#FCA5A5"
+        overlay:      "rgba(48, 8, 12, 0.74)"
+        glass-fill:   "rgba(239, 68, 68, 0.22)"
+        glass-stroke: "rgba(252, 165, 165, 0.45)"
+        text:         "#FFF5F5"
+        text-muted:   "rgba(254, 226, 226, 0.78)"
+        shadow:       "rgba(28, 0, 0, 0.60)"
+
+      - id: mocha-brown
+        name: "Mocha Brown"
+        accent:       "#D97706"
+        accent-soft:  "#FCD34D"
+        overlay:      "rgba(36, 22, 10, 0.74)"
+        glass-fill:   "rgba(217, 119, 6, 0.22)"
+        glass-stroke: "rgba(252, 211, 77, 0.42)"
+        text:         "#FFF8EC"
+        text-muted:   "rgba(254, 235, 200, 0.78)"
+        shadow:       "rgba(22, 12, 4, 0.60)"
+
+      - id: slate-blue
+        name: "Slate Blue"
+        accent:       "#475569"
+        accent-soft:  "#94A3B8"
+        overlay:      "rgba(15, 23, 42, 0.78)"
+        glass-fill:   "rgba(71, 85, 105, 0.30)"
+        glass-stroke: "rgba(148, 163, 184, 0.45)"
+        text:         "#F1F5F9"
+        text-muted:   "rgba(226, 232, 240, 0.78)"
+        shadow:       "rgba(2, 6, 23, 0.62)"
+
+      - id: neon-pink
+        name: "Neon Pink"
+        accent:       "#EC4899"
+        accent-soft:  "#F9A8D4"
+        overlay:      "rgba(36, 6, 24, 0.74)"
+        glass-fill:   "rgba(236, 72, 153, 0.24)"
+        glass-stroke: "rgba(249, 168, 212, 0.45)"
+        text:         "#FFF1F8"
+        text-muted:   "rgba(252, 211, 232, 0.78)"
+        shadow:       "rgba(28, 0, 18, 0.60)"
+
+      - id: sage-green
+        name: "Sage Green"
+        accent:       "#4D7C0F"
+        accent-soft:  "#BEF264"
+        overlay:      "rgba(20, 34, 6, 0.72)"
+        glass-fill:   "rgba(132, 204, 22, 0.22)"
+        glass-stroke: "rgba(190, 242, 100, 0.42)"
+        text:         "#F7FEE7"
+        text-muted:   "rgba(217, 249, 157, 0.78)"
+        shadow:       "rgba(8, 18, 0, 0.55)"
+
+      - id: lunar-brass
+        name: "Lunar Brass"
+        accent:       "#D6A21E"
+        accent-soft:  "#B8F7FF"
+        overlay:      "rgba(18, 20, 26, 0.78)"
+        glass-fill:   "rgba(214, 162, 30, 0.20)"
+        glass-stroke: "rgba(184, 247, 255, 0.42)"
+        text:         "#FFF8E8"
+        text-muted:   "rgba(255, 235, 190, 0.78)"
+        shadow:       "rgba(0, 0, 0, 0.64)"
+
+      - id: copper-bronze
+        name: "Copper Bronze"
+        accent:       "#EA580C"
+        accent-soft:  "#FED7AA"
+        overlay:      "rgba(40, 18, 4, 0.74)"
+        glass-fill:   "rgba(234, 88, 12, 0.22)"
+        glass-stroke: "rgba(254, 215, 170, 0.45)"
+        text:         "#FFF7ED"
+        text-muted:   "rgba(255, 237, 213, 0.78)"
+        shadow:       "rgba(24, 8, 0, 0.60)"
+
+      - id: crimson-wine
+        name: "Crimson Wine"
+        accent:       "#B91C1C"
+        accent-soft:  "#FCA5A5"
+        overlay:      "rgba(48, 6, 10, 0.78)"
+        glass-fill:   "rgba(185, 28, 28, 0.24)"
+        glass-stroke: "rgba(252, 165, 165, 0.45)"
+        text:         "#FFF1F2"
+        text-muted:   "rgba(254, 226, 226, 0.78)"
+        shadow:       "rgba(28, 0, 4, 0.62)"
+
+      - id: powder-blue
+        name: "Powder Blue"
+        accent:       "#0369A1"
+        accent-soft:  "#7DD3FC"
+        overlay:      "rgba(208, 226, 240, 0.72)"
+        glass-fill:   "rgba(255, 255, 255, 0.55)"
+        glass-stroke: "rgba(3, 105, 161, 0.35)"
+        text:         "#0F172A"
+        text-muted:   "rgba(15, 23, 42, 0.65)"
+        shadow:       "rgba(15, 23, 42, 0.22)"
+
+      - id: sandstone
+        name: "Sandstone"
+        accent:       "#A16207"
+        accent-soft:  "#FDE68A"
+        overlay:      "rgba(60, 40, 14, 0.72)"
+        glass-fill:   "rgba(161, 98, 7, 0.24)"
+        glass-stroke: "rgba(253, 230, 138, 0.42)"
+        text:         "#FFFBEB"
+        text-muted:   "rgba(254, 240, 200, 0.78)"
+        shadow:       "rgba(28, 16, 0, 0.58)"
+
+      - id: plasma-peacock
+        name: "Plasma Peacock"
+        accent:       "#39FF88"
+        accent-soft:  "#4D5BFF"
+        overlay:      "rgba(2, 24, 26, 0.78)"
+        glass-fill:   "rgba(57, 255, 136, 0.18)"
+        glass-stroke: "rgba(77, 91, 255, 0.48)"
+        text:         "#EEFFF5"
+        text-muted:   "rgba(205, 255, 225, 0.78)"
+        shadow:       "rgba(0, 8, 12, 0.64)"
+
+      - id: magenta-storm
+        name: "Magenta Storm"
+        accent:       "#A21CAF"
+        accent-soft:  "#F0ABFC"
+        overlay:      "rgba(48, 8, 56, 0.74)"
+        glass-fill:   "rgba(162, 28, 175, 0.24)"
+        glass-stroke: "rgba(240, 171, 252, 0.45)"
+        text:         "#FAF5FF"
+        text-muted:   "rgba(243, 218, 252, 0.78)"
+        shadow:       "rgba(28, 0, 32, 0.60)"
+
+      - id: pine-forest
+        name: "Pine Forest"
+        accent:       "#15803D"
+        accent-soft:  "#86EFAC"
+        overlay:      "rgba(6, 28, 14, 0.78)"
+        glass-fill:   "rgba(21, 128, 61, 0.24)"
+        glass-stroke: "rgba(134, 239, 172, 0.45)"
+        text:         "#F0FDF4"
+        text-muted:   "rgba(214, 248, 224, 0.78)"
+        shadow:       "rgba(0, 14, 6, 0.62)"
+
+      - id: royal-purple
+        name: "Royal Purple"
+        accent:       "#6D28D9"
+        accent-soft:  "#C4B5FD"
+        overlay:      "rgba(28, 12, 56, 0.78)"
+        glass-fill:   "rgba(109, 40, 217, 0.24)"
+        glass-stroke: "rgba(196, 181, 253, 0.45)"
+        text:         "#F5F3FF"
+        text-muted:   "rgba(229, 220, 255, 0.78)"
+        shadow:       "rgba(12, 4, 32, 0.62)"
+
+      - id: tangerine
+        name: "Tangerine"
+        accent:       "#C2410C"
+        accent-soft:  "#FED7AA"
+        overlay:      "rgba(50, 22, 4, 0.74)"
+        glass-fill:   "rgba(194, 65, 12, 0.24)"
+        glass-stroke: "rgba(254, 215, 170, 0.45)"
+        text:         "#FFF7ED"
+        text-muted:   "rgba(255, 237, 213, 0.78)"
+        shadow:       "rgba(28, 8, 0, 0.60)"

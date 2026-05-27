@@ -11,14 +11,15 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.sermas.x.men</groupId>
-    <artifactId>X-Men_3.0</artifactId>
+    <groupId>com.xmen</groupId>
+    <artifactId>X-Men_2.0</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>X-Men</name>
     <description>X-Men: A Mutation-Based Approach for the Formal Analysis of Security Ceremonies</description>
 
     <properties>
         <java.version>21</java.version>
+        <springdoc.version>2.6.0</springdoc.version>
     </properties>
 
     <dependencies>
@@ -53,6 +54,12 @@
             <version>2.11.0</version>
         </dependency>
 
+        <!-- Jackson YAML for runtime vocabulary/theme config import-export -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+
         <!-- ANTLR -->
         <dependency>
             <groupId>org.antlr</groupId>
@@ -76,7 +83,8 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>1.18.36</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Spring Boot Test Dependencies -->
@@ -156,6 +164,13 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
+        <!-- Springdoc OpenAPI for Swagger UI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -168,10 +183,10 @@
     <build>
         <plugins>
             <!-- GraalVM Native Image (only if you need it) -->
-            <plugin>
-                <groupId>org.graalvm.buildtools</groupId>
-                <artifactId>native-maven-plugin</artifactId>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.graalvm.buildtools</groupId>-->
+<!--                <artifactId>native-maven-plugin</artifactId>-->
+<!--            </plugin>-->
 
             <!-- Compiler Plugin -->
             <plugin>
@@ -179,10 +194,17 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>21</release>
                     <showWarnings>false</showWarnings>
                     <showDeprecation>false</showDeprecation>
+
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.36</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
@@ -192,7 +214,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.sermas.x.men.user_interface.XMenInterface</mainClass>
+                    <mainClass>com.xmen.user_interface.XMenInterface</mainClass>
                 </configuration>
             </plugin>
 
@@ -202,6 +224,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M3</version>
                 <configuration>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
                     <systemPropertyVariables>
                         <jacoco-agent.destfile>$/jacoco.exec</jacoco-agent.destfile>
                     </systemPropertyVariables>
@@ -271,6 +294,17 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <!--
+                              Silence the "Discovered module-info.class" and
+                              "overlapping resource" warning storm by:
+                                * filtering out module-info.class from every
+                                  dependency before shading,
+                                * dropping the duplicated license / notice /
+                                  metadata files that show up in many JARs, and
+                                * merging the spring.tooling/aot/MANIFEST entries
+                                  via dedicated transformers so shade no longer
+                                  flags them as conflicts.
+                            -->
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -278,10 +312,45 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/*/module-info.class</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                        <exclude>META-INF/LICENSE.txt</exclude>
+                                        <exclude>META-INF/LICENSE.md</exclude>
+                                        <exclude>META-INF/license.txt</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                        <exclude>META-INF/NOTICE.txt</exclude>
+                                        <exclude>META-INF/NOTICE.md</exclude>
+                                        <exclude>META-INF/notice.txt</exclude>
+                                        <exclude>META-INF/DEPENDENCIES</exclude>
+                                        <exclude>META-INF/COPYRIGHT</exclude>
+                                        <exclude>META-INF/io.netty.versions.properties</exclude>
+                                        <exclude>META-INF/substrate/**</exclude>
+                                        <exclude>META-INF/additional-spring-configuration-metadata.json</exclude>
+                                        <exclude>META-INF/spring-autoconfigure-metadata.properties</exclude>
+                                        <exclude>META-INF/spring-configuration-metadata.json</exclude>
+                                        <exclude>META-INF/spring.tooling</exclude>
+                                        <exclude>META-INF/spring/aot.factories</exclude>
+                                        <exclude>META-INF/web-fragment.xml</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
-                            <!-- Additional configurations if needed -->
+                            <transformers combine.self="override">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.factories</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.handlers</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.schemas</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</resource>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>

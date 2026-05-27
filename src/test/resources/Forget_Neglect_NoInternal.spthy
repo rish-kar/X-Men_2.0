@@ -1,0 +1,43 @@
+/****MODEL****/
+
+theory NeglectNoInternal
+
+begin
+
+/****RULES****/
+
+rule Setup:
+  [ ]
+  --[ Setup($User)
+  , Roles($User,$Server)
+  ]->
+  [ State($User,'1',<p1,p2>)
+  , State($Server,'1',<p1,p2>)
+  ]
+
+rule User_1:
+  [ State($User,'1',<p1,p2>) ]
+  --[ H()
+  , Forget(p1)
+  , PasswordAttempt($User,p2)
+  , Send($User,'password',p1)
+  , To($Server)
+  ]->
+  [ State($User,'2',<p1,p2>)
+  , SndS($User,$Server,<'password'>,<p1>)
+  ]
+
+rule Server_1:
+  [ State($Server,'1',<p1,p2>)
+  , RcvS($User,$Server,<'password'>,<p1>)
+  ]
+  --[ H()
+  , Receive($Server,$User,p1)
+  ]->
+  [ State($Server,'2',<p1,p2>)
+  ]
+
+end
+
+/****ENDOFMODEL****/
+

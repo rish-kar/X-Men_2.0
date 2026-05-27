@@ -48,6 +48,7 @@ rule Setup:
 rule User_1:
   [ State($User,'1',<$uid,p1,p2,~nh>) ]
   --[ H()
+  , U_LoginRequest($User, $Bank2, ~nh)
   , Send($User,'useridentity',$uid)
   , Send($User,'nonce',~nh)
   , To($Intruder)
@@ -100,6 +101,7 @@ rule User_2:
   ]
   --[ H()
   , Receive($User,$Intruder,~nb)
+  , PasswordAttempt($User, $Bank2, p2, ~nh, ~nb)
   , Forget(p1)
   , Send($User,'password',p2)
   , Send($User,'nonce',~nh)
@@ -133,6 +135,7 @@ rule Bank2_2:
   --[ Receive($Bank2,$Intruder,p2)
   , Receive($Bank2,$Intruder,~nh)
   , Receive($Bank2,$Intruder,~nb)
+  , LoginOK($Bank2, $User, p2)
   , Send($Bank2,'access','Granted')
   , To($Intruder)
   ]->
@@ -164,7 +167,9 @@ rule User_3:
 /****ENDOFRULES****/
 
 restriction UniqueRole:
-  "All U1 U2 I1 I2 B1 B2 #i #j. Roles(H1, I1) @i & Roles(H2, I2) @j ==> not H1 = I1 & not H1 = I2 & not H1 = B1 & not H1 = B2 & H1 = H2"
+  "All U1 I1 B1 U2 I2 B2 #i #j. Roles(U1, I1, B1) @#i & Roles(U2, I2, B2) @#j
+   ==> not (U1 = I1) & not (U1 = B1) & not (I1 = B1)
+   & U1 = U2 & I1 = I2 & B1 = B2"
 
 restriction OnlyOnce:
   "All #i #j. OnlyOnce() @#i & OnlyOnce() @#j ==> #i = #j"
@@ -172,14 +177,14 @@ restriction OnlyOnce:
 restriction Inequality:
   "All x #i. Neq(x, x) @#i ==> F"
 
-lemma Challenge_Injective: all-traces
-  "(All B2 nb #i #j. Challenge(B2, nb) @i & Challenge(B2, nb) @j ==> #i = #j)"
+lemma Human_intends_Bank2_if_Bank2_OK: all-traces
+  "All u b2 pw #i. LoginOK(b2, u, pw) @i
+   ==> (Ex nH #j. U_LoginRequest(u, b2, nH) @j & #j < #i)"
 
-lemma Complete_Verification: all-traces
-  "(All U 'Denied' #j. Hfin(U, 'access', 'Denied') @j ==> (Ex B2 I ~nb #i. Challenge($B2, I, ~nb) @i & i<j))"
-
-lemma functional: exists-trace
-  "(All U1 U2 #i #j. Setup(U1) @i & Setup(U2) @j ==> #i = #j) & (Ex U I #k #l. Hfin(U, 'access', 'Denied') @k & Commit(I, U, 'Denied') @l)"
+lemma Password2_confidential: all-traces
+  "All u b2 pw nH nB #i.
+     PasswordAttempt(u, b2, pw, nH, nB) @i
+     ==> not (Ex #j. K(pw) @j)"
 
 end
 /****ENDOFMODEL****/

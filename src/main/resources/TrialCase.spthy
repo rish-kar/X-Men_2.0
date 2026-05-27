@@ -1,0 +1,177 @@
+/****MODEL****/
+theory BankLogin_StateStyle
+
+begin
+
+/* Channel rules */
+rule ChanSndS:
+  [ SndS($A,$B,xt,x) ]
+  --[ ChanSndS($A,$B,xt,x) ]->
+  [ !Sec($A,$B,xt,x) ]
+
+rule ChanRcvS:
+  [ !Sec($A,$B,xt,x) ]
+  --[ ChanRcvS($A,$B,xt,x) ]->
+  [ RcvS($A,$B,xt,x) ]
+
+
+/****RULES****/
+
+builtins: symmetric-encryption
+functions: tok/2
+
+rule humansetup:
+  [ ]
+  --[ OnlyOnce()
+    , Neq($Human,'B')
+    , Neq('User1','User2')
+    , Neq('User1','User3')
+    , Neq('User2','User3')
+    ]->
+  [ /* agents + usernames */
+    !Type($Human,'agent',$Human)
+  , !Type('B','agent','B')
+  , !Type($Human,'username','User1')
+  , !Type($Human,'username','User2')
+  , !Type($Human,'username','User3')
+
+    /* base messages */
+  , !Type($Human,'msg',m1)
+  , !Type($Human,'msg',m2)
+  , !Type($Human,'msg',m3)
+
+    /* passwords are the ACTUAL terms (no pw1 aliasing) */
+  , !Type($Human,'pw',senc(m1,m2))        /* pw for User1 */
+  , !Type($Human,'pw',<m1,m2>)            /* pw for User2 */
+  , !Type($Human,'pw',<<m1,m2>,m2>)       /* pw for User3 (triple encoded safely) */
+  , !Type($Human,'pw',senc(m2,m1))        /* extra pw */
+
+    /* bank DB (3 valid pairs) */
+  , !Cred('B','User1',senc(m1,m2))
+  , !Cred('B','User2',<m1,m2>)
+  , !Cred('B','User3',<<m1,m2>,m2>)
+  ]
+
+
+/* setup */
+rule Setup:
+  [ !Cred('B','User1',senc(m1,m2)) ]
+  --[ Setup($Human)
+    , Roles($Human,'B')
+    ]->
+  [ State($Human,'1',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1)>)
+  , State('B','1',<'ready'>)
+  ]
+
+
+/* ===================================================== */
+/*                    HUMAN ROLE                          */
+/* ===================================================== */
+
+rule H_1:
+  [ State($Human,'1',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1)>)
+  , Fr(~nH)
+  ]
+  --[ H()
+    , Send($Human,'agent',$Human)
+    , Forget(senc(m1,m2))
+    , Send($Human,'nonce',~nH)
+    , To('B')
+    ]->
+  [ State($Human,'2',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),~nH>)
+  , SndS($Human,'B',<'agent','nonce'>,<$Human,~nH>)
+  ]
+
+
+rule B_1:
+  [ State('B','1',<'ready'>)
+  , RcvS($Human,'B',<'agent','nonce'>,<$Human,nH>)
+  , Fr(~nB)
+  ]
+  --[ Receive('B',$Human,nH)
+    , Send('B','nonce',nH)
+    , Send('B','nonce',~nB)
+    , B_Running('B',$Human,nH,~nB)
+    , To($Human)
+    ]->
+  [ State('B','2',<$Human,nH,~nB>)
+  , SndS('B',$Human,<'nonce','nonce'>,<nH,~nB>)
+  ]
+
+
+rule H_2:
+  [ State($Human,'2',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH>)
+  , RcvS('B',$Human,<'nonce','nonce'>,<nH,nB>)
+  ]
+  --[ H()
+    , Receive($Human,'B',nB)
+    , Send($Human,'username','User1')
+    , Send($Human,'pw',senc(m1,m2))
+    , Send($Human,'nonce',nH)
+    , Send($Human,'nonce',nB)
+    , To('B')
+    , PasswordAttempt($Human,'B','User1',senc(m1,m2),nH,nB)
+    ]->
+  [ State($Human,'3',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH,nB>)
+  , SndS($Human,'B',<'username','pw','nonce','nonce'>,<'User1',senc(m1,m2),nH,nB>)
+  ]
+
+
+rule B_2_Accept:
+  [ State('B','2',<$Human,nH,nB>)
+  , RcvS($Human,'B',<'username','pw','nonce','nonce'>,<u,p,nH,nB>)
+  , !Cred('B',u,p)
+  ]
+  --[ Receive('B',$Human,u)
+    , Receive('B',$Human,p)
+    , LoginOK('B',$Human,u,p,nH,nB)
+    , Send('B','access','Granted')
+    , Send('B','token',tok(nH,nB))
+    , To($Human)
+    ]->
+  [ State('B','3',<$Human,nH,nB,'Granted'>)
+  , SndS('B',$Human,<'access','token'>,<'Granted',tok(nH,nB)>)
+  ]
+
+
+rule B_2_Deny:
+  [ State('B','2',<$Human,nH,nB>)
+  , RcvS($Human,'B',<'username','pw','nonce','nonce'>,<u,p,nH,nB>)
+  ]
+  --[ Receive('B',$Human,u)
+    , Receive('B',$Human,p)
+    , LoginFail('B',$Human,u,p,nH,nB)
+    , Send('B','access','Denied')
+    , Send('B','token',tok(nH,nB))
+    , To($Human)
+    ]->
+  [ State('B','3',<$Human,nH,nB,'Denied'>)
+  , SndS('B',$Human,<'access','token'>,<'Denied',tok(nH,nB)>)
+  ]
+
+
+rule H_3:
+  [ State($Human,'3',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH,nB>)
+  , RcvS('B',$Human,<'access','token'>,<res,tok(nH,nB)>)
+  ]
+  --[ H()
+    , Receive($Human,'B',res)
+    , HFin($Human,res)
+    ]->
+  [ State($Human,'4',<'User1','User2','User3',m1,m2,m3,senc(m1,m2),<m1,m2>,<<m1,m2>,m2>,senc(m2,m1),nH,nB,res>) ]
+
+
+/****ENDOFRULES****/
+
+restriction OnlyOnce:
+  "All #i #j. OnlyOnce()@#i & OnlyOnce()@#j ==> #i = #j"
+
+restriction Inequality:
+  "All x #i. Neq(x,x) @ #i ==> F"
+
+
+lemma BankAccept_implies_HumanInit: all-traces
+  "(All u p nH nB #i. LoginOK('B',$Human,u,p,nH,nB) @ i ==> (Ex #j. Send($Human,'nonce',nH) @ j & j < i))"
+
+end
+/****ENDOFMODEL****/
