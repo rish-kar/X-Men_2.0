@@ -122,4 +122,4 @@ Each test seeds Spring, points the pipeline at a fixture, runs the relevant muta
 
 ---
 
-> 💡 **TL;DR** — One test per mutation kind. Edit the strategy → regenerate the matching fixture, or update the assertion.
+> 💡 **Summary** — One test per mutation kind. Edit the strategy → regenerate the matching fixture, or update the assertion.

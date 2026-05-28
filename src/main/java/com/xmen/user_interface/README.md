@@ -89,4 +89,4 @@ Splash screen → main scene with checkbox grid and the file picker → user cli
 
 ---
 
-> 💡 **TL;DR** — One file does the whole desktop UI. Headers and endpoints must mirror what the controllers expect.
+> 💡 **Summary** — One file does the whole desktop UI. Headers and endpoints must mirror what the controllers expect.

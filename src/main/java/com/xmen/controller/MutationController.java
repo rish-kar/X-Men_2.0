@@ -54,6 +54,8 @@ public class MutationController {
 
   @Autowired private DerivationTreeCaptureService derivationTreeCaptureService;
 
+  @Autowired private com.xmen.service.forget.ForgetDerivationChecker forgetDerivationChecker;
+
   /**
    * Generates mutations based on the provided file and mutation options.
    *
@@ -241,6 +243,18 @@ public class MutationController {
         parametersBundle.setDerivationDepth(derivationDepth);
       }
 
+      // Mirror Derivation-Type into the Forget pipeline so an "Infinite" or
+      // "Specified Depth" selection actually lifts the ForgetDerivationChecker
+      // caps (default depth=10 / max=50). Only meaningful when Forget is in
+      // the requested mutation set, but it's harmless to set unconditionally.
+      if (DerivationType.INFINITE.name().equalsIgnoreCase(derivationType)) {
+        forgetDerivationChecker.overrideLimits(Integer.MAX_VALUE, Integer.MAX_VALUE);
+      } else if (DerivationType.DEPTH_SPECIFIED.name().equalsIgnoreCase(derivationType)
+          && derivationDepth != null
+          && derivationDepth > 0) {
+        forgetDerivationChecker.overrideLimits(derivationDepth, Integer.MAX_VALUE);
+      }
+
       parametersBundle.getCollections().clear();
       parametersBundle.setFileName(file.getOriginalFilename());
 
@@ -268,6 +282,9 @@ public class MutationController {
         DerivationModeContext.disableHaskell();
         log.info("Haskell derivation DISABLED after mutation processing");
       }
+      // Restore the Forget pipeline's default caps so the next request isn't
+      // accidentally still in INFINITE mode if this one tripped that path.
+      forgetDerivationChecker.resetLimits();
       // Clear any remaining capture state
       derivationTreeCaptureService.clearCapture();
     }

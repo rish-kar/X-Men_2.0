@@ -643,14 +643,14 @@ entries:
     category: mutation
     terms: [mutations, mutation list, available mutations, what mutations are available]
     definition: |
-      X-Men supports mutation families that model different human or ceremony deviations. The JCS paper focuses on four core human mutation families: Skip, Add, Replace, and Neglect; this Java repo also exposes Forget and combined Add plus Replace options.
+      X-Men supports mutation families that model different human or ceremony deviations. The previous paper focuses on four core human mutation families: Skip, Add, Replace, and Neglect; this Java repo also exposes Forget and combined Add plus Replace options.
     details:
       - Skip removes a send, receive, or short send/receive chunk from the human trace.
       - Add inserts an extra send or duplicates an existing send using finite choices from current knowledge.
       - Replace swaps a message with a format-preserving submessage or same-type value.
       - Neglect removes internal role-actions such as checks.
       - Add plus Replace combines an extra action with a replaced value.
-      - Forget is a repo extension that removes knowledge from state; the JCS paper discusses forgetting as future work.
+      - Forget is a repo extension that removes knowledge from state; the previous paper discusses forgetting as future work.
     related: [paper.mutation.catalog, mutation.skip, mutation.add, mutation.replace]
     followups:
       - What is Skip?

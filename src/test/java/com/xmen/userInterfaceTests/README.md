@@ -47,4 +47,4 @@ The UI test framework spins up a JavaFX scene, interacts with controls, and asse
 
 ---
 
-> 💡 **TL;DR** — One UI test class. Update it whenever the JavaFX layout changes.
+> 💡 **Summary** — One UI test class. Update it whenever the JavaFX layout changes.

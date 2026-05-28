@@ -171,4 +171,4 @@ Upload → `ModelLoader` parses → `FileHandler` arranges → mutation strategi
 
 ---
 
-> 💡 **TL;DR** — The plumbing that holds everything together. Top picks: `ModelLoader`, `FileHandler`, `MutatedFileGenerator`.
+> 💡 **Summary** — The plumbing that holds everything together. Top picks: `ModelLoader`, `FileHandler`, `MutatedFileGenerator`.

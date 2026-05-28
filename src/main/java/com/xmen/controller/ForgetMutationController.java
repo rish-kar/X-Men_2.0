@@ -46,6 +46,7 @@ public class ForgetMutationController {
   @Autowired private HaskellDerivationFetcher haskellDerivationFetcher;
   @Autowired private DerivationTreeCaptureService derivationTreeCaptureService;
   @Autowired private ForgetMutationStrategy forgetMutationStrategy;
+  @Autowired private com.xmen.service.forget.ForgetDerivationChecker forgetDerivationChecker;
 
   /**
    * Trigger of forget mutation.
@@ -112,6 +113,18 @@ public class ForgetMutationController {
         } catch (IllegalArgumentException e) {
           return ResponseEntity.status(400).body(e.getMessage());
         }
+      }
+
+      // Honour the user's Derivation-Type selection so the Forget pipeline
+      // actually respects "Infinite" / "Specified Depth". Without this the
+      // ForgetDerivationChecker always silently used its built-in depth=10
+      // and max=50 caps regardless of what the UI requested.
+      if ("INFINITE".equalsIgnoreCase(derivationType)) {
+        forgetDerivationChecker.overrideLimits(Integer.MAX_VALUE, Integer.MAX_VALUE);
+      } else if ("DEPTH_SPECIFIED".equalsIgnoreCase(derivationType)
+          && derivationDepth != null
+          && derivationDepth > 0) {
+        forgetDerivationChecker.overrideLimits(derivationDepth, Integer.MAX_VALUE);
       }
 
       if (witnessActionsHeader != null && !witnessActionsHeader.trim().isEmpty()) {
@@ -234,6 +247,9 @@ public class ForgetMutationController {
       forgetMutationStrategy.setMaxVariantsPerRule(originalMaxVariants);
       forgetMutationStrategy.setBlockingMode(originalBlockingMode);
       forgetMutationStrategy.setNonInternalActions(originalNonInternal);
+      // Restore the static derivation caps so the next request starts fresh
+      // even if this one tripped them (e.g. INFINITE mode that caused OOM).
+      forgetDerivationChecker.resetLimits();
       if (haskellWasEnabled) {
         com.xmen.service.impl.HybridDerivationService.disableHaskellDerivation();
         DerivationModeContext.disableHaskell();

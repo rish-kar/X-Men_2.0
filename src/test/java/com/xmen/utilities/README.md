@@ -71,4 +71,4 @@ Each test feeds the parser a sample input and asserts on the resulting token str
 
 ---
 
-> 💡 **TL;DR** — Parser smoke tests. If you change the grammar, expect to touch these first.
+> 💡 **Summary** — Parser smoke tests. If you change the grammar, expect to touch these first.

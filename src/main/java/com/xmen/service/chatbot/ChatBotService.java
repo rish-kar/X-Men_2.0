@@ -25,7 +25,7 @@ public final class ChatBotService {
 
   private static final List<String> KNOWLEDGE_RESOURCES = List.of(
       "chatbot/knowledge/chatbot-knowledge.yaml",
-      "chatbot/knowledge/existing-paper.yaml",
+      "chatbot/knowledge/previous-paper.yaml",
       "chatbot/knowledge/forget-paper.yaml",
       "chatbot/knowledge/xmen-manual.yaml");
 

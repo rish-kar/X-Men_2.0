@@ -36,7 +36,7 @@ public class FileLoadingService {
     // Basic Level File Validation: Check if the file is empty or null
     {
       if (file == null) {
-        log.error("File is null: ", file.getOriginalFilename());
+        log.error("File is null");
         throw new Exception("File is null");
       }
       if (file.isEmpty()) {

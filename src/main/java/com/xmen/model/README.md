@@ -169,4 +169,4 @@ A `.spthy` input goes through `TamarinLexer → TamarinParser → TamVisitor` to
 
 ---
 
-> 💡 **TL;DR** — The shared vocabulary. `Rule`, `Fact`, `ParametersBundle`, and the `Message` family carry every piece of state moving through the pipeline.
+> 💡 **Summary** — The shared vocabulary. `Rule`, `Fact`, `ParametersBundle`, and the `Message` family carry every piece of state moving through the pipeline.

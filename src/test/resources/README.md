@@ -97,4 +97,4 @@ Each integration test loads one SPTHY input from this folder, runs a mutation st
 
 ---
 
-> 💡 **TL;DR** — Inputs and golden outputs that pin mutation behaviour. Treat the `.m` files as test contracts.
+> 💡 **Summary** — Inputs and golden outputs that pin mutation behaviour. Treat the `.m` files as test contracts.

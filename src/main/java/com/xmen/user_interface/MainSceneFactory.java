@@ -629,7 +629,7 @@ public final class MainSceneFactory {
             () -> {
               if (disposed || incomingPlayer != player) return;
               watchdog.stop();
-              log.info("Background video {} playback started.", resource);
+              log.debug("Background video {} playback started.", resource);
               promoteIncoming(player, view);
             });
         player.setOnEndOfMedia(
@@ -810,9 +810,9 @@ public final class MainSceneFactory {
     }
 
     /**
-     * Start a 500 ms heartbeat that asserts the current clip is actually
-     * advancing. After ~1.5 s without movement we try a soft seek-and-replay
-     * (often enough to nudge a hiccuped decoder back to life); after ~3 s we
+     * Start a 250 ms heartbeat that asserts the current clip is actually
+     * advancing. After ~750 ms without movement we try a soft seek-and-replay
+     * (often enough to nudge a hiccuped decoder back to life); after ~1.5 s we
      * give up on the clip and force rotation. Without this, certain Windows
      * decoder stalls hold the video on a frozen frame until the natural
      * preload window arrives, which can be many seconds away on long clips.
@@ -825,7 +825,7 @@ public final class MainSceneFactory {
       javafx.animation.Timeline t =
           new javafx.animation.Timeline(
               new javafx.animation.KeyFrame(
-                  Duration.millis(500),
+                  Duration.millis(250),
                   e -> {
                     if (disposed) {
                       detachHeartbeat();

@@ -66,17 +66,15 @@ public class ForgetMutationStrategyIntegrationTest {
     // Bank protocol generates Bank_M0.m
     String generatedContent = Files.readString(Paths.get("Bank_M0.m"), StandardCharsets.UTF_8);
 
-    // Accept either explicit mutated rule names or in-place mutation content
-    boolean hasUser2Suffix = generatedContent.contains("rule User_2_M:");
-    boolean hasIntruder4Suffix = generatedContent.contains("rule Intruder_4_M:");
-    boolean user2MutatedContent =
-        generatedContent.contains(
-            "SndS($User,$Intruder,<'password','nonce','nonce'>,<p2,~nh,~nb>)");
-    boolean intruder4MutatedContent =
-        generatedContent.contains("RcvS($Bank2,$Intruder,<'access'>,<'Granted'>)");
+    // The Forget mutation rewrites H_2 -> H_2_M, substituting pw1 with pw2
+    // in the m3 send and the PasswordAttempt action.
+    boolean hasH2MutatedRule = generatedContent.contains("rule H_2_M:");
+    boolean hasPw2Send =
+        generatedContent.contains("Send($Human,'m3',senc(<$Human,pw2>,k(nH,nB)))");
+    boolean hasPw2Attempt =
+        generatedContent.contains("PasswordAttempt($Human,$B1,pw2,nH,nB)");
 
-    assertThat(hasUser2Suffix || user2MutatedContent).isTrue();
-    assertThat(hasIntruder4Suffix || intruder4MutatedContent).isTrue();
+    assertThat(hasH2MutatedRule || hasPw2Send || hasPw2Attempt).isTrue();
 
     // Verify the basic structure is maintained
     assertThat(generatedContent).contains("theory Bank");
@@ -101,19 +99,14 @@ public class ForgetMutationStrategyIntegrationTest {
     // Bank protocol generates Bank_M0.m
     String generatedContent = Files.readString(Paths.get("Bank_M0.m"), StandardCharsets.UTF_8);
 
-    boolean hasUser2Suffix = generatedContent.contains("rule User_2_M:");
-    boolean hasIntruder4Suffix = generatedContent.contains("rule Intruder_4_M:");
-    boolean user2MutatedContent =
-        generatedContent.contains(
-            "SndS($User,$Intruder,<'password','nonce','nonce'>,<p2,~nh,~nb>)");
-    boolean intruder4MutatedContent =
-        generatedContent.contains("RcvS($Bank2,$Intruder,<'access'>,<'Granted'>)");
+    boolean hasH2MutatedRule = generatedContent.contains("rule H_2_M:");
+    boolean hasPw2Send =
+        generatedContent.contains("Send($Human,'m3',senc(<$Human,pw2>,k(nH,nB)))");
+    boolean hasPw2Attempt =
+        generatedContent.contains("PasswordAttempt($Human,$B1,pw2,nH,nB)");
 
-    assertThat(hasUser2Suffix || user2MutatedContent)
-        .as("User_2 must be mutated by name or content")
-        .isTrue();
-    assertThat(hasIntruder4Suffix || intruder4MutatedContent)
-        .as("Intruder_4 must be mutated by name or content")
+    assertThat(hasH2MutatedRule || hasPw2Send || hasPw2Attempt)
+        .as("H_2 must be mutated by rule-name suffix _M or by pw1->pw2 substitution in content")
         .isTrue();
 
     // Verify the basic structure is maintained
@@ -289,17 +282,14 @@ public class ForgetMutationStrategyIntegrationTest {
 
     String generatedContent = Files.readString(Paths.get("Bank_M0.m"), StandardCharsets.UTF_8);
 
-    boolean hasUser2Suffix = generatedContent.contains("rule User_2_M:");
-    boolean hasIntruder4Suffix = generatedContent.contains("rule Intruder_4_M:");
-    boolean user2MutatedContent =
-        generatedContent.contains(
-            "SndS($User,$Intruder,<'password','nonce','nonce'>,<p2,~nh,~nb>)");
-    boolean intruder4MutatedContent =
-        generatedContent.contains("RcvS($Bank2,$Intruder,<'access'>,<'Granted'>)");
+    boolean hasH2MutatedRule = generatedContent.contains("rule H_2_M:");
+    boolean hasPw2Send =
+        generatedContent.contains("Send($Human,'m3',senc(<$Human,pw2>,k(nH,nB)))");
+    boolean hasPw2Attempt =
+        generatedContent.contains("PasswordAttempt($Human,$B1,pw2,nH,nB)");
 
-    // Accept either naming convention with _M or verified in-place mutation content
-    assertThat(hasUser2Suffix || user2MutatedContent).isTrue();
-    assertThat(hasIntruder4Suffix || intruder4MutatedContent).isTrue();
+    // Accept either the _M naming convention or verified in-place pw1->pw2 mutation content
+    assertThat(hasH2MutatedRule || hasPw2Send || hasPw2Attempt).isTrue();
 
     log.info("Rule naming convention satisfied by suffix or content-based mutation");
   }
@@ -348,12 +338,17 @@ public class ForgetMutationStrategyIntegrationTest {
     // Verify that State facts are properly handled in mutated rules
     assertThat(generatedContent).contains("State(");
 
-    // Verify that mutated rules contain expected transformations
-    assertThat(generatedContent).contains("RcvS($Bank2,$Intruder,<'access'>,<'Granted'>)");
+    // Verify the Forget mutation visited H_2 (rule was renamed to H_2_M) and
+    // the symmetric-encryption send-payload structure is preserved. The exact
+    // password substitution (pw1 -> pw2 vs. left as-is) depends on whether the
+    // derivation checker finds an unblocked derivation; both are valid mutation
+    // outcomes per Algorithm 1.
+    assertThat(generatedContent).contains("rule H_2_M:");
+    assertThat(generatedContent).contains("senc(<$Human,");
 
-    // Verify channel rules are preserved
-    assertThat(generatedContent).contains("rule ChanSndS:");
-    assertThat(generatedContent).contains("rule ChanRcvS:");
+    // Verify the Bank-side response rules are preserved.
+    assertThat(generatedContent).contains("rule Bank_1:");
+    assertThat(generatedContent).contains("rule Bank_2_OK:");
 
     log.info("Content validation test passed - State facts handled correctly");
   }
@@ -477,14 +472,14 @@ public class ForgetMutationStrategyIntegrationTest {
         Files.readString(
             Paths.get("src/test/resources/Forget_Bank_Input.spthy"), StandardCharsets.UTF_8);
 
-    assertThat(spec).contains("lemma Human_intends_Bank2_if_Bank2_OK");
-    assertThat(spec).contains("lemma Password2_confidential");
-    assertThat(spec).contains("U_LoginRequest($User, $Bank2,");
-    assertThat(spec).contains("PasswordAttempt($User, $Bank2,");
-    assertThat(spec).contains("LoginOK($Bank2, $User,");
+    assertThat(spec).contains("lemma Auth_B2_requires_H_intent");
+    assertThat(spec).contains("lemma Password_Confidentiality");
+    assertThat(spec).contains("U_LoginRequest($Human,$B1,");
+    assertThat(spec).contains("PasswordAttempt($Human,$B1,");
+    assertThat(spec).contains("LoginOK($B,$Human,");
     assertThat(spec).doesNotContain("lemma Challenge_Injective");
     assertThat(spec).doesNotContain("lemma Complete_Verification");
-    assertThat(spec).doesNotContain("lemma functional");
+    assertThat(spec).doesNotContain("lemma Human_intends_Bank2_if_Bank2_OK");
   }
 
   @SuppressWarnings("unused")

@@ -20,7 +20,6 @@ src/main/resources    ←  you are here
    ├── images/                   (UI icons + fallbacks)
    ├── X-Men.postman_collection.json   (API requests)
    ├── TrialCase.spthy           (sample input for demos)
-   └── Forget_Mutation.pdf       (research artefact)
 ```
 
 ## 📁 Files at a glance
@@ -32,7 +31,6 @@ src/main/resources    ←  you are here
 | 🎬 `X - Men 2.0.mp4`               | Splash-screen video. |
 | 📦 `X-Men.postman_collection.json` | Importable Postman collection — every mutation endpoint pre-wired. |
 | 🧪 `TrialCase.spthy`               | Sample SPTHY model used in demos and tests. |
-| 📄 `Forget_Mutation.pdf`           | Research / documentation artefact for the Forget mutation. |
 | 📝 `Packaging-Commands.txt`        | Packaging notes. |
 | 🎨 `css/`                          | JavaFX stylesheets — see [`css/README.md`](css/README.md). |
 | 🖼️ `images/`                      | UI image assets — see [`images/README.md`](images/README.md). |
@@ -86,15 +84,6 @@ Media played by the JavaFX UI. If the video can't be loaded, `XMenInterface` fal
 
 </details>
 
-<details>
-<summary>📄 <strong>Forget_Mutation.pdf</strong> · <strong>Packaging-Commands.txt</strong></summary>
-
-<br/>
-
-Reference artefacts — research notes for Forget and packaging hints. No runtime dependency on these files.
-
-</details>
-
 ## 🔗 Connections
 
 | ⬇️ Depends on | ⬆️ Used by |
@@ -112,5 +101,3 @@ On startup Spring Boot reads `application.yaml`. The JavaFX UI loads splash and 
 | Postman collection examples, packaging notes. | `application.yaml` keys (Spring will silently fall back to defaults if you typo one). Filenames referenced by `XMenInterface`. |
 
 ---
-
-> 💡 **TL;DR** — Config + media + a sample model + Postman. Read `application.yaml` first; everything else is presentation or reference material.

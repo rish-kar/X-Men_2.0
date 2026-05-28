@@ -358,4 +358,127 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+          Installer profile: turns the shaded fat jar into a native installer
+          via the JDK's `jpackage` tool.
+
+          Usage:
+            mvn clean package -P installer                          # default: app-image (folder, no installer tool needed)
+            mvn clean package -P installer -Djpackage.type=EXE      # Windows .exe (requires WiX Toolset 3.x on PATH)
+            mvn clean package -P installer -Djpackage.type=MSI      # Windows .msi (requires WiX Toolset 3.x on PATH)
+            mvn clean package -P installer -Djpackage.type=DMG      # macOS  .dmg
+            mvn clean package -P installer -Djpackage.type=PKG      # macOS  .pkg
+            mvn clean package -P installer -Djpackage.type=DEB      # Linux  .deb
+            mvn clean package -P installer -Djpackage.type=RPM      # Linux  .rpm
+
+          Override the user-visible version with -Djpackage.appVersion=X.Y.Z
+          (jpackage rejects Maven SNAPSHOT versions).
+        -->
+        <profile>
+            <id>installer</id>
+
+            <properties>
+                <jpackage.type>APP_IMAGE</jpackage.type>
+                <jpackage.appVersion>1.0.0</jpackage.appVersion>
+            </properties>
+
+            <build>
+                <plugins>
+                    <!-- 1) Stage the shaded jar into a clean input folder. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>stage-jpackage-input</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/jpackage-input</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>${project.build.finalName}.jar</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- 2) Invoke jpackage. -->
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <version>1.6.5</version>
+                        <executions>
+                            <execution>
+                                <id>build-installer</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jpackage</goal>
+                                </goals>
+                                <configuration>
+                                    <name>X-Men</name>
+                                    <appVersion>${jpackage.appVersion}</appVersion>
+                                    <vendor>X-Men</vendor>
+                                    <input>${project.build.directory}/jpackage-input</input>
+                                    <destination>${project.build.directory}/dist</destination>
+                                    <mainJar>${project.build.finalName}.jar</mainJar>
+                                    <mainClass>com.xmen.user_interface.XMenInterface</mainClass>
+                                    <type>${jpackage.type}</type>
+                                    <javaOptions>
+                                        <option>-Djava.awt.headless=false</option>
+                                    </javaOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+          Windows-specific extras for the `exe` / `msi` installers:
+          create a Start-menu shortcut, a desktop shortcut, and let the user
+          choose the install directory.
+
+          Activated automatically when -Djpackage.type=exe or msi is set.
+        -->
+        <profile>
+            <id>installer-windows-extras</id>
+            <activation>
+                <property>
+                    <name>jpackage.type</name>
+                    <value>EXE</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <version>1.6.5</version>
+                        <executions>
+                            <execution>
+                                <id>build-installer</id>
+                                <configuration>
+                                    <winMenu>true</winMenu>
+                                    <winShortcut>true</winShortcut>
+                                    <winDirChooser>true</winDirChooser>
+                                    <winPerUserInstall>true</winPerUserInstall>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -40,6 +40,46 @@ public class ForgetDerivationChecker {
     private Set<String> userDefinedFunctions = new HashSet<>();
 
     /**
+     * Active depth / derivation caps. Initialised to the safe defaults; a controller
+     * can override these per-request (e.g. when the user selects "Infinite" in the
+     * UI) via {@link #overrideLimits(int, int)} and must call {@link #resetLimits()}
+     * in a finally block so the next request starts from the defaults again.
+     */
+    private int depthLimit = DEFAULT_DEPTH_LIMIT;
+    private int maxDerivations = MAX_DERIVATIONS;
+
+    /**
+     * Lift (or tighten) the derivation caps for the current request. Pass
+     * {@link Integer#MAX_VALUE} for both arguments to honor an "Infinite"
+     * selection from the UI — the derivation engine will then attempt unbounded
+     * exploration, which is allowed to OOM / stack-overflow on self-feeding
+     * inputs (that's the whole point of the Infinite mode).
+     */
+    public void overrideLimits(int newDepth, int newMax) {
+        this.depthLimit = newDepth;
+        this.maxDerivations = newMax;
+        refreshConfig();
+        log.info("Derivation limits overridden: depth={}, maxDerivations={}",
+                 newDepth, newMax);
+    }
+
+    /** Restore the static defaults. Call from controller `finally` blocks. */
+    public void resetLimits() {
+        this.depthLimit = DEFAULT_DEPTH_LIMIT;
+        this.maxDerivations = MAX_DERIVATIONS;
+        refreshConfig();
+    }
+
+    private void refreshConfig() {
+        DerivationConfig config = new DerivationConfig(
+            this.userDefinedFunctions,
+            this.maxDerivations,
+            this.depthLimit
+        );
+        derivationService.setConfig(config);
+    }
+
+    /**
      * Configures the derivation checker with user-defined functions.
      * These functions will NOT be decomposed during derivation to prevent explosion.
      *
@@ -55,13 +95,9 @@ public class ForgetDerivationChecker {
             }
         }
 
-        // Update the derivation service config
-        DerivationConfig config = new DerivationConfig(
-            this.userDefinedFunctions,
-            MAX_DERIVATIONS,
-            DEFAULT_DEPTH_LIMIT
-        );
-        derivationService.setConfig(config);
+        // Reuse whatever depth/max are currently active (defaults unless a
+        // controller has overridden them for this request).
+        refreshConfig();
 
         log.info("Configured derivation checker with {} user-defined functions: {}",
                  userDefinedFunctions.size(), userDefinedFunctions);
@@ -131,15 +167,15 @@ public class ForgetDerivationChecker {
             // separately by ForgetMutationStrategy via printDerivationTree(...), so
             // we do not want this call to also dump a (possibly less informative)
             // tree on top of it.
-            Set<Derivation> derivations = derivationService.deriveToDepthNoPrint(target, knowledge, DEFAULT_DEPTH_LIMIT);
+            Set<Derivation> derivations = derivationService.deriveToDepthNoPrint(target, knowledge, this.depthLimit);
 
             // Cap the number of derivations to prevent explosion
-            if (derivations.size() > MAX_DERIVATIONS) {
-                log.warn("Truncating derivations from {} to {}", derivations.size(), MAX_DERIVATIONS);
+            if (derivations.size() > this.maxDerivations) {
+                log.warn("Truncating derivations from {} to {}", derivations.size(), this.maxDerivations);
                 Set<Derivation> truncated = new LinkedHashSet<>();
                 int count = 0;
                 for (Derivation d : derivations) {
-                    if (count >= MAX_DERIVATIONS) break;
+                    if (count >= this.maxDerivations) break;
                     truncated.add(d);
                     count++;
                 }
@@ -168,7 +204,7 @@ public class ForgetDerivationChecker {
             return;
         }
         try {
-            derivationService.deriveToDepth(target, displayKnowledge, DEFAULT_DEPTH_LIMIT);
+            derivationService.deriveToDepth(target, displayKnowledge, this.depthLimit);
         } catch (Exception e) {
             log.error("Error rendering derivation tree for target {}: {}",
                       target.represent(), e.getMessage());
