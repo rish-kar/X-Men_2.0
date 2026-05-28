@@ -1,14 +1,13 @@
 entries:
-  - id: paper.jcs210075
-    title: JCS mutation-based ceremonies paper
+  - id: paper.previous
+    title: Previous mutation-based ceremonies paper
     category: paper
-    terms: [JCS paper, JCS210075, mutation based approach paper, security ceremonies paper, X-Men paper, DOI 10.3233 JCS 210075]
+    terms: [Oyster.json, mutation based approach paper, security ceremonies paper, X-Men paper, previous paper]
     shortAnswer: |
-      The paper defines X-Men as a mutation-based approach for formally and automatically analyzing security ceremonies with Tamarin.
+      The previous paper defines X-Men as a mutation-based approach for formally and automatically analyzing security ceremonies with Tamarin.
     definition: |
-      "A mutation-based approach for the formal and automated analysis of security ceremonies" is a 2023 Journal of Computer Security paper. It introduces human-behavior mutations for security ceremonies, an automated X-Men workflow over Tamarin, and three case studies.
+      The previous paper introduces a mutation-based approach for the formal and automated analysis of security ceremonies. It introduces human-behavior mutations for security ceremonies, an automated X-Men workflow over Tamarin, and three case studies.
     details:
-      - Venue is Journal of Computer Security 31, pages 293-364.
       - The paper focuses on ceremonies where human users are first-class actors.
       - The four core paper mutations are Skip, Add, Replace, and Neglect.
       - The proof-of-concept case studies are Oyster, SAML-based SSO for Google Apps, and a Coach Service ceremony.
@@ -130,7 +129,7 @@ entries:
     category: mutation
     terms: [what mutations are available, what mutations are in the paper, paper mutations, four mutations, skip add replace neglect, behavioral patterns library, list all mutations, show mutation types, explain mutation families, what are the human mutations, which mutations does X-Men support, mutation catalogue, mutation catalog, all mutation variants, mutation options]
     definition: |
-      The JCS paper focuses on four core human mutation families: Skip, Add, Replace, and Neglect. It also studies combinations such as Add plus Replace.
+      The previous paper focuses on four core human mutation families: Skip, Add, Replace, and Neglect. It also studies combinations such as Add plus Replace.
     details:
       - Skip variants are Skip Send, Skip Receive, Skip Send Receive, Skip Receive Send, and Skip Receive Send Receive.
       - Add variants are adding a new send from current knowledge or duplicating an existing send.
@@ -450,11 +449,11 @@ entries:
       - How is Neglect different from Forget?
 
   - id: paper.neglect-vs-forget
-    title: Neglect vs Forget in the JCS paper
+    title: Neglect vs Forget in the previous paper
     category: mutation
     terms: [Neglect vs Forget, difference between neglect and forget in paper, forgetting fifth mutation, future forget mutation]
     definition: |
-      In the JCS paper, Neglect is one of the four formalized mutations. Forgetting is discussed as future work, not as one of the four paper mutations.
+      In the previous paper, Neglect is one of the four formalized mutations. Forgetting is discussed as future work, not as one of the four paper mutations.
     details:
       - Neglect means the data or check exists in the model but the role-action enforcing it is removed.
       - Forgetting would remove terms from the human's current knowledge and limit later sends.
@@ -485,7 +484,7 @@ entries:
     why: |
       It models state loss, such as a user or process losing a token, nonce, password component, or remembered value mid-ceremony.
     details:
-      - The older JCS paper treated forgetting as future work; the newer X-Men 2.0 paper formalizes it.
+      - The previous paper treated forgetting as future work; the newer paper formalizes it.
       - The forget set identifies values that should be treated as unavailable even though monotonic knowledge is preserved.
       - If a forgotten value blocks a later derivation, Forget can trigger Neglect, Replace, or Skip as a consequence.
       - "It is different from Neglect: Forget affects what the human can derive; Neglect removes an internal validation action."

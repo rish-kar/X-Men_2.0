@@ -1492,7 +1492,11 @@ public class XMenInterface extends Application {
             new Callback() {
               @Override
               public void onFailure(@NotNull Call call, @NotNull IOException ex) {
-                log.error("Error while performing mutation: {}", ex.getMessage());
+                log.error("Error while performing mutation: {}", ex.getMessage(), ex);
+                final String reason =
+                    ex.getMessage() == null || ex.getMessage().isBlank()
+                        ? ex.getClass().getSimpleName()
+                        : ex.getMessage();
                 Platform.runLater(
                     () -> {
                       clearGeneratedOutput();
@@ -1500,7 +1504,7 @@ public class XMenInterface extends Application {
                           primaryStage,
                           ThemedDialog.Kind.ERROR,
                           "Mutation Request Failed",
-                          "Error: " + message);
+                          "Could not reach the server: " + reason);
                     });
               }
 
@@ -1546,12 +1550,45 @@ public class XMenInterface extends Application {
                         }
                       });
                 } else {
-                  log.error("Error: {} {}", response.code(), response.message());
                   Platform.runLater(() -> clearGeneratedOutput());
 
-                  String responseBodyStr = response.body() != null ? response.body().string() : "";
+                  String responseBodyStr =
+                      response.body() != null ? response.body().string() : "";
+                  log.error(
+                      "Mutation request failed: HTTP {} {} — body: {}",
+                      response.code(),
+                      response.message(),
+                      responseBodyStr);
 
-                  if (responseBodyStr.contains("Forget function not found")) {
+                  // Surface the real cause to the user instead of the generic message.
+                  // Server controllers return the underlying exception message in the
+                  // response body (e.g. "SPTHY file '…' has 1 syntax error(s) …" from
+                  // ModelLoader). Fall back to the HTTP status line only when the body
+                  // is empty.
+                  final int httpCode = response.code();
+                  final String httpReason =
+                      response.message() == null ? "" : response.message();
+                  final String serverMsg = responseBodyStr.trim();
+
+                  final String dialogTitle;
+                  if (httpCode >= 400 && httpCode < 500) {
+                    dialogTitle = "Invalid Input (HTTP " + httpCode + ")";
+                  } else if (httpCode >= 500) {
+                    dialogTitle = "Server Error (HTTP " + httpCode + ")";
+                  } else {
+                    dialogTitle = "Mutation Failed (HTTP " + httpCode + ")";
+                  }
+
+                  final String dialogBody;
+                  if (!serverMsg.isEmpty()) {
+                    dialogBody = serverMsg;
+                  } else if (!httpReason.isEmpty()) {
+                    dialogBody = httpReason;
+                  } else {
+                    dialogBody = message;
+                  }
+
+                  if (serverMsg.contains("Forget function not found")) {
                     Platform.runLater(
                         () ->
                             ThemedDialog.show(
@@ -1565,8 +1602,8 @@ public class XMenInterface extends Application {
                             ThemedDialog.show(
                                 primaryStage,
                                 ThemedDialog.Kind.ERROR,
-                                "Error",
-                                "Error: " + message));
+                                dialogTitle,
+                                dialogBody));
                   }
                 }
                 response.close();

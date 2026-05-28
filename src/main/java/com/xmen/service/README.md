@@ -169,4 +169,4 @@ When a request lands, the controller calls `FileLoadingService` and `FileSplitte
 
 ---
 
-> 💡 **TL;DR** — The brain stem. Interfaces and glue here; mutation muscle lives in `impl/` and `forget/`.
+> 💡 **Summary** — The brain stem. Interfaces and glue here; mutation muscle lives in `impl/` and `forget/`.

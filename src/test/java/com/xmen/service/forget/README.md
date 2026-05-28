@@ -93,4 +93,4 @@ Each test seeds `Message`, `ForgetContext`, or full pipelines and asserts on der
 
 ---
 
-> 💡 **TL;DR** — The safety net for Algorithm 1. If you change blocking or replacement, you'll meet these tests first.
+> 💡 **Summary** — The safety net for Algorithm 1. If you change blocking or replacement, you'll meet these tests first.

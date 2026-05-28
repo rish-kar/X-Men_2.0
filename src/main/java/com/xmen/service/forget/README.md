@@ -143,4 +143,4 @@ For each transition that contains `Forget(x)`:
 
 ---
 
-> 💡 **TL;DR** — Five files that implement Algorithm 1: track `K`, classify what's blocked, compute replacements, and decide whether the send survives.
+> 💡 **Summary** — Five files that implement Algorithm 1: track `K`, classify what's blocked, compute replacements, and decide whether the send survives.

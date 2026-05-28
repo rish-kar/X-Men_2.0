@@ -894,6 +894,14 @@
 /* Scroll-bars across the dialog and table. */
 .x-vocab-table .scroll-bar,
 .x-settings-pane .scroll-bar { -fx-background-color: transparent; }
+.x-vocab-table .scroll-bar:vertical {
+    -fx-pref-width: 10;
+    -fx-padding: 3 3 3 0;
+}
+.x-vocab-table .scroll-bar:horizontal {
+    -fx-pref-height: 0;
+    -fx-opacity: 0;
+}
 .x-vocab-table .scroll-bar .track,
 .x-settings-pane .scroll-bar .track {
     -fx-background-color: transparent;
@@ -904,6 +912,10 @@
     -fx-background-color: -accent-soft;
     -fx-background-radius: 8;
     -fx-background-insets: 2;
+}
+.x-vocab-table .scroll-bar:vertical .thumb {
+    -fx-background-color: -accent;
+    -fx-background-insets: 2 1 2 1;
 }
 .x-vocab-table .scroll-bar .increment-button,
 .x-vocab-table .scroll-bar .decrement-button,

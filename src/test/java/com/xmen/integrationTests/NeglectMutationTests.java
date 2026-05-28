@@ -145,29 +145,31 @@ public class NeglectMutationTests {
   }
 
   @Test
-  @DisplayName("Neglect Multi - no RULES markers returns 204 (no content)")
+  @DisplayName("Neglect Multi - no RULES markers returns 400 (syntax error)")
   public void testNeglectMultiEndpoint_NoRulesMarkers_returns500() throws Exception {
     String noRules = "/****MODEL****/ theory X begin\n builtins: signing\n rule setup: [ Fr(~x) ] --> [ ]\n /****ENDOFMODEL****/";
     MockMultipartFile bad =
         new MockMultipartFile("file", "CoachService.spthy", MediaType.TEXT_PLAIN_VALUE, noRules.getBytes(StandardCharsets.UTF_8));
 
-    // Without RULES markers, splitter treats whole content as rules; parser yields no usable
-    // rules and generator produces nothing -> 204 No Content
+    // Without RULES markers, splitter treats whole content as rules; parser flags syntax
+    // errors and the visitor yields no usable rules, so ModelLoader surfaces a 400 Bad
+    // Request rather than letting the request silently complete with no output.
     mockMvc
         .perform(multipart("/api/generateMutations").file(bad).header("Neglect-Mutation", "true"))
-        .andExpect(status().isNoContent());
+        .andExpect(status().isBadRequest());
   }
 
   @Test
-  @DisplayName("Neglect Single - malformed rules returns 500")
+  @DisplayName("Neglect Single - malformed rules returns 400 (syntax error)")
   public void testNeglectSingleEndpoint_MalformedRules_returns500() throws Exception {
     // Include RULES markers but broken content inside
     String malformed = "/****RULES****/\n rule bad: [ X ] --> [ Y\n /****ENDOFRULES****/"; // missing closing bracket
     MockMultipartFile bad =
         new MockMultipartFile("file", "CoachService.spthy", MediaType.TEXT_PLAIN_VALUE, malformed.getBytes(StandardCharsets.UTF_8));
 
-    // Parser throws on syntax errors above threshold -> 500 Internal Server Error
-    mockMvc.perform(multipart("/api/neglect/mutations").file(bad)).andExpect(status().isInternalServerError());
+    // ModelLoader wraps unrecoverable parser errors as IllegalArgumentException, which the
+    // controller maps to HTTP 400 Bad Request (instead of the previous opaque 500).
+    mockMvc.perform(multipart("/api/neglect/mutations").file(bad)).andExpect(status().isBadRequest());
   }
 
   private void assertAtLeastOneGeneratedMatchesAnySample() throws Exception {

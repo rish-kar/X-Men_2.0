@@ -47,4 +47,4 @@ src/test/java   ←  you are here
 
 ---
 
-> 💡 **TL;DR** — Empty container; tests live one level deeper.
+> 💡 **Summary** — Empty container; tests live one level deeper.

@@ -111,4 +111,4 @@ The following mutation headers must remain in the CORS allowlist:
 
 ---
 
-> 💡 **TL;DR** — Three small classes that wire beans, lock down CORS/security, and feed Swagger. Touch the security chain only with care.
+> 💡 **Summary** — Three small classes that wire beans, lock down CORS/security, and feed Swagger. Touch the security chain only with care.

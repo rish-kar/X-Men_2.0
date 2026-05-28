@@ -75,4 +75,4 @@ Each HTTP request is checked once. Static-resource and health URLs pass through 
 
 ---
 
-> 💡 **TL;DR** — One small filter that quietly enforces "where can you talk to us from" on every request.
+> 💡 **Summary** — One small filter that quietly enforces "where can you talk to us from" on every request.

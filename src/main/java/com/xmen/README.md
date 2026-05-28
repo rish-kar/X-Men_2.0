@@ -64,4 +64,4 @@ On startup Spring initializes the context and scans all sub-packages. If headles
 
 ---
 
-> 💡 **TL;DR** — One file, one job: start Spring, optionally start the UI. Most action happens in sub-packages.
+> 💡 **Summary** — One file, one job: start Spring, optionally start the UI. Most action happens in sub-packages.

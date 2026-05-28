@@ -931,7 +931,7 @@ entries:
       - Its knowledge effect is that knowledge does not increase when a skipped receive or matching skipped receive prevents learning.
       - The table marks Skip as primitive.
     why: |
-      This gives the precise table-based answer for Skip, separate from individual Skip variants in the older JCS paper.
+      This gives the precise table-based answer for Skip, separate from individual Skip variants in the previous paper.
     related: [paper.skip-mutation, paper.mutation.relationships-xmen2]
 
   - id: paper.mutation.classification-add

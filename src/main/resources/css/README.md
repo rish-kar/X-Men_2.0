@@ -58,5 +58,3 @@ When the UI loads, `main.css` is applied to the scene's root pane and `alert.css
 | Colours, fonts, spacing, gradients. | The selector names — they're contracts with `XMenInterface`. |
 
 ---
-
-> 💡 **TL;DR** — Two stylesheets keeping the JavaFX UI looking like X-Men, not Java 8.

@@ -154,12 +154,33 @@ public class ModelLoader {
       componentList.addAll(ruleList);
       log.debug("Visited parse tree and added rules to componentList");
 
+      // If the parser flagged syntax errors AND the visitor produced no components,
+      // the file is unusable. Surface a clear 4xx error instead of silently
+      // returning an empty mutation set downstream.
+      if (ruleList.isEmpty() && syntaxErrors > 0) {
+        String errorMsg = String.format(
+            "SPTHY file '%s' has %d syntax error(s) and no parseable rules. "
+                + "The file does not appear to be valid Tamarin syntax.",
+            spthyFile.getOriginalFilename(), syntaxErrors);
+        log.error(errorMsg);
+        throw new IllegalArgumentException(errorMsg);
+      }
+
     } catch (IOException e) {
       log.error("IOException occurred while loading SPTHY file: {}", e.getMessage(), e);
       throw e;
+    } catch (IllegalArgumentException e) {
+      // Already a 400-grade error (bad input); propagate as-is so controllers
+      // can return HTTP 400 with the message.
+      throw e;
     } catch (Exception e) {
+      // Parser/visitor crashed on malformed input (e.g. ANTLR ClassCastException
+      // from unrecoverable token mismatches). Treat as bad input, not a 500.
       log.error("Unexpected exception occurred while loading SPTHY file: {}", e.getMessage(), e);
-      throw new RuntimeException("Error loading SPTHY file", e);
+      throw new IllegalArgumentException(
+          "Could not parse SPTHY file '" + spthyFile.getOriginalFilename()
+              + "': " + e.getMessage(),
+          e);
     }
 
     log.debug("loadSPTHY completed");
@@ -173,7 +194,10 @@ public class ModelLoader {
    * @return True if the file extension is valid, false otherwise.
    */
   public boolean isValidExtension(MultipartFile file) {
-    String fileName = file.getOriginalFilename();
-    return fileName.endsWith(".spthy");
+    if (file.getOriginalFilename() != null) {
+      String fileName = file.getOriginalFilename();
+      return fileName.endsWith(".spthy");
+    }
+    return false;
   }
 }

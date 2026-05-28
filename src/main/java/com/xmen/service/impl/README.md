@@ -216,4 +216,4 @@ A controller selects mutations → `MutationGeneratorServiceImpl` resolves each 
 
 ---
 
-> 💡 **TL;DR** — Where every mutation actually happens. `ForgetMutationStrategy` and the Skip family are the most semantically loaded files.
+> 💡 **Summary** — Where every mutation actually happens. `ForgetMutationStrategy` and the Skip family are the most semantically loaded files.

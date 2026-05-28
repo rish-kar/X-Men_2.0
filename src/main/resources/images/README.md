@@ -70,5 +70,3 @@ Branding asset and a screenshot of the native UI. Referenced in the top-level pr
 | Adding new images; replacing them with same-name files. | Renaming or removing files referenced by `XMenInterface` or the README. |
 
 ---
-
-> 💡 **TL;DR** — Alert icons + fallback backgrounds + branding. Keep filenames stable; code references them by string.

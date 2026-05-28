@@ -195,4 +195,4 @@ A `POST` with a `.spthy` payload reaches a controller method. The controller spl
 
 ---
 
-> 💡 **TL;DR** — The HTTP front door. Endpoints, headers, and zip responses live here; the heavy lifting is one layer down in `service/`.
+> 💡 **Summary** — The HTTP front door. Endpoints, headers, and zip responses live here; the heavy lifting is one layer down in `service/`.

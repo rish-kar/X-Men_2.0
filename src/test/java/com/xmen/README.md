@@ -62,4 +62,4 @@ src/test/java/com/xmen    ←  you are here
 
 ---
 
-> 💡 **TL;DR** — One smoke test plus four sub-packages. Everything else hangs off this point.
+> 💡 **Summary** — One smoke test plus four sub-packages. Everything else hangs off this point.

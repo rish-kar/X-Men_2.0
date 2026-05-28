@@ -48,5 +48,3 @@ Every class compiled from this tree is loaded by the JVM at startup. Spring's co
 | Adding new packages and classes under `com/xmen`. | The base package name — moving it requires updating `@SpringBootApplication`'s scan settings. |
 
 ---
-
-> 💡 **TL;DR** — Empty container directory; the action is one level deeper at `com/xmen`.

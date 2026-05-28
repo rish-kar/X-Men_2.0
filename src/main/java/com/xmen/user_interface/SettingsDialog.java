@@ -410,7 +410,11 @@ public class SettingsDialog {
     table.getStyleClass().add("x-vocab-table");
     table.setPlaceholder(new Label(
         "No vocabulary rows available yet — use 'Detect from .spthy' or load a profile."));
-    VBox.setVgrow(table, Priority.ALWAYS);
+    table.setFixedCellSize(36);
+    double compactTableHeight = 178;
+    table.setMinHeight(compactTableHeight);
+    table.setPrefHeight(compactTableHeight);
+    table.setMaxHeight(compactTableHeight);
 
     // Column 1 — Category (read-only, derived from the row's key path).
     TableColumn<VocabRow, String> catCol = new TableColumn<>("CATEGORY");
@@ -547,11 +551,8 @@ public class SettingsDialog {
     // they were being clipped).
     VBox.setMargin(actions, new Insets(0, 0, 24, 0));
 
-    // Cap the table at a sensible height. With Vgrow ALWAYS the table previously stretched
-    // far enough to push the action row off-screen on small displays. SOMETIMES + a hard
-    // max keeps the table generous while guaranteeing the buttons stay visible.
-    table.setMaxHeight(460);
-    VBox.setVgrow(table, Priority.SOMETIMES);
+    // Keep the vocabulary table compact; overflow stays inside the table's own scroll bar.
+    VBox.setVgrow(table, Priority.NEVER);
 
     VBox content = new VBox(12, hint, profileRow, table, actions);
     content.setPadding(new Insets(8, 0, 12, 0));

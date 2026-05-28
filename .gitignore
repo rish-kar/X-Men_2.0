@@ -78,6 +78,3 @@ replay_pid*
 
 # Ignore all .exe files
 *.exe
-
-# Claude
-.claude/

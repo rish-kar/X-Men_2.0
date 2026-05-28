@@ -49,4 +49,4 @@ Each test feeds the service in-memory content and asserts on the returned sectio
 
 ---
 
-> 💡 **TL;DR** — One unit test here + a Forget-focused sub-package next door.
+> 💡 **Summary** — One unit test here + a Forget-focused sub-package next door.

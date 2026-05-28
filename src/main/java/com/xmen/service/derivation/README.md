@@ -82,4 +82,4 @@ During Forget processing, `DerivationConfig` limits decomposition while `Derivat
 
 ---
 
-> 💡 **TL;DR** — Tiny utility package: what the engine may decompose, and how to print the result.
+> 💡 **Summary** — Tiny utility package: what the engine may decompose, and how to print the result.
