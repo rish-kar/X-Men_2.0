@@ -1,0 +1,404 @@
+entries:
+  - id: paper.ui-ceremony.overview
+    title: User identification ceremony paper
+    category: paper
+    terms: [user identification paper, UI ceremony paper, identification ceremony, pilot study paper, virtual receptionist paper, disorder paper]
+    shortAnswer: |
+      A separate paper extends mutation-based ceremony analysis to user identification procedures, introduces a new Disorder mutation, and pilots the approach on an AI-driven virtual receptionist kiosk.
+    definition: |
+      The user identification paper models login-style identification procedures as security ceremonies, treats human deviations during identification as mutations of the ceremony, and adds Disorder to the existing X-Men mutation catalogue. It validates the approach on a pilot virtual receptionist kiosk that uses a QR code plus an email verification link for two-factor visitor identification.
+    details:
+      - The work targets identification procedures specifically, where missed, swapped, or extra user actions can disrupt the workflow even without a Dolev-Yao attacker.
+      - It reuses the X-Men mutation generator and Tamarin Prover for automated analysis.
+      - It uses three pre-existing mutations from earlier X-Men work (Skip, Add, Replace) and adds Disorder for action swaps.
+      - The pilot study is a two-factor identification ceremony between a Guest and a Receptionist Kiosk (RK).
+      - The threat model focuses on human errors during identification with normal system functioning.
+    why: |
+      Questions about user identification, virtual receptionists, QR-code plus email-link two-factor flows, the Disorder mutation, action swaps, or non-blocking ceremony actions should resolve to this paper first.
+    related: [paper.ui-ceremony.contributions, paper.ui-ceremony.disorder, paper.ui-ceremony.case-study]
+    followups:
+      - What is the Disorder mutation?
+      - What is the receptionist kiosk case study?
+      - What attacks does the user identification paper find?
+
+  - id: paper.ui-ceremony.contributions
+    title: User identification paper contributions
+    category: paper
+    terms: [UI paper contributions, three contributions identification paper, disorder mutation contribution, pilot study contribution, X-Men tool extension contribution]
+    definition: |
+      The paper makes three contributions: the introduction of a new Disorder mutation, an extension of the X-Men tool to support it, and a pilot study on a real-life user identification procedure.
+    details:
+      - Contribution 1 is Disorder, a mutation that swaps non-blocking actions in the ceremony.
+      - Contribution 2 is extending X-Men's mutation library and tool-chain so Disorder is generated automatically alongside Skip, Add, and Replace.
+      - Contribution 3 is the pilot analysis of an AI-driven virtual receptionist kiosk ceremony, demonstrating concrete attacks induced by user mistakes.
+    related: [paper.ui-ceremony.disorder, paper.ui-ceremony.case-study, paper.ui-ceremony.results]
+
+  - id: paper.ui-ceremony.context
+    title: Why user identification needs ceremony analysis
+    category: foundation
+    terms: [why identification ceremony, user identification rationale, two-factor authentication human errors, identification workflow integrity]
+    definition: |
+      User identification procedures intrinsically depend on naive or partially trained human users who can unintentionally deviate from the prescribed flow. Without modelling those deviations, an analysis may declare a procedure secure even though normal users can routinely break it.
+    details:
+      - Identification procedures sit underneath higher-level protocols such as multi-factor authentication or secure messaging.
+      - User deviations can trigger access denial, incorrect authentication, or other unpredictable system reactions.
+      - The paper argues for analysing these procedures rigorously and independently of attackers, capturing human error as a first-class concern.
+      - This is the motivation for modelling identification as a security ceremony and pushing security requirements onto the human side.
+    related: [paper.ui-ceremony.overview, paper.ui-ceremony.threat-model, paper.security-ceremony]
+
+  - id: paper.ui-ceremony.case-study
+    title: Receptionist kiosk case study
+    category: case-study
+    terms: [receptionist kiosk, RK case study, virtual avatar kiosk, visitor reception ceremony, two factor visitor identification, kiosk pilot study, QR code plus email link identification]
+    definition: |
+      The pilot study is a Receptionist Kiosk (RK) deployed at an office building's reception. It is a platform-agnostic virtual avatar with an LLM-powered chatbot that welcomes visitors, identifies them with a booking QR code plus an email verification link, and grants building access.
+    details:
+      - Visitors are referred to as guests.
+      - A host books the visit through a web application; the guest receives an invitation email with a QR code containing the reservation number.
+      - On arrival, the guest scans the booking QR code at the kiosk camera.
+      - The kiosk emails a verification link; clicking it returns a token with meeting details, serving as the second authentication factor.
+      - The kiosk confirms the booking status with a booking system in parallel.
+      - The kiosk notifies the host (e.g. by video call or chat message) and requests access consent.
+      - After approval, the booking QR code on the guest's smartphone is activated for the turnstiles.
+      - The kiosk then gives directions, safety information, and optional escorting by a mobile robot kiosk.
+    why: |
+      The case study is a concrete two-factor identification flow with realistic non-blocking steps, which makes it well suited to exposing skip, replace, and disorder mistakes by the guest.
+    related: [paper.ui-ceremony.ui-module, paper.ui-ceremony.attacks, paper.ui-ceremony.role-scripts]
+    followups:
+      - What is the UI module?
+      - What attacks does the kiosk study find?
+      - What are the role scripts for guest and kiosk?
+
+  - id: paper.ui-ceremony.ui-module
+    title: UI module functional requirements
+    category: case-study
+    terms: [UI module, FR_1 guest identification, FR_2 guest authentication, kiosk functional requirements, two factor email link]
+    definition: |
+      The user identification (UI) module is the part of the kiosk that decides whether a guest can access the building, based on the booking QR code, the verification link, or a combination of identifiers.
+    details:
+      - FR_1 (guest identification) requires the kiosk to identify every guest before granting access.
+      - FR_2 (guest authentication) requires the kiosk to integrate an email-link authentication step that verifies the person who received the booking QR code is the one requesting access.
+      - These two requirements drive the security goals analyzed in the paper.
+    related: [paper.ui-ceremony.security-goals, paper.ui-ceremony.case-study]
+
+  - id: paper.ui-ceremony.role-scripts
+    title: Role scripts for the UI ceremony
+    category: formal-model
+    terms: [role script guest, role script kiosk, RoleScriptG, RoleScriptRK, UI ceremony agents, two-role ceremony]
+    definition: |
+      The UI ceremony has two roles: the guest (G) and the receptionist kiosk (RK). Their role scripts use Start, Snd, and Rcv events over a secure channel and exchange typed values such as 'qrcode', 'verificationlink', and verification data.
+    details:
+      - The Start event for G fixes the initial knowledge with role identifiers and the booking QR code and verification-data placeholders.
+      - G sends the booking QR code, receives a verification link, sends verification data plus the link, and receives the access QR code with a finish marker.
+      - RK starts with knowledge of G and a verification link, receives the booking QR code, sends back the verification link, receives verification data plus the link, and sends back the access QR code and finish marker.
+      - The paper does not model an explicit Dolev-Yao attacker; channels are declared secure to focus the analysis on human-error mutations.
+      - Constants written within quotation marks act as types, restricting which values may replace each other under Replace mutations.
+    related: [paper.ui-ceremony.execution-model, paper.ui-ceremony.mutations, paper.role-script]
+
+  - id: paper.ui-ceremony.execution-model
+    title: Execution model used by the paper
+    category: formal-model
+    terms: [execution model UI ceremony, multiset rewriting identification, labeled transition UI, AgSt UI rules, transition rule UI]
+    definition: |
+      The paper relies on Tamarin's standard execution model: multiset rewriting rules turn the system state from one multiset of facts to another, producing a trace of action facts.
+    details:
+      - Linear facts are consumed when rules fire; persistent facts prefixed with ! are reusable.
+      - Premise (prem), action labels (a), and conclusion (conc) form each transition rule.
+      - AgSt facts record the role's step number and the role's knowledge at that step.
+      - Each Snd event adds an outgoing message fact; each Rcv event consumes an incoming message fact.
+      - The Start event becomes the setup rule that initializes the agent state.
+    related: [paper.ui-ceremony.role-scripts, paper.trace-model, paper.agent-rules]
+
+  - id: paper.ui-ceremony.security-goals
+    title: Security goals of the UI ceremony
+    category: case-study
+    terms: [UI ceremony goals, SG_1 verification link, SG_2 valid booking, SG_3 no double booking, identification ceremony security goals]
+    definition: |
+      The paper analyzes three security goals for the UI ceremony, all pushed onto the guest because human errors are the threat of interest.
+    details:
+      - SG_1 says the guest can obtain the access QR code only after going through the verification link; only authenticated guests should obtain the access code.
+      - SG_2 says the access QR code the guest obtains must correspond to a valid current booking.
+      - SG_3 says a guest cannot use two different booking QR codes to access the building.
+      - These goals are translated to Tamarin lemmas analyzed against the original and mutated models.
+    related: [paper.ui-ceremony.lemmas, paper.ui-ceremony.attacks]
+
+  - id: paper.ui-ceremony.lemmas
+    title: Tamarin lemmas for the UI ceremony
+    category: case-study
+    terms: [UI lemmas, Complete_Verification lemma, Valid_Code lemma, Transaction_Clash lemma, all-traces lemmas identification]
+    definition: |
+      The three security goals are formalised as all-traces Tamarin lemmas using action facts emitted by the guest and kiosk transitions.
+    details:
+      - Complete_Verification (SG_1) states that whenever Gfin signals the guest finished with an access QR code, there must be an earlier CommitVerificationLink action by RK to G with some verification link.
+      - Valid_Code (SG_2) states that whenever Gfin completes with an access QR code, the guest must have sent some booking QR code earlier and must not have sent any other booking QR code in the same trace.
+      - Transaction_Clash (SG_3) states that if RK commits a finish and a verification link for one booking QR code, there cannot be a second booking QR code under which RK also commits the same finish/verification-link pair.
+      - The lemmas use action labels Send, Receive, Commit, CommitVerificationLink, and Gfin, plus inequalities over temporal variables.
+    related: [paper.ui-ceremony.security-goals, tamarin.lemma, paper.ui-ceremony.attacks]
+
+  - id: paper.ui-ceremony.threat-model
+    title: Threat model in the UI ceremony paper
+    category: foundation
+    terms: [UI ceremony threat model, technical bug label, human error label, scenario labels identification, threat model chart]
+    definition: |
+      The paper adapts a four-component threat model: agents, information, actions, and scenarios labelled to distinguish normal behaviour from bugs (for technical systems) and errors (for humans).
+    details:
+      - Agents are partitioned into Technical (e.g. RK) and Human (e.g. G).
+      - Information is the typed data exchanged between agents (QR codes, verification link, verification data).
+      - Actions are either TechnicalAction or HumanAction relations over agent, information, and partner.
+      - Scenarios label actions as normal, bug, or error, giving four combinations per agent (normal/normal, bug/normal, normal/error, bug/error).
+      - The paper focuses on scenario #3, human error with normal system functioning, captured by the mutation catalogue.
+    why: |
+      The labelling scheme is what licences treating human deviations as the only source of vulnerability in the analyzed scenarios.
+    related: [paper.ui-ceremony.mutations, paper.ui-ceremony.scenario-3, paper.dolev-yao]
+
+  - id: paper.ui-ceremony.scenario-3
+    title: Scenario 3 — human errors with normal systems
+    category: foundation
+    terms: [scenario 3 identification, normal kiosk human error, kiosk normal guest error, error label scenario]
+    definition: |
+      Scenario 3 is the threat-model row where every technical action of the kiosk is labelled normal, but at least one human action of the guest is labelled error.
+    details:
+      - This is the row the user identification paper analyses in depth.
+      - It isolates the impact of guest mistakes on a correctly-behaving kiosk.
+      - The mutations (Skip, Add, Replace, Disorder) are the human-side errors instantiated in this row.
+      - Scenarios involving technical bugs are out of scope of the pilot analysis.
+    related: [paper.ui-ceremony.threat-model, paper.ui-ceremony.mutations]
+
+  - id: paper.ui-ceremony.mutations
+    title: Mutations considered in the UI ceremony paper
+    category: mutation
+    terms: [UI ceremony mutations, skip add replace disorder, four mutations identification paper, mutations table UI]
+    definition: |
+      The paper considers four mutations on the human subtrace: Skip, Add, Replace, and the newly introduced Disorder. Replace and Disorder are described as combinations of Skip and Add, but Disorder differs in that it preserves message content and only changes ordering.
+    details:
+      - Skip removes one or more human actions from the role script.
+      - Add inserts an extra send or duplicates an existing send action.
+      - Replace substitutes a sent message with another typed value; it can be derived from Skip plus Add.
+      - Disorder swaps the order of human actions, typically by exchanging one send with another later send.
+      - Each mutation is matched on the other roles so the ceremony remains executable for Tamarin.
+    why: |
+      This list explains why a UI-identification question should be answered with one of these four families, with Disorder used specifically for out-of-order actions.
+    related: [paper.ui-ceremony.disorder, paper.ui-ceremony.skip-cases, paper.ui-ceremony.add-case, paper.ui-ceremony.replace-case]
+    followups:
+      - What is Disorder?
+      - How does Skip look in the UI ceremony?
+      - When is Disorder different from Replace?
+
+  - id: paper.ui-ceremony.disorder
+    title: Disorder mutation
+    category: mutation
+    terms: [Disorder mutation, disorder identification ceremony, swap actions mutation, non-blocking action swap, reorder ceremony steps]
+    definition: |
+      Disorder is a human mutation that confuses the order of ceremony actions by swapping a send with another later send. It is realised by combining the effects of Skip and Add, but it preserves message content and only changes ordering.
+    why: |
+      Disorder captures realistic user behaviour for non-blocking identification flows: a user can re-scan an old QR code, access a turnstile before scanning a new code, or click an old verification link from a previous booking. These actions would not be expressible as a pure Replace because the content is unchanged; the deviation is purely positional.
+    details:
+      - Disorder is most useful when ceremony actions do not enforce strict ordering, so swapping does not immediately halt the ceremony.
+      - The mutation builds new transitions where m2 is swapped with m4 in the human knowledge powerset, preserving type constants.
+      - If skipping m2 has no influence on the m3 derivation, the swapped trace is added directly.
+      - If skipping m2 does influence m3, m3 is mutated as [[m3]] and combined with m2 only when [[m3]] is non-blocking with respect to m2.
+      - Disorder is matched on other agents so their subsequent sends and receives line up with the reordered human trace.
+    related: [paper.ui-ceremony.disorder-algorithm, paper.ui-ceremony.mutations, paper.mutation.cognitive-origin]
+
+  - id: paper.ui-ceremony.disorder-algorithm
+    title: Disorder mutation algorithm
+    category: mutation
+    terms: [disorder algorithm, disorder pseudo code, swap m2 m4 algorithm, non-blocking m3 algorithm]
+    definition: |
+      The Disorder algorithm walks over the human role script, swaps a send action m2 with another later send action m4 from the human's current-knowledge powerset, and then patches subsequent transitions depending on whether the swap influences the messages that follow.
+    steps:
+      - Enumerate all candidate swaps of m2 with m4 that respect type constants in the human's current knowledge.
+      - Rewrite the transition reading AgSt(H, i, kn), Pre_i, Rcv(H, l1, A1, m1) so it ends with Snd(H, l4, A4, m4) instead of Snd(H, l2, A2, m2).
+      - Check whether the signature still contains a transition with Snd(A3, l3, H, m3) in its conclusion under the mutation.
+      - If yes, m3 is unaffected and the next transition keeps Snd(H, l4, A4, m4) as is.
+      - If no, m3 is mutated into [[m3]] and the next transition receives [[m3]] instead, with the swapped m2 placed afterwards because [[m3]] is non-blocking towards m2.
+      - The updated knowledge state kn_{i+2} carries [[m3]] and the matching Pre_{i+1} facts.
+    related: [paper.ui-ceremony.disorder, paper.ui-ceremony.role-scripts]
+
+  - id: paper.ui-ceremony.skip-cases
+    title: Skip cases in the UI ceremony
+    category: case-study
+    terms: [UI Skip cases, four skip cases identification, missed QR code scan, missed verification link click, overlooked verification email]
+    definition: |
+      The paper enumerates four illustrative Skip cases that combine into larger skipped chunks of the UI ceremony.
+    details:
+      - Case 1 is the guest not scanning the booking QR code (skipped Snd of the QR code from G to RK).
+      - Case 2 follows Case 1; the guest does not receive the verification link from RK (skipped Rcv on G).
+      - Case 3 is the guest overlooking the email with the verification link (skipped Snd of verification data plus link from G to RK).
+      - Case 4 follows Case 3; the guest does not receive the access QR code from RK (skipped Rcv on G).
+      - These cases compose into the Skip-S, Skip-SR, Skip-R, Skip-RS, and Skip-RSR variants used in the X-Men toolchain.
+    related: [paper.ui-ceremony.mutations, paper.ui-ceremony.skip-attacks]
+
+  - id: paper.ui-ceremony.add-case
+    title: Add case in the UI ceremony
+    category: case-study
+    terms: [UI Add example, double QR code add, two QR codes guest, duplicate booking QR code, parallel ceremony execution UI]
+    definition: |
+      An illustrative Add case is the guest showing two QR codes to the kiosk — for example the booking QR code plus a leftover reservation QR code from another visit — which corresponds to inserting an extra Snd(G, sec, RK, reservation_qr) alongside the original Snd(G, sec, RK, booking_qr).
+    details:
+      - The extra send is drawn from the guest's current knowledge, like other Add mutations.
+      - The receiving role gains a matching extra receive transition.
+      - The case can trigger parallel ceremony executions where two verification links are issued, breaking the no-double-authentication goal.
+    related: [paper.ui-ceremony.attacks, paper.add-mutation]
+
+  - id: paper.ui-ceremony.replace-case
+    title: Replace case in the UI ceremony
+    category: case-study
+    terms: [UI Replace example, wrong QR code shown, incorrect booking QR, wrong verification link clicked]
+    definition: |
+      Two illustrative Replace cases are showing an incorrect QR code (a reservation QR code in place of the booking QR code) and clicking a wrong verification link from a different reservation.
+    details:
+      - Showing the wrong QR code corresponds to G replacing Snd(G, sec, RK, booking_qr) with Snd(G, sec, RK, reservation_qr).
+      - Clicking the wrong verification link replaces the next Snd of verification data with the link from a different reservation.
+      - Both cases respect the type constants because the substituted values share the same QR-code or verification-link type.
+    related: [paper.ui-ceremony.attacks, paper.replace-mutation]
+
+  - id: paper.ui-ceremony.disorder-case
+    title: Disorder case in the UI ceremony
+    category: case-study
+    terms: [UI Disorder example, re-scan booking QR code, scan again instead of click, swap actions guest, non-blocking re-scan]
+    definition: |
+      The illustrative Disorder case is a guest who, after receiving the verification link, tries to re-scan the booking QR code instead of clicking the link as expected.
+    details:
+      - The non-blocking nature of the ceremony allows the kiosk to process the rescan as a valid scan.
+      - The kiosk then issues another verification link, even though the guest is performing actions out of the intended order.
+      - This case is one of the motivating examples for adding Disorder as a primitive mutation type.
+    related: [paper.ui-ceremony.disorder, paper.ui-ceremony.attacks]
+
+  - id: paper.ui-ceremony.tool-extension
+    title: X-Men extension in the user identification paper
+    category: xmen
+    terms: [X-Men tool extension UI paper, behavioural patterns library disorder, X-Men ceremony architecture, X-Men pipeline UI paper, X-Men disorder support]
+    definition: |
+      The paper extends X-Men so the Disorder mutation joins Skip, Add, Replace, and the rest of the behavioural-patterns library, while keeping the same generate-then-analyse pipeline through Tamarin.
+    details:
+      - X-Men remains a Java tool that consumes a .spthy specification.
+      - A Python helper script slices the model into channel rules, setup rules, agent rules, restrictions, and lemmas.
+      - The analyst selects mutations from the library; the tool generates mutated models by combining mutated agent rules with the unchanged surrounding sections.
+      - The mutated models are then handed to Tamarin for analysis against the lemmas.
+      - The underlying approach stays generic and could in principle drive other formal tools beyond Tamarin.
+    related: [paper.xmen-mutation-phase, paper.ui-ceremony.disorder, xmen.pipeline]
+
+  - id: paper.ui-ceremony.formal-model
+    title: Formal model fragments of the UI ceremony
+    category: formal-model
+    terms: [formal model UI ceremony, channel rules UI, setup rules UI, agent rules UI, restrictions UI, lemmas UI]
+    definition: |
+      The Tamarin model of the UI ceremony comprises channel rules, setup rules wrapping the ceremony roles, agent rules for the state transitions, restrictions on rule invocation, and lemmas encoding the security goals.
+    details:
+      - Channel rules model the secure communication between guest and kiosk.
+      - Setup rules wrap the role scripts so they can be instantiated by Tamarin.
+      - Agent rules implement each transition with premise, action, and conclusion sections.
+      - Restrictions constrain valid traces and the order in which rules fire.
+      - Lemmas (Complete_Verification, Valid_Code, Transaction_Clash) express the three security goals.
+    related: [paper.ui-ceremony.lemmas, paper.ui-ceremony.role-scripts, paper.agent-rules]
+
+  - id: paper.ui-ceremony.attacks
+    title: Attacks found in the UI ceremony
+    category: case-study
+    terms: [UI ceremony attacks, three attack scenarios identification, attack 1 wrong link, attack 2 rescan, attack 3 double booking, identification ceremony falsifications]
+    definition: |
+      The paper highlights three attack scenarios uncovered by mutating the UI ceremony.
+    details:
+      - Attack #1 — Replace failure. The guest scans the booking QR code and receives a verification link, but clicks a link for a different reservation. The kiosk issues an access QR code for that reservation. If the access procedure later compares the access code to the current meeting, SG_1 fails; if the booking system never re-validates the link, the guest can be wrongly authenticated and SG_2 fails.
+      - Attack #2 — Disorder failure. After receiving the verification link, the guest re-scans the booking QR code instead of clicking the link. The ceremony's non-blocking nature lets the kiosk treat the rescan as valid and issue another verification link, breaking SG_1.
+      - Attack #3 — Add failure. A guest who has two booking QR codes (e.g. accidentally double-booked) shows both, triggering parallel ceremony executions and two valid verification links. This violates SG_3 by allowing two simultaneous authenticated sessions.
+      - "A further interesting case: a guest shows a QR code from a different valid booking. Tamarin reports no attack because the replaced QR code propagates through the whole ceremony cleanly, but it represents a real-world vulnerability mitigatable by a time-of-meeting contextual check."
+    why: |
+      These results show that user mistakes alone can break the security goals of a two-factor identification ceremony even when the underlying cryptography and channels are sound.
+    related: [paper.ui-ceremony.results, paper.ui-ceremony.security-goals, paper.ui-ceremony.disorder-case]
+    followups:
+      - What is Attack #2?
+      - Why is Attack #3 an Add mutation?
+      - What is the mitigation suggested by the paper?
+
+  - id: paper.ui-ceremony.results
+    title: Attack summary table in the UI ceremony paper
+    category: case-study
+    terms: [UI ceremony results table, attacks summary table V, found vs not found mutations, skip add replace disorder results]
+    definition: |
+      The paper tabulates which mutations falsify which security goals across the generated mutated models.
+    details:
+      - Skip-S M0 (no booking QR scan) falsifies SG_1 and SG_2.
+      - Skip-S M1 (no verification-link click) falsifies SG_1.
+      - Skip-SR M0 (no scan plus missed link) falsifies SG_1.
+      - Skip-SR M1 (overlooked email then missed access code) does not falsify any of SG_1, SG_2, or SG_3.
+      - Skip-R M0 (no verification link received) falsifies SG_1; Skip-R M1 does not falsify the goals.
+      - Skip-RS M0 (no link received then no verification data sent) does not falsify the goals.
+      - Skip-RSR M0 (no link received, no verification data, no access code) falsifies SG_1.
+      - Add M0 (two booking QR codes) falsifies SG_3.
+      - Replace M0 (different booking QR) falsifies SG_1 and SG_2.
+      - Replace M1 (wrong verification link) falsifies SG_1 and SG_2.
+      - Disorder M0 (skip the link click and re-scan instead) falsifies SG_1.
+      - Several Skip variants do not falsify any goal because the ceremony stops short of the actions whose conditions the lemmas rely on.
+    why: |
+      The table makes the qualitative impact of each mutation explicit: small differences in which action is skipped, replaced, or swapped change which goal becomes false.
+    related: [paper.ui-ceremony.attacks, paper.ui-ceremony.lemmas, paper.results-table]
+
+  - id: paper.ui-ceremony.mitigation
+    title: Mitigation suggested by the UI ceremony paper
+    category: case-study
+    terms: [UI ceremony mitigation, contextual check meeting time, booking time validation, mitigate wrong QR code]
+    definition: |
+      For the wrong-booking-QR case that Tamarin does not flag, the paper recommends a contextual check that compares the current time with the scheduled check-in time before granting access.
+    details:
+      - The base ceremony has no time-of-meeting comparison, so the wrong-booking QR can be replaced cleanly and authentication still succeeds in the model.
+      - The recommended mitigation adds a check that rejects the access request if the access time is outside the booking window.
+      - The mitigation does not require new cryptography, only an additional validation step on the kiosk or booking system side.
+    related: [paper.ui-ceremony.attacks, paper.ui-ceremony.security-goals]
+
+  - id: paper.ui-ceremony.skip-not-falsified
+    title: Why some Skip variants do not violate the goals
+    category: case-study
+    terms: [skip incomplete ceremony, skip no attack found, skip unmet prerequisite, conditional predicates non-blocking, skip lemma does not trigger]
+    definition: |
+      When a Skip mutation cuts the ceremony before the actions referenced by a lemma's antecedent, the lemma's implication is vacuously satisfied: no Gfin happens, so the requirement on the prior verification or commit never fires.
+    details:
+      - Lemmas use conditional predicates such as "if the guest finishes with an access QR code, then ...".
+      - If the guest never finishes, the implication holds trivially without any further constraint.
+      - This is not the same as a missing security guarantee; it is an unmet prerequisite for evaluating the goal.
+      - It explains the "not found" entries in the attack table even when the user clearly fails to complete the identification.
+    why: |
+      The bot should not interpret a "Skip variant found no attack" entry as evidence that the goal is met under that deviation; it merely reflects that the goal's antecedent is never reached.
+    related: [paper.ui-ceremony.results, paper.ui-ceremony.lemmas]
+
+  - id: paper.ui-ceremony.mutation-classification
+    title: Mutation classification in the user identification paper
+    category: mutation
+    terms: [primitive vs derivable mutation UI, replace skip add disorder classification, derivable mutation table identification]
+    definition: |
+      The paper treats Skip and Add as primitive mutations and treats Replace and Disorder as derivable from Skip plus Add. Disorder differs from Replace because it does not alter message content, only message ordering.
+    details:
+      - Skip operates on send and receive actions and removes events.
+      - Add operates on send actions and inserts or duplicates events.
+      - Replace operates on the message inside a send by combining Skip's removal of the original send with Add's insertion of a substituted send.
+      - Disorder operates on action ordering by swapping a send with another later send, again via Skip plus Add but preserving message content.
+      - Forget is not formalised in this paper; it is the subject of the separate Forget paper carried elsewhere in this knowledge base.
+    related: [paper.mutation.relationships-xmen2, paper.forget.xmen2, paper.ui-ceremony.disorder]
+
+  - id: paper.ui-ceremony.related-work
+    title: Related work positioning of the UI ceremony paper
+    category: paper
+    terms: [related work identification paper, comparison with prior X-Men work, MP-Auth OTP comparison, Pi calculus authentication comparison, statistical analysis VR comparison, epistemic threat models comparison, synchronous ceremonies comparison]
+    definition: |
+      The paper positions its approach against earlier human-error formalisations, statistical detection methods, epistemic-logic threat models, and frameworks for synchronous ceremonies, arguing for a mutation-based account that propagates human errors to other agents.
+    details:
+      - It differs from rule-based human-error formalisations that rely on a Dolev-Yao adversary exploiting human weaknesses; the present analysis is effective without such an adversary.
+      - It differs from process-calculus threat models for multi-factor authentication by focusing on how human errors propagate rather than enumerating attacker capabilities.
+      - It differs from statistical detection methods, which require empirical data and offer probabilistic guarantees, by using formal proofs over modelled scenarios.
+      - It differs from epistemic-logic threat models that assume technical agents behave correctly, by mutating other ceremony participants alongside the human.
+      - It builds directly on earlier X-Men mutation work and adds Disorder for action ordering.
+      - It differs from synchronous-ceremony frameworks that treat distracted human behaviour as a separate parallel ceremony, by mutating the original ceremony in place.
+    related: [paper.previous, paper.security-ceremony, paper.forget.related-work]
+
+  - id: paper.ui-ceremony.future-work
+    title: Future work in the UI ceremony paper
+    category: paper
+    terms: [UI ceremony future work, timing-related mutations, expired QR code mutation, outdated verification link mutation, compositional security analysis identification]
+    definition: |
+      The paper closes by suggesting timing-related mutations and a compositional security analysis as next steps.
+    details:
+      - Timing mutations could model action execution delays such as scanning an expired QR code or using an outdated verification link.
+      - Compositional analysis would combine human mutations with technical bugs (other rows of the threat-model chart) and with communication processes or devices.
+      - Both directions raise the complexity of analysis and motivate strategies to keep it tractable.
+    related: [paper.ui-ceremony.threat-model, paper.ui-ceremony.tool-extension, paper.forget.limitations-future]

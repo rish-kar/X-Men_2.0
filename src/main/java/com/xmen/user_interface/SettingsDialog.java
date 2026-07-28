@@ -48,7 +48,19 @@ import java.util.function.Consumer;
 public class SettingsDialog {
 
   private static final String BASE = "http://localhost:";
-  private final OkHttpClient http = new OkHttpClient();
+  /**
+   * OkHttp default is *no* read/write timeout, so a packaged build where the embedded server
+   * is slow to start (or a localhost firewall hiccups) silently hangs every settings call.
+   * 10-second budgets per phase are plenty for in-process loopback traffic while still
+   * surfacing real failures quickly.
+   */
+  private final OkHttpClient http =
+      new OkHttpClient.Builder()
+          .connectTimeout(java.time.Duration.ofSeconds(10))
+          .readTimeout(java.time.Duration.ofSeconds(10))
+          .writeTimeout(java.time.Duration.ofSeconds(10))
+          .callTimeout(java.time.Duration.ofSeconds(20))
+          .build();
   private final ObjectMapper json = new ObjectMapper();
   private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 
@@ -198,50 +210,74 @@ public class SettingsDialog {
     prefs.put(
         "keepDerivationTree", cbKeepDerivationTree != null && cbKeepDerivationTree.isSelected());
 
-    runHttp(
-        () -> {
-          boolean ok = true;
-          ok &= postJson("/api/settings/vocabulary", vocabBody);
-          if (themeId != null && !themeId.isBlank()) {
-            ok &= postJson("/api/settings/themes/active", Map.of("id", themeId));
-          }
-          ok &= postJson("/api/settings/preferences", prefs);
-
-          // Persist into the active profile file so descriptions survive switching.
-          if (activeProfile != null) {
-            try {
-              http.newCall(
-                      new Request.Builder()
-                          .url(
-                              BASE
-                                  + serverPort
-                                  + "/api/settings/vocabulary/profiles/"
-                                  + java.net.URLEncoder.encode(activeProfile, "UTF-8"))
-                          .post(RequestBody.create(new byte[0]))
-                          .build())
-                  .execute()
-                  .close();
-            } catch (Exception e) {
-              log.warn("Could not auto-save profile '{}': {}", activeProfile, e.getMessage());
-            }
-          }
-
-          final boolean success = ok;
-          Platform.runLater(
-              () -> {
-                if (success) {
-                  if (themeId != null && onThemeApplied != null) onThemeApplied.accept(themeId);
-                  if (onPreferencesChanged != null) onPreferencesChanged.accept(prefs);
-                  // Close the dialog FIRST, then show the toast on the parent window so
-                  // the confirmation isn't competing with the modal that's about to vanish.
-                  if (thisStage != null) thisStage.close();
-                  ThemedToast.show(hostStage, "Settings saved.");
-                } else {
-                  ThemedToast.show(hostStage, "Some settings failed to save.");
+    new Thread(
+            () -> {
+              boolean ok = true;
+              String failureReason = null;
+              try {
+                ok &= postJson("/api/settings/vocabulary", vocabBody);
+                if (themeId != null && !themeId.isBlank()) {
+                  ok &= postJson("/api/settings/themes/active", Map.of("id", themeId));
                 }
-              });
-        },
-        "save all");
+                ok &= postJson("/api/settings/preferences", prefs);
+
+                // Persist into the active profile file so descriptions survive switching.
+                if (activeProfile != null) {
+                  try {
+                    http.newCall(
+                            new Request.Builder()
+                                .url(
+                                    BASE
+                                        + serverPort
+                                        + "/api/settings/vocabulary/profiles/"
+                                        + java.net.URLEncoder.encode(activeProfile, "UTF-8"))
+                                .post(RequestBody.create(new byte[0]))
+                                .build())
+                        .execute()
+                        .close();
+                  } catch (Exception e) {
+                    log.warn(
+                        "Could not auto-save profile '{}': {}", activeProfile, e.getMessage());
+                  }
+                }
+              } catch (Exception e) {
+                ok = false;
+                failureReason =
+                    e.getMessage() == null || e.getMessage().isBlank()
+                        ? e.getClass().getSimpleName()
+                        : e.getMessage();
+                log.warn("settings dialog: save all failed: {}", failureReason);
+              }
+
+              final boolean success = ok;
+              final String reason = failureReason;
+              Platform.runLater(
+                  () -> {
+                    if (success) {
+                      if (themeId != null && onThemeApplied != null)
+                        onThemeApplied.accept(themeId);
+                      if (onPreferencesChanged != null) onPreferencesChanged.accept(prefs);
+                      // Close the dialog FIRST, then show the toast on the parent window so
+                      // the confirmation isn't competing with the modal that's about to vanish.
+                      if (thisStage != null) thisStage.close();
+                      ThemedToast.show(hostStage, "Settings saved.");
+                    } else {
+                      // Earlier this only logged + showed a vague toast, so packaged builds
+                      // where the local Spring server hadn't bound yet or a firewall blocked
+                      // the loopback request looked like "settings just don't work". Surface
+                      // the actual cause so the user can act on it.
+                      ThemedDialog.show(
+                          hostStage,
+                          ThemedDialog.Kind.ERROR,
+                          "Could not save settings",
+                          reason == null
+                              ? "The server rejected one or more settings updates."
+                              : "Server unreachable: " + reason);
+                    }
+                  });
+            },
+            "settings-save-all")
+        .start();
   }
 
   private boolean postJson(String path, Map<String, Object> body) throws Exception {
@@ -609,7 +645,7 @@ public class SettingsDialog {
     fc.setTitle("Export vocabulary as YAML");
     fc.setInitialFileName("vocabulary.yaml");
     fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("YAML", "*.yaml", "*.yml"));
-    File target = fc.showSaveDialog(owner);
+    File target = JavaFxFilePicker.showSaveDialog(owner, fc);
     if (target == null) return;
     runHttp(
         () -> {
@@ -636,7 +672,7 @@ public class SettingsDialog {
     FileChooser fc = new FileChooser();
     fc.setTitle("Import vocabulary YAML");
     fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("YAML", "*.yaml", "*.yml"));
-    File source = fc.showOpenDialog(owner);
+    File source = JavaFxFilePicker.showOpenDialog(owner, fc);
     if (source == null) return;
     runHttp(
         () -> {
@@ -696,7 +732,7 @@ public class SettingsDialog {
     FileChooser fc = new FileChooser();
     fc.setTitle("Pick a .spthy file to detect vocabulary from");
     fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Tamarin SPTHY", "*.spthy"));
-    File source = fc.showOpenDialog(owner);
+    File source = JavaFxFilePicker.showOpenDialog(owner, fc);
     if (source == null) return;
 
     runHttp(

@@ -58,7 +58,7 @@ src/test/java/com/xmen    ←  you are here
 
 | ✅ Safe to touch | ⚠️ Handle with care |
 | --- | --- |
-| Adding tests; sharpening assertions for new mutation behaviour. | Tests that depend on file fixtures — keep paths and filenames stable. |
+| Adding tests; sharpening assertions for new mutation behavior. | Tests that depend on file fixtures — keep paths and filenames stable. |
 
 ---
 

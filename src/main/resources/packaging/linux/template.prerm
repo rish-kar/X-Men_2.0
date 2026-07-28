@@ -1,0 +1,60 @@
+#!/bin/sh
+# jpackage Debian prerm script for x-men.
+#
+# Filename must be `template.prerm` — that is the literal resource name
+# jpackage's OverridableResource lookup uses when scanning --resource-dir.
+# The prior `package-prerm.in` name was never matched and the script was
+# silently dropped, which is what left a stale AppStream metainfo behind
+# after `apt remove x-men`.
+#
+# Runs before the package is removed (apt remove / dpkg -r / GUI uninstall).
+# We clean up the AppStream metainfo + hicolor icon copies that postinst
+# wrote in /usr/share, then refresh every cache that referenced them so
+# the launcher entry disappears from the Activities view and the App
+# Center without a session restart.
+
+set -e
+
+APP_ID="com.xmen.app"
+STOCK_ICON_NAME="x-men"
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        rm -f /usr/share/metainfo/${APP_ID}.metainfo.xml
+
+        for size in 16 24 32 48 64 128 256 512; do
+            rm -f "/usr/share/icons/hicolor/${size}x${size}/apps/${STOCK_ICON_NAME}.png"
+        done
+        rm -f "/usr/share/icons/hicolor/scalable/apps/${STOCK_ICON_NAME}.png"
+
+        if [ -x "$(command -v update-desktop-database 2>/dev/null)" ]; then
+            update-desktop-database -q /usr/share/applications/ || true
+        fi
+
+        if [ -x "$(command -v gtk-update-icon-cache 2>/dev/null)" ]; then
+            gtk-update-icon-cache -q -f -t /usr/share/icons/hicolor || true
+        fi
+
+        if [ -x "$(command -v appstreamcli 2>/dev/null)" ]; then
+            appstreamcli refresh-cache --force >/dev/null 2>&1 \
+                || appstreamcli refresh --force >/dev/null 2>&1 \
+                || true
+        elif [ -x "$(command -v appstream-util 2>/dev/null)" ]; then
+            appstream-util refresh >/dev/null 2>&1 || true
+        fi
+
+        if [ -x "$(command -v pkcon 2>/dev/null)" ]; then
+            pkcon refresh force >/dev/null 2>&1 || true
+        fi
+        ;;
+
+    failed-upgrade)
+        ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

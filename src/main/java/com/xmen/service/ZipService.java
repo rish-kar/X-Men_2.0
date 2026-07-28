@@ -1,6 +1,8 @@
 package com.xmen.service;
 
+import com.xmen.utilities.MutationWorkspace;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -11,7 +13,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -21,6 +22,8 @@ import java.util.zip.ZipOutputStream;
 @Service
 @Slf4j
 public class ZipService {
+
+  @Autowired private MutationWorkspace workspace;
 
   /**
    * Creates a ZIP file containing all files matching the pattern and returns it as a ResponseEntity.
@@ -41,8 +44,11 @@ public class ZipService {
    */
   public ResponseEntity<ByteArrayResource> createZipResponse(String baseFileName, String derivationTreeContent) {
     try {
-      // Find all generated mutation files
-      File directory = new File(Paths.get("").toAbsolutePath().toString());
+      // Find all generated mutation files — these live under the shared
+      // MutationWorkspace root, not the process CWD (CWD is "/" under the
+      // jpackage-built .app / .deb and was the reason the macOS / Linux
+      // installer always shipped an empty zip).
+      File directory = workspace.root().toFile();
       File[] mutationFiles = directory.listFiles((dir, name) ->
           name.startsWith(baseFileName + "_M") && name.endsWith(".m"));
 

@@ -27,6 +27,7 @@ public final class ChatBotService {
       "chatbot/knowledge/chatbot-knowledge.yaml",
       "chatbot/knowledge/previous-paper.yaml",
       "chatbot/knowledge/forget-paper.yaml",
+      "chatbot/knowledge/ui-ceremony-paper.yaml",
       "chatbot/knowledge/xmen-manual.yaml");
 
   private static final String DEFAULT_GREETING =

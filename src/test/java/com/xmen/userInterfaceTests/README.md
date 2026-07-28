@@ -37,7 +37,7 @@
 
 ## ⚙️ At runtime
 
-The UI test framework spins up a JavaFX scene, interacts with controls, and asserts on visible behaviour.
+The UI test framework spins up a JavaFX scene, interacts with controls, and asserts on visible behavior.
 
 ## 🚦 Modification guide
 

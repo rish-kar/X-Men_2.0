@@ -10,9 +10,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -26,6 +27,7 @@ import java.util.Iterator;
 public class MutatedFileGenerator {
 
   @Autowired private FileHandler fileHandler;
+  @Autowired private MutationWorkspace workspace;
 
   /**
    * Saves the mutated files based on the provided parameters bundle.
@@ -50,8 +52,13 @@ public class MutatedFileGenerator {
     for (ArrayList<Rule> model : collections) {
       model = fileHandler.demergeTagsValues(model, parametersBundle);
       String newFileName = baseName + "_M" + fileCounter + ".m";
+      // Always resolve through MutationWorkspace so we land in a guaranteed
+      // writable directory (~/.xmen/runs by default) rather than the process
+      // CWD, which is "/" under jpackage'd .app and .deb bundles.
+      Path outputPath = workspace.resolve(newFileName);
 
-      try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFileName))) {
+      try (BufferedWriter writer =
+          Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8)) {
         // Write preamble
         writer.write(preamble);
         writer.newLine();
@@ -94,9 +101,9 @@ public class MutatedFileGenerator {
     }
   }
 
-  /** Deletes existing mutated files in the current directory. */
+  /** Deletes existing mutated files from the mutation workspace. */
   public void deleteExistingMutatedFiles() {
-    File directory = new File(Paths.get("").toAbsolutePath().toString());
+    File directory = workspace.root().toFile();
     File[] files = directory.listFiles((dir, name) -> name.contains("_M") && name.endsWith(".m"));
 
     if (files != null) {

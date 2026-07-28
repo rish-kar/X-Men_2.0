@@ -36,7 +36,7 @@
 
 <br/>
 
-- **🎯 Job:** Validate parser behaviour on representative SPTHY input.
+- **🎯 Job:** Validate parser behavior on representative SPTHY input.
 - **🪝 Depends on:** ANTLR-generated parser.
 - **⚠️ Heads-up:** Update when the grammar evolves.
 
