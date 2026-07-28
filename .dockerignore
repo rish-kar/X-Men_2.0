@@ -54,5 +54,4 @@ production/
 *.exe
 
 # Worktrees / scratch directories
-.claude/
 $/

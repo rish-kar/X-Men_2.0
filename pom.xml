@@ -20,6 +20,7 @@
     <properties>
         <java.version>21</java.version>
         <springdoc.version>2.6.0</springdoc.version>
+        <javafx.version>23.0.2</javafx.version>
     </properties>
 
     <dependencies>
@@ -83,7 +84,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.36</version>
+            <version>1.18.46</version>
             <scope>provided</scope>
         </dependency>
 
@@ -126,16 +127,16 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- JavaFX (one version only). Suppose we keep the newest one, 23.0.1 -->
+        <!-- JavaFX API artifacts; native libraries are supplied by OS/arch profiles below. -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>23.0.1</version>
+            <version>${javafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>23.0.1</version>
+            <version>${javafx.version}</version>
         </dependency>
 
         <!-- SwingX -->
@@ -202,7 +203,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.36</version>
+                            <version>1.18.46</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -282,86 +283,192 @@
                 </executions>
             </plugin>
 
-            <!-- maven-shade-plugin: Moved here under <plugins>, not <dependencies> -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.1</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <!--
-                              Silence the "Discovered module-info.class" and
-                              "overlapping resource" warning storm by:
-                                * filtering out module-info.class from every
-                                  dependency before shading,
-                                * dropping the duplicated license / notice /
-                                  metadata files that show up in many JARs, and
-                                * merging the spring.tooling/aot/MANIFEST entries
-                                  via dedicated transformers so shade no longer
-                                  flags them as conflicts.
-                            -->
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>module-info.class</exclude>
-                                        <exclude>META-INF/versions/*/module-info.class</exclude>
-                                        <exclude>META-INF/LICENSE</exclude>
-                                        <exclude>META-INF/LICENSE.txt</exclude>
-                                        <exclude>META-INF/LICENSE.md</exclude>
-                                        <exclude>META-INF/license.txt</exclude>
-                                        <exclude>META-INF/NOTICE</exclude>
-                                        <exclude>META-INF/NOTICE.txt</exclude>
-                                        <exclude>META-INF/NOTICE.md</exclude>
-                                        <exclude>META-INF/notice.txt</exclude>
-                                        <exclude>META-INF/DEPENDENCIES</exclude>
-                                        <exclude>META-INF/COPYRIGHT</exclude>
-                                        <exclude>META-INF/io.netty.versions.properties</exclude>
-                                        <exclude>META-INF/substrate/**</exclude>
-                                        <exclude>META-INF/additional-spring-configuration-metadata.json</exclude>
-                                        <exclude>META-INF/spring-autoconfigure-metadata.properties</exclude>
-                                        <exclude>META-INF/spring-configuration-metadata.json</exclude>
-                                        <exclude>META-INF/spring.tooling</exclude>
-                                        <exclude>META-INF/spring/aot.factories</exclude>
-                                        <exclude>META-INF/web-fragment.xml</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <transformers combine.self="override">
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/spring.factories</resource>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/spring.handlers</resource>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/spring.schemas</resource>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</resource>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--
+              The maven-shade-plugin was previously layered on top of
+              spring-boot:repackage to silence dependency-metadata warnings.
+              That layering flattened Spring Boot's own classes (Launcher,
+              YamlPropertySourceLoader, snakeyaml, META-INF/spring.factories,
+              AutoConfiguration.imports, …) into the jar root, alongside the
+              proper BOOT-INF/{classes,lib} layout produced by repackage.
+              In the packaged build that caused the system ClassLoader to
+              resolve Spring Boot's classes from the jar root before the
+              LaunchedURLClassLoader could see them, which meant
+              BOOT-INF/classes/application.yaml was never consumed:
+              `server.port` fell back to 8080 (the JavaFX UI hard-codes 8081),
+              `xmen.themes`/`xmen.vocabulary` config-properties beans loaded
+              empty, and the Settings dialog rendered empty Theme, Profiles,
+              and Preferences lists.
+
+              Spring Boot's repackage already produces a working executable
+              fat jar, so shade was purely cosmetic — removing it is the fix.
+              The warnings it was muting are harmless and only appear at
+              build time.
+            -->
 
         </plugins>
     </build>
 
     <profiles>
+        <profile>
+            <id>javafx-windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>win</classifier>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>javafx-linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                </os>
+            </activation>
+            <!--
+              Ubuntu 26.04 LTS "Resolute" ships FFmpeg 8 (libavcodec.so.62) and
+              does not carry older SONAMEs. JavaFX 23.0.2's Linux media bundle
+              only ships libavplugin-ffmpeg-56..61, so on Resolute the .deb
+              either fails dep resolution (no 58-61 available) or installs
+              against libavcodec62 with no shim to load it — splash + background
+              videos die silently. 27-ea+18 is the first JavaFX build that
+              includes libavplugin-ffmpeg-62.so (verified by extracting
+              javafx-media-27-ea+18-linux.jar). Pinning the bump inside the
+              javafx-linux profile leaves the Windows, Intel-Mac, and
+              Apple-Silicon builds on 23.0.2 untouched.
+            -->
+            <properties>
+                <javafx.version>27-ea+18</javafx.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>linux</classifier>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>javafx-mac-intel</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac</classifier>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>javafx-mac-arm</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-base</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac-aarch64</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-graphics</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac-aarch64</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-controls</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac-aarch64</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-media</artifactId>
+                    <version>${javafx.version}</version>
+                    <classifier>mac-aarch64</classifier>
+                </dependency>
+            </dependencies>
+        </profile>
+
         <!--
-          Installer profile: turns the shaded fat jar into a native installer
+          Installer profile: turns the Spring Boot fat jar into a native installer
           via the JDK's `jpackage` tool.
 
           Usage:
@@ -373,6 +480,9 @@
             mvn clean package -P installer -Djpackage.type=DEB      # Linux  .deb
             mvn clean package -P installer -Djpackage.type=RPM      # Linux  .rpm
 
+          The per-OS icon (-Djpackage.icon=…) is picked automatically by the
+          activate-by-OS profiles below, so callers don't need to set it.
+
           Override the user-visible version with -Djpackage.appVersion=X.Y.Z
           (jpackage rejects Maven SNAPSHOT versions).
         -->
@@ -382,11 +492,17 @@
             <properties>
                 <jpackage.type>APP_IMAGE</jpackage.type>
                 <jpackage.appVersion>1.0.0</jpackage.appVersion>
+                <!--
+                  Fallback icon if no OS-specific profile fired. Each platform
+                  profile below overrides this to point at the native format
+                  (.ico on Windows, .icns on macOS, .png on Linux).
+                -->
+                <jpackage.icon>${project.basedir}/src/main/resources/packaging/x-men-icon.png</jpackage.icon>
             </properties>
 
             <build>
                 <plugins>
-                    <!-- 1) Stage the shaded jar into a clean input folder. -->
+                    <!-- 1) Stage the Spring Boot fat jar into a clean input folder. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-resources-plugin</artifactId>
@@ -431,10 +547,27 @@
                                     <input>${project.build.directory}/jpackage-input</input>
                                     <destination>${project.build.directory}/dist</destination>
                                     <mainJar>${project.build.finalName}.jar</mainJar>
-                                    <mainClass>com.xmen.user_interface.XMenInterface</mainClass>
+                                    <mainClass>org.springframework.boot.loader.launch.JarLauncher</mainClass>
                                     <type>${jpackage.type}</type>
+                                    <icon>${jpackage.icon}</icon>
                                     <javaOptions>
                                         <option>-Djava.awt.headless=false</option>
+                                        <option>-Dfile.encoding=UTF-8</option>
+                                        <!--
+                                          Bundled JRE heap budget. Forget +
+                                          derivation on Bank/Oyster occasionally
+                                          peaks at a few hundred MB of
+                                          intermediate model state, but the
+                                          previous 2 GB cap was big enough to
+                                          push a low-RAM Intel Mac (8 GB shared
+                                          with the iGPU) into swap on launch and
+                                          freeze the WindowServer. 1 GB is
+                                          comfortably above the working set we
+                                          measured on the Bank case study and
+                                          leaves the OS room to breathe.
+                                        -->
+                                        <option>-Xmx1g</option>
+                                        <option>-XX:MaxMetaspaceSize=256m</option>
                                     </javaOptions>
                                 </configuration>
                             </execution>
@@ -445,11 +578,54 @@
         </profile>
 
         <!--
+          OS-specific icon override + jpackage extras. Each profile activates
+          automatically when running on the matching family, so callers can use
+          a single command (e.g. `mvn package -P installer -Djpackage.type=DMG`)
+          and get the right icon shape without remembering paths.
+        -->
+        <profile>
+            <id>installer-windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <jpackage.icon>${project.basedir}/src/main/resources/packaging/x-men-icon.ico</jpackage.icon>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>installer-mac</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <jpackage.icon>${project.basedir}/src/main/resources/packaging/x-men-icon.icns</jpackage.icon>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>installer-linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                </os>
+            </activation>
+            <properties>
+                <jpackage.icon>${project.basedir}/src/main/resources/packaging/x-men-icon.png</jpackage.icon>
+            </properties>
+        </profile>
+
+        <!--
           Windows-specific extras for the `exe` / `msi` installers:
           create a Start-menu shortcut, a desktop shortcut, and let the user
           choose the install directory.
 
-          Activated automatically when -Djpackage.type=exe or msi is set.
+          Activated automatically when -Djpackage.type=EXE or MSI is set.
         -->
         <profile>
             <id>installer-windows-extras</id>
@@ -470,9 +646,145 @@
                                 <id>build-installer</id>
                                 <configuration>
                                     <winMenu>true</winMenu>
+                                    <winMenuGroup>X-Men</winMenuGroup>
+                                    <winShortcut>true</winShortcut>
+                                    <winShortcutPrompt>true</winShortcutPrompt>
+                                    <winDirChooser>true</winDirChooser>
+                                    <winPerUserInstall>true</winPerUserInstall>
+                                    <winUpgradeUuid>3b2a3df0-1a2c-4f5a-9b1c-9e07c0e0a777</winUpgradeUuid>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>installer-windows-msi-extras</id>
+            <activation>
+                <property>
+                    <name>jpackage.type</name>
+                    <value>MSI</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <version>1.6.5</version>
+                        <executions>
+                            <execution>
+                                <id>build-installer</id>
+                                <configuration>
+                                    <winMenu>true</winMenu>
+                                    <winMenuGroup>X-Men</winMenuGroup>
                                     <winShortcut>true</winShortcut>
                                     <winDirChooser>true</winDirChooser>
                                     <winPerUserInstall>true</winPerUserInstall>
+                                    <winUpgradeUuid>3b2a3df0-1a2c-4f5a-9b1c-9e07c0e0a777</winUpgradeUuid>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+          macOS extras: identifier + package signing hooks. The signing flags
+          stay opt-in (set -Djpackage.macSign=true and ship the cert) so the
+          unsigned dev build still works.
+        -->
+        <profile>
+            <id>installer-mac-extras</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+                <property>
+                    <name>jpackage.type</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <version>1.6.5</version>
+                        <executions>
+                            <execution>
+                                <id>build-installer</id>
+                                <configuration>
+                                    <macPackageName>X-Men</macPackageName>
+                                    <macPackageIdentifier>com.xmen.app</macPackageIdentifier>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+          Linux .deb / .rpm extras: menu category + .desktop integration so the
+          package shows up under Applications -> Development with the X-Men
+          icon, AND so it appears in the OS uninstaller (GNOME Software /
+          KDE Discover / elementary AppCenter).
+
+          The resourceDir override ships custom Debian postinst + prerm scripts
+          that write an AppStream metainfo XML into /usr/share/metainfo/. Modern
+          Ubuntu (22.04+) and similar distros only list installed apps in their
+          graphical control plane when AppStream metadata is present — without
+          this the user has to drop to a terminal (`sudo apt remove x-men`)
+          to uninstall, which is the symptom we are fixing.
+
+          linuxAppRelease pins the Debian release suffix so the resulting file
+          is reproducibly named x-men_1.0.0-1_amd64.deb and dpkg can compute
+          proper upgrade ordering across versions.
+        -->
+        <profile>
+            <id>installer-linux-extras</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                </os>
+                <property>
+                    <name>jpackage.type</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <version>1.6.5</version>
+                        <executions>
+                            <execution>
+                                <id>build-installer</id>
+                                <configuration>
+                                    <linuxShortcut>true</linuxShortcut>
+                                    <linuxMenuGroup>Development;Security;Utility;</linuxMenuGroup>
+                                    <linuxPackageName>x-men</linuxPackageName>
+                                    <linuxAppCategory>Development</linuxAppCategory>
+                                    <!--
+                                      Match the Linux profile's JavaFX runtime: 27-ea+18
+                                      ships libavplugin-ffmpeg-56..62, so include the
+                                      62 SONAMEs (Ubuntu 26.04 "Resolute", Debian
+                                      Trixie+) alongside the 58-61 set that older LTS
+                                      releases (Ubuntu 24.04, Debian 12) still ship.
+                                      apt picks the first installable alternative, and
+                                      JavaFX has a matching plugin for whichever wins.
+                                    -->
+                                    <additionalOptions>
+                                        <option>--linux-package-deps</option>
+                                        <option>libglib2.0-0, libavcodec58 | libavcodec59 | libavcodec60 | libavcodec61 | libavcodec62 | libavcodec-extra58 | libavcodec-extra59 | libavcodec-extra60 | libavcodec-extra61 | libavcodec-extra62, libavformat58 | libavformat59 | libavformat60 | libavformat61 | libavformat62, libavutil56 | libavutil57 | libavutil58 | libavutil59 | libavutil60, libswresample3 | libswresample4 | libswresample5 | libswresample6, libswscale5 | libswscale6 | libswscale7 | libswscale8 | libswscale9</option>
+                                    </additionalOptions>
+                                    <linuxRpmLicenseType>MIT</linuxRpmLicenseType>
+                                    <linuxAppRelease>1</linuxAppRelease>
+                                    <resourceDir>${project.basedir}/src/main/resources/packaging/linux</resourceDir>
                                 </configuration>
                             </execution>
                         </executions>

@@ -1,0 +1,222 @@
+name: Build Release Installers
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      app_version:
+        description: "App version for jpackage (X.Y.Z, no SNAPSHOT). Leave blank to use 1.0.1."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.asset_name }}
+    runs-on: ${{ matrix.os }}
+    # Per-job timeout caps the macos-13 (Intel) job at 60 min so a scarce
+    # Intel-runner queue can't hold the release open forever. The fast jobs
+    # finish in <15 min, so this is only relevant when Apple-Silicon-only
+    # runner pools delay an Intel pick-up.
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    # macos-13 Intel availability fluctuates; let the other three platforms
+    # publish even if Intel ends up timing out. The user can re-run just the
+    # X-Men-x64.dmg job from the workflow page when capacity returns.
+    continue-on-error: ${{ matrix.continue_on_error }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            jdk_arch: x64
+            package_type: EXE
+            asset_name: X-Men.exe
+            artifact_glob: target/dist/*.exe
+            timeout_minutes: 45
+            continue_on_error: false
+          # Intel-Mac .dmg: install the x86_64 Temurin JDK on the Apple-Silicon
+          # runner; macos-14 ships with Rosetta 2, so the x86_64 JDK + jpackage
+          # auto-execute through it and the resulting launcher / bundled JRE are
+          # x86_64 native for Intel Macs.
+          - os: macos-14
+            arch: x64
+            macho_arch: x86_64
+            jdk_arch: x64
+            javafx_classifier: mac
+            package_type: DMG
+            asset_name: X-Men-x64.dmg
+            artifact_glob: target/dist/*.dmg
+            timeout_minutes: 60
+            continue_on_error: false
+          # Apple Silicon .dmg: the previous matrix entry omitted `architecture`,
+          # so setup-java defaulted to x64 and installed an x86_64 JDK on the
+          # arm64 runner. jpackage then produced an x86_64 launcher labelled as
+          # "arm64" — on a real Apple-Silicon Mac without Rosetta 2 that launcher
+          # silently fails to start, which was the "app isn't starting" report.
+          # Pinning aarch64 here makes the build truly native.
+          - os: macos-14
+            arch: arm64
+            macho_arch: arm64
+            jdk_arch: aarch64
+            javafx_classifier: mac-aarch64
+            package_type: DMG
+            asset_name: X-Men-arm64.dmg
+            artifact_glob: target/dist/*.dmg
+            timeout_minutes: 45
+            continue_on_error: false
+          - os: ubuntu-latest
+            jdk_arch: x64
+            package_type: DEB
+            asset_name: X-Men.deb
+            artifact_glob: target/dist/*.deb
+            timeout_minutes: 30
+            continue_on_error: false
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          architecture: ${{ matrix.jdk_arch }}
+          cache: maven
+
+      # JavaFX 27-ea (Linux-only, pinned in pom.xml's javafx-linux profile so
+      # video plays on Ubuntu 26.04 "Resolute" against libavcodec62) is built
+      # with Java 25 class files (major 69). Java 21's javac cannot read them,
+      # so the Linux compile fails with "class file has wrong version 69.0,
+      # should be 65.0". Overriding JAVA_HOME to Temurin 25 here is scoped to
+      # the Linux runner via the if-guard; Windows, Intel-Mac, and
+      # Apple-Silicon matrix jobs keep JDK 21 + JavaFX 23.0.2 unchanged.
+      - name: Override JDK to 25 for Linux JavaFX 27-ea compile
+        if: runner.os == 'Linux'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          architecture: x64
+
+      - name: Make Maven wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./mvnw
+
+      # The repo ships a pre-built .icns generated from the master logo, but
+      # regenerate it on the macOS runner with the OS-native `iconutil` so the
+      # produced .icns always matches the Apple-recommended layout (one-time
+      # cost; the rest of the build does not care).
+      - name: Refresh macOS app icon via iconutil
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          iconset=target/x-men.iconset
+          mkdir -p "$iconset"
+          for size in 16 32 128 256 512; do
+            sips -z "$size" "$size" src/main/resources/packaging/x-men-icon.png --out "$iconset/icon_${size}x${size}.png"
+            sips -z "$((size * 2))" "$((size * 2))" src/main/resources/packaging/x-men-icon.png --out "$iconset/icon_${size}x${size}@2x.png"
+          done
+          iconutil -c icns "$iconset" -o src/main/resources/packaging/x-men-icon.icns
+
+      - name: Install Linux packaging tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot
+
+      - name: Resolve app version
+        id: appver
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            v="${GITHUB_REF_NAME#v}"
+          else
+            v="${{ github.event.inputs.app_version }}"
+          fi
+          if [[ ! "$v" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
+            v="1.0.1"
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Using app version: $v"
+
+      # Single-step build for every platform. The architecture pin in
+      # setup-java above is what makes the Apple-Silicon launcher boot:
+      # jpackage 21 already ad-hoc signs the .app bundle by default, so a
+      # separate codesign + repackage pass is unnecessary and was the
+      # source of the x64 .dmg build instability.
+      - name: Build installer
+        shell: bash
+        run: |
+          ./mvnw -B -ntp -P installer \
+            -Djpackage.type=${{ matrix.package_type }} \
+            -Djpackage.appVersion=${{ steps.appver.outputs.version }} \
+            -DskipTests \
+            clean package
+
+      - name: Verify macOS app architecture
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$(ls target/dist/*.dmg)"
+          mount_dir="$(mktemp -d)"
+          hdiutil attach "$dmg" -mountpoint "$mount_dir" -nobrowse -quiet
+          trap 'hdiutil detach "$mount_dir" -quiet || true' EXIT
+          app="$(find "$mount_dir" -maxdepth 1 -name '*.app' -print -quit)"
+          test -n "$app"
+          file "$app/Contents/MacOS/X-Men"
+          file "$app/Contents/MacOS/X-Men" | grep -q "${{ matrix.macho_arch }}"
+          jar_file="$app/Contents/app/X-Men_2.0-0.0.1-SNAPSHOT.jar"
+          jar tf "$jar_file" | grep -q "javafx-graphics-.*-${{ matrix.javafx_classifier }}\\.jar"
+          if [ "${{ matrix.javafx_classifier }}" = "mac-aarch64" ]; then
+            ! jar tf "$jar_file" | grep -q "javafx-graphics-[0-9].*-mac\\.jar"
+          else
+            ! jar tf "$jar_file" | grep -q "javafx-graphics-.*-mac-aarch64\\.jar"
+          fi
+
+      - name: Verify Linux media dependencies
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb="$(ls target/dist/*.deb)"
+          depends="$(dpkg-deb -f "$deb" Depends)"
+          echo "$depends"
+          grep -q "libglib2.0-0" <<< "$depends"
+          grep -Eq "libavcodec[0-9]+|libavcodec-extra[0-9]+" <<< "$depends"
+          grep -Eq "libavformat[0-9]+" <<< "$depends"
+
+      - name: Normalize asset name
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          shopt -s nullglob
+          matches=( ${{ matrix.artifact_glob }} )
+          if [ ${#matches[@]} -ne 1 ]; then
+            echo "Expected exactly one installer matching '${{ matrix.artifact_glob }}', found ${#matches[@]}"
+            ls -R target/dist || true
+            printf '%s\n' "${matches[@]}"
+            exit 1
+          fi
+          cp "${matches[0]}" "release-assets/${{ matrix.asset_name }}"
+          ls -la release-assets
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: release-assets/${{ matrix.asset_name }}
+          if-no-files-found: error
+
+      - name: Upload GitHub Release asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: release-assets/${{ matrix.asset_name }}

@@ -2,7 +2,7 @@ entries:
   - id: paper.forget.xmen2
     title: X-Men 2.0 Forget paper
     category: paper
-    terms: [X-Men 2.0 paper, Forget paper, formal modeling forget mutation, main 3 tex, bank login forget paper]
+    terms: [X-Men 2.0 paper, Forget paper, formal modeling forget mutation, bank login forget paper]
     shortAnswer: |
       The new paper formalizes Forget as a primitive X-Men mutation for human memory lapses and implements it in X-Men 2.0.
     definition: |

@@ -1,19 +1,71 @@
-PowerShell commands for packaging the application:
+X-Men packaging — quick reference
+==================================
 
-1. Jlink command to create a runtime image:
+The pom.xml ships an "installer" Maven profile that drives jpackage. The
+per-OS profile activations auto-pick the right icon format:
+    Windows -> packaging/x-men-icon.ico
+    macOS   -> packaging/x-men-icon.icns
+    Linux   -> packaging/x-men-icon.png
 
-jlink --module-path "$env:JAVA_HOME\jmods;.\javafx-libs" --add-modules java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.rmi,java.security.jgss,java.sql,java.xml,javafx.base,javafx.graphics,javafx.controls,javafx.media --output myruntime
+To regenerate every icon from src/main/resources/images/Front-End-Logo.png
+(tight crop, all sizes, .ico + .icns + .png), run:
+
+    powershell -NoProfile -File scripts\build-icons.ps1
+
+(The script is Windows-only because it uses System.Drawing. The committed
+icons in src/main/resources/packaging/ are the latest output.)
 
 
-2. Command to test the application using the runtime image:
+1) Local build — Windows installer (.exe)
+-----------------------------------------
+Requires:  JDK 21 on PATH + WiX Toolset 3.x on PATH
+            (choco install wixtoolset --version 3.14.1 -y)
 
- .\myruntime\bin\java -jar target\X-Men_2.0-0.0.1-SNAPSHOT.jar
+    powershell -NoProfile -Command "& '.\mvnw.cmd' -B -ntp '-DskipTests' '-P' 'installer' '-Djpackage.type=EXE' '-Djpackage.appVersion=1.0.1' 'package'"
+
+Output:    target\dist\X-Men-1.0.1.exe
 
 
-3. Command to build the executable file for the application:
+2) Local build — Windows MSI
+----------------------------
+    & '.\mvnw.cmd' '-DskipTests' '-P' 'installer' '-Djpackage.type=MSI' '-Djpackage.appVersion=1.0.1' 'package'
 
-jpackage --type exe --name "X-Men" --input target --main-jar X-Men_2.0-0.0.1-SNAPSHOT.jar --runtime-image .\myruntime --app-version 1.0.0 --win-shortcut --win-menu --win-dir-chooser --win-console
 
-4. Command to remove the runtime image:
+3) Local build — APP_IMAGE folder (no installer tool needed)
+------------------------------------------------------------
+    & '.\mvnw.cmd' '-DskipTests' '-P' 'installer' '-Djpackage.type=APP_IMAGE' '-Djpackage.appVersion=1.0.1' 'package'
 
-Remove-Item -Recurse -Force .\myruntime
+Output:    target\dist\X-Men\X-Men.exe       (run the folder; ships its own JRE)
+
+
+4) Local build — macOS .dmg
+---------------------------
+On a Mac (Intel or Apple Silicon):
+
+    ./mvnw -DskipTests -P installer -Djpackage.type=DMG -Djpackage.appVersion=1.0.1 package
+
+Output:    target/dist/X-Men-1.0.1.dmg
+
+The .dmg architecture matches the build host (run on Intel -> x86_64,
+run on Apple Silicon -> arm64). Run the matching .dmg on each Mac, or
+ship both via GitHub Actions (see release.yml).
+
+
+5) Local build — Linux .deb
+---------------------------
+On a Linux box with fakeroot installed (sudo apt-get install fakeroot):
+
+    ./mvnw -DskipTests -P installer -Djpackage.type=DEB -Djpackage.appVersion=1.0.1 package
+
+Output:    target/dist/x-men_1.0.1-1_amd64.deb
+
+
+6) GitHub Actions release
+-------------------------
+.github/workflows/release.yml builds .exe, x64.dmg, arm64.dmg, and .deb on
+the matching runners and uploads them as release assets. Trigger by:
+
+    git tag v1.0.1
+    git push origin v1.0.1
+
+…or via the "Run workflow" button on GitHub Actions (no release publishing).

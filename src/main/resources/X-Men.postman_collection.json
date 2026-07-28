@@ -2,8 +2,7 @@
 	"info": {
 		"_postman_id": "c471b225-f9be-4f6c-be1c-0af6409d6917",
 		"name": "X-Men",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "39727841"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{

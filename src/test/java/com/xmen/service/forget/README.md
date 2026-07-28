@@ -14,7 +14,7 @@
 
 | File | Role |
 | --- | --- |
-| 🚧 `BlockingCheckerCase1Test.java` | Validates Case 1 (weak) blocking behaviour. |
+| 🚧 `BlockingCheckerCase1Test.java` | Validates Case 1 (weak) blocking behavior. |
 | 🚧 `BlockingCheckerTest.java` | Validates blocking across all three cases. |
 | 🧾 `ForgetContextTransitionTest.java` | Validates `ForgetContext.updateForTransition` (Algorithm 1's bookkeeping). |
 | 🔁 `ReplacementComputerTest.java` | Validates replacement candidate sets and variant generation. |

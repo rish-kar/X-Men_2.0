@@ -1,9 +1,7 @@
 package com.xmen.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,9 +17,7 @@ import org.springframework.context.annotation.Configuration;
             description =
                 "Endpoints for generating mutation variants of SPTHY models, "
                     + "including skip, replace, forget, and neglect mutations, "
-                    + "plus optional derivation tree analysis.",
-            contact = @Contact(name = "X-Men Team"),
-            license = @License(name = "Internal")),
+                    + "plus optional derivation tree analysis."),
     tags = {
       @Tag(
           name = "Mutations",

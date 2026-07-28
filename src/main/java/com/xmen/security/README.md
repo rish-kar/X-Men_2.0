@@ -42,7 +42,7 @@ Spring Security chain → CORS → Controller → Service → ...
 - **📤 Outputs:** Either continues the filter chain or returns a `403` response.
 - **🤝 Used by:** `../config/SecurityConfig` registers the filter.
 - **🪝 Depends on:** `HttpHeaders.ORIGIN`, the origin list pulled from `application.yaml`.
-- **⚠️ Heads-up:** Tweaking allowed paths or origin matching directly affects API accessibility and native UI behaviour.
+- **⚠️ Heads-up:** Tweaking allowed paths or origin matching directly affects API accessibility and native UI behavior.
 
 </details>
 

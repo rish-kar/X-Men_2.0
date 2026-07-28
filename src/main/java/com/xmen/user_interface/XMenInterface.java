@@ -120,10 +120,48 @@ public class XMenInterface extends Application {
   /** Cached decoded PNG resources — same bitmap reused across every load. */
   private static volatile Image cachedSplashFallback;
   private static volatile Image cachedChatIconWhite;
+  private static volatile java.util.List<Image> cachedAppIcons;
+
+  /** Sizes JavaFX should be offered for the taskbar / dock / Alt-Tab. */
+  private static final int[] APP_ICON_SIZES = {16, 24, 32, 48, 64, 128, 256, 512};
+  private static final String APP_ICON_RESOURCE = "/images/Front-End-Logo.png";
+
+  /** True on any Linux/BSD desktop where JavaFX runs against GTK + an X11/Wayland WM. */
+  static boolean isLinux() {
+    String os = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT);
+    return os.contains("linux") || os.contains("nix");
+  }
+
+  /** True on any Windows OS where JavaFX runs against Media Foundation. */
+  static boolean isWindows() {
+    return System.getProperty("os.name", "")
+        .toLowerCase(java.util.Locale.ROOT)
+        .contains("win");
+  }
 
   @Override
   public void start(Stage stage) {
     this.primaryStage = stage;
+    // Windows-only: drop the OS title bar + 1-px frame that Windows 11 draws
+    // around every decorated window. Without this the background video and
+    // overlay stop short of the OS-drawn frame and leave a visible border on
+    // the left, right, and bottom edges of the maximised window. macOS and
+    // Linux are unaffected — their native chrome already sits flush against
+    // the dark theme.
+    if (System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).contains("win")) {
+      try {
+        stage.initStyle(javafx.stage.StageStyle.UNDECORATED);
+      } catch (IllegalStateException ignored) {
+        // initStyle can only be called before show(); if the runtime re-uses
+        // an already-shown primary stage (tests, devtools restart) the call
+        // throws and we just keep the default chrome.
+      }
+    }
+    // Ship the X-Men logo to the OS so the taskbar / dock / Alt-Tab uses our
+    // brand mark at a usable resolution (without this JavaFX falls back to the
+    // generic Java cup, which is what made the taskbar icon look tiny on
+    // previous Windows builds).
+    applyAppIcon(stage);
     // Ask the OS for a dark title bar / window chrome — best-effort, see WindowChrome.
     // Same hint applies to the splash and main windows because it's process-wide.
     WindowChrome.requestDarkChrome(stage);
@@ -152,6 +190,28 @@ public class XMenInterface extends Application {
     stage.setHeight(screen.getHeight());
     stage.show();
     stage.setMaximized(true);
+    // Block edge-drag resize. Programmatic setMaximized(true) above still
+    // works because the WM treats it as an explicit override, so the
+    // window opens (and stays) at the active monitor's visual bounds —
+    // setResizable(false) only suppresses *user-initiated* resize and the
+    // OS maximise affordance, which is exactly the behaviour we want:
+    // the window is fixed at fullscreen and can never be drag-resized
+    // into an awkward intermediate size.
+    //
+    // Linux: GNOME/Mutter processes setMaximized asynchronously, so
+    // calling setResizable(false) on the same frame captures the
+    // pre-maximise size (the 1100x720 minimum) as the WM_NORMAL_HINTS
+    // lock and un-maximises the window back to that size. Defer the lock
+    // by ~300 ms so the maximise has actually applied before the size is
+    // pinned — by that point the stage's reported size is the screen
+    // bounds, and locking it keeps the fullscreen state intact.
+    if (isLinux()) {
+      PauseTransition lockAfterMaximize = new PauseTransition(Duration.millis(300));
+      lockAfterMaximize.setOnFinished(e -> stage.setResizable(false));
+      lockAfterMaximize.play();
+    } else {
+      stage.setResizable(false);
+    }
 
     stage.setOnCloseRequest(e -> shutdownEverything());
 
@@ -171,11 +231,37 @@ public class XMenInterface extends Application {
           if (handedOff[0]) return;
           handedOff[0] = true;
           detachSplashPlaybackWatchdog();
-          if (splashPlayer != null) {
-            try {
-              splashPlayer.stop();
-              splashPlayer.dispose();
-            } catch (Exception ignored) {
+
+          // Windows-only: swap scenes FIRST and defer disposing the splash
+          // MediaPlayer so the native Media Foundation runtime stays
+          // initialised through the rotator's first background MediaPlayer
+          // cold start. Tearing the splash down before that happens was
+          // the cause of the first-background-video-stuck symptom on
+          // Windows. On Linux (GStreamer) and macOS (AVFoundation),
+          // keeping two parallel MediaPlayer instances alive while the
+          // rotator initialises actually prevents the second one from
+          // starting at all — which is what produced the "splash and
+          // background videos do not play on Linux" and "Apple Silicon
+          // build will not open" reports. Dispose the splash inline on
+          // those platforms; they don't need the warmup window.
+          MediaPlayer oldSplash = splashPlayer;
+          if (oldSplash != null) {
+            if (isWindows()) {
+              try {
+                oldSplash.setMute(true);
+                oldSplash.stop();
+              } catch (Exception ignored) {
+              }
+            } else {
+              try {
+                oldSplash.stop();
+                oldSplash.dispose();
+              } catch (Exception ignored) {
+              }
+              if (mediaPlayer == oldSplash) {
+                mediaPlayer = null;
+              }
+              oldSplash = null;
             }
           }
           stage.setScene(createMainScene(stage));
@@ -188,6 +274,29 @@ public class XMenInterface extends Application {
           stage.setWidth(current.getWidth());
           stage.setHeight(current.getHeight());
           stage.setMaximized(true);
+
+          // Windows: defer the splash dispose so the runtime stays warm
+          // long enough for the rotator to bring its first MediaPlayer up
+          // to PLAYING. 5 seconds is comfortably above the longest first
+          // video codec init we have measured on Windows (Media Foundation
+          // cold start is typically 1-3 s; 5 s leaves headroom for slower
+          // laptops). No-op on Linux/macOS (oldSplash is already null
+          // because the inline dispose above ran).
+          if (oldSplash != null) {
+            final MediaPlayer toDispose = oldSplash;
+            PauseTransition delayedDispose = new PauseTransition(Duration.seconds(5));
+            delayedDispose.setOnFinished(
+                ev -> {
+                  try {
+                    toDispose.dispose();
+                  } catch (Exception ignored) {
+                  }
+                  if (mediaPlayer == toDispose) {
+                    mediaPlayer = null;
+                  }
+                });
+            delayedDispose.play();
+          }
           // preWarmBackgroundVideo() already ran during splash start; calling it
           // again here is a no-op because ensureCachedVideo() is idempotent, so
           // we drop the redundant invocation.
@@ -292,6 +401,18 @@ public class XMenInterface extends Application {
       splashRoot.getChildren().add(fallbackImage);
     }
     boolean videoLoaded = false;
+
+    // Honour the shared opt-out kill switch (XMEN_BG_VIDEO=false /
+    // -Dxmen.bg.video.enabled=false). Default is ON for every OS/arch — the
+    // splash video is part of the brand. The fallback logo image stays on
+    // screen for the 12 s watchdog if videos are disabled, so the launch
+    // sequence still feels intentional for power users who opted out.
+    if (!MainSceneFactory.isBackgroundVideoEnabled()) {
+      log.info("Splash video disabled by xmen.bg.video.enabled override; using fallback image.");
+      if (fallbackImage != null) fallbackImage.setVisible(true);
+      splashRoot.setAlignment(Pos.CENTER);
+      return null;
+    }
 
     try {
       File tempVideoFile = ensureCachedSplashVideo();
@@ -562,6 +683,43 @@ public class XMenInterface extends Application {
     }
   }
 
+  /**
+   * Register the X-Men brand mark at a range of standard sizes on the given stage so the OS
+   * picks the closest one for the taskbar, dock, Alt-Tab list, and window title bar. JavaFX's
+   * default behaviour (no icons set) is a generic Java cup at a single resolution, which is
+   * what made the previous Windows builds look tiny and washed-out on the taskbar.
+   */
+  static void applyAppIcon(Stage stage) {
+    if (stage == null) return;
+    java.util.List<Image> icons = loadAppIcons();
+    if (icons.isEmpty()) return;
+    try {
+      stage.getIcons().setAll(icons);
+    } catch (Exception ignored) {
+    }
+  }
+
+  private static java.util.List<Image> loadAppIcons() {
+    java.util.List<Image> cached = cachedAppIcons;
+    if (cached != null) return cached;
+    synchronized (XMenInterface.class) {
+      if (cachedAppIcons != null) return cachedAppIcons;
+      java.util.List<Image> list = new java.util.ArrayList<>();
+      for (int size : APP_ICON_SIZES) {
+        try (InputStream is = XMenInterface.class.getResourceAsStream(APP_ICON_RESOURCE)) {
+          if (is == null) break;
+          // requestedWidth/Height + preserveRatio + smooth = high-quality downscaled bitmap
+          // at the size the OS asks for, so each Image fed to Stage.getIcons() is crisp.
+          list.add(new Image(is, size, size, true, true));
+        } catch (Exception e) {
+          log.debug("App icon {}px unavailable: {}", size, e.getMessage());
+        }
+      }
+      cachedAppIcons = java.util.Collections.unmodifiableList(list);
+      return cachedAppIcons;
+    }
+  }
+
   private Scene createMainScene(Stage stage) {
     int serverPort = 8081;
     MainSceneFactory.Built built =
@@ -573,6 +731,14 @@ public class XMenInterface extends Application {
 
     this.mainRoot = built.root();
     this.heroLogo = built.logoView();
+
+    // Windows uses StageStyle.UNDECORATED so the video can paint edge-to-edge;
+    // re-add a minimal top-right control strip with the minimise + close
+    // buttons that the OS chrome would normally provide. Skipped on macOS and
+    // Linux because their native title bar is still present.
+    if (System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).contains("win")) {
+      mainRoot.getChildren().add(buildWindowsChromeButtons(stage));
+    }
 
     GridPane checkboxPanel = setupGridPane(stage);
     checkboxPanel.setMaxWidth(Double.MAX_VALUE);
@@ -647,9 +813,11 @@ public class XMenInterface extends Application {
     // affordance instead of bunching them near the top.
     VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
 
-    // No ScrollPane: all mutations are laid out flat inside the glass card.
-    // The chat affordance overlays the bottom-right corner so it no longer
-    // adds extra vertical height to the panel.
+    // No ScrollPane: all mutations are laid out flat inside the glass card so
+    // the rows distribute evenly all the way down to the chat affordance,
+    // matching the original v1.0.0 layout. The window is locked at
+    // fullscreen-or-larger so the panel always has enough height for the
+    // rows to fit without a scrollbar.
     StackPane panelWrap = new StackPane(panelContent, panelFooter);
     panelWrap.getStyleClass().add("x-control-panel");
     panelWrap.setMaxWidth(Double.MAX_VALUE);
@@ -684,6 +852,45 @@ public class XMenInterface extends Application {
     if (legacy != null) scene.getStylesheets().add(legacy.toExternalForm());
 
     return scene;
+  }
+
+  /**
+   * Build the top-right minimise + close controls that replace the native
+   * Windows title-bar buttons when the stage is undecorated. Sized to roughly
+   * match the Windows 11 caption (46×32 px), with a red hover for close and
+   * a subtle white tint for minimise so they read against the dark theme.
+   */
+  private static HBox buildWindowsChromeButtons(Stage stage) {
+    Button min = new Button("–");          // en-dash, visually clean minimise glyph
+    Button close = new Button("✕");        // multiplication X
+    String base =
+        "-fx-background-color: transparent;"
+            + "-fx-text-fill: white;"
+            + "-fx-font-size: 14px;"
+            + "-fx-font-weight: 400;"
+            + "-fx-min-width: 46px; -fx-min-height: 32px;"
+            + "-fx-pref-width: 46px; -fx-pref-height: 32px;"
+            + "-fx-background-radius: 0;"
+            + "-fx-border-width: 0;"
+            + "-fx-cursor: hand;";
+    min.setStyle(base);
+    close.setStyle(base);
+    min.setOnMouseEntered(
+        e -> min.setStyle(base + "-fx-background-color: rgba(255,255,255,0.12);"));
+    min.setOnMouseExited(e -> min.setStyle(base));
+    close.setOnMouseEntered(
+        e -> close.setStyle(base + "-fx-background-color: #E81123;"));
+    close.setOnMouseExited(e -> close.setStyle(base));
+    min.setFocusTraversable(false);
+    close.setFocusTraversable(false);
+    min.setOnAction(e -> stage.setIconified(true));
+    close.setOnAction(e -> stage.fireEvent(
+        new javafx.stage.WindowEvent(stage, javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST)));
+    HBox bar = new HBox(min, close);
+    bar.setMaxSize(javafx.scene.layout.Region.USE_PREF_SIZE, javafx.scene.layout.Region.USE_PREF_SIZE);
+    bar.setPickOnBounds(false);
+    StackPane.setAlignment(bar, javafx.geometry.Pos.TOP_RIGHT);
+    return bar;
   }
 
   private void setChatIcon(boolean lightTheme, com.xmen.config.ThemeCatalog.Theme theme) {
@@ -733,31 +940,49 @@ public class XMenInterface extends Application {
 
       if (chatIconPulse != null) {
         chatIconPulse.stop();
+        chatIconPulse = null;
       }
 
-      chatIconPulse =
-              new Timeline(
-                      new KeyFrame(
-                              Duration.ZERO,
-                              new KeyValue(glow.radiusProperty(), charcoalMono ? 10 : 18, Interpolator.EASE_BOTH),
-                              new KeyValue(glow.spreadProperty(), charcoalMono ? 0.18 : 0.34, Interpolator.EASE_BOTH),
-                              new KeyValue(iconWrap.scaleXProperty(), 0.98, Interpolator.EASE_BOTH),
-                              new KeyValue(iconWrap.scaleYProperty(), 0.98, Interpolator.EASE_BOTH)),
-                      new KeyFrame(
-                              Duration.seconds(1.8),
-                              new KeyValue(glow.radiusProperty(), charcoalMono ? 18 : 32, Interpolator.EASE_BOTH),
-                              new KeyValue(glow.spreadProperty(), charcoalMono ? 0.32 : 0.52, Interpolator.EASE_BOTH),
-                              new KeyValue(iconWrap.scaleXProperty(), 1.08, Interpolator.EASE_BOTH),
-                              new KeyValue(iconWrap.scaleYProperty(), 1.08, Interpolator.EASE_BOTH)),
-                      new KeyFrame(
-                              Duration.seconds(3.6),
-                              new KeyValue(glow.radiusProperty(), charcoalMono ? 10 : 18, Interpolator.EASE_BOTH),
-                              new KeyValue(glow.spreadProperty(), charcoalMono ? 0.18 : 0.34, Interpolator.EASE_BOTH),
-                              new KeyValue(iconWrap.scaleXProperty(), 0.98, Interpolator.EASE_BOTH),
-                              new KeyValue(iconWrap.scaleYProperty(), 0.98, Interpolator.EASE_BOTH)));
+      // The pulse animates DropShadow.radius + .spread along with iconWrap's
+      // scale. iconWrap.setCache(SPEED) above caches the rasterised glow so
+      // the per-frame work is a GPU transform + blend, not a fresh shadow
+      // filter pass. Power users on hardware that can't cope can still
+      // disable the animation via XMEN_BG_VIDEO=false (same env var as the
+      // background videos), in which case the static DropShadow stays and
+      // the icon still looks themed — just without the heartbeat.
+      //
+      // Linux: skipped by default. The Prism cache for the DropShadow
+      // filter does not survive the per-keyframe radius/spread tween on
+      // the Linux GTK pipeline (filter parameters force a regen even with
+      // cacheHint=SPEED), and that competes with GStreamer for frame
+      // budget — the background video drops frames around the pulse cycle.
+      // The static glow set above stays visible so the icon still reads
+      // as themed; only the heartbeat is dropped.
+      if (MainSceneFactory.isBackgroundVideoEnabled() && !isLinux()) {
+        chatIconPulse =
+                new Timeline(
+                        new KeyFrame(
+                                Duration.ZERO,
+                                new KeyValue(glow.radiusProperty(), charcoalMono ? 10 : 18, Interpolator.EASE_BOTH),
+                                new KeyValue(glow.spreadProperty(), charcoalMono ? 0.18 : 0.34, Interpolator.EASE_BOTH),
+                                new KeyValue(iconWrap.scaleXProperty(), 0.98, Interpolator.EASE_BOTH),
+                                new KeyValue(iconWrap.scaleYProperty(), 0.98, Interpolator.EASE_BOTH)),
+                        new KeyFrame(
+                                Duration.seconds(1.8),
+                                new KeyValue(glow.radiusProperty(), charcoalMono ? 18 : 32, Interpolator.EASE_BOTH),
+                                new KeyValue(glow.spreadProperty(), charcoalMono ? 0.32 : 0.52, Interpolator.EASE_BOTH),
+                                new KeyValue(iconWrap.scaleXProperty(), 1.08, Interpolator.EASE_BOTH),
+                                new KeyValue(iconWrap.scaleYProperty(), 1.08, Interpolator.EASE_BOTH)),
+                        new KeyFrame(
+                                Duration.seconds(3.6),
+                                new KeyValue(glow.radiusProperty(), charcoalMono ? 10 : 18, Interpolator.EASE_BOTH),
+                                new KeyValue(glow.spreadProperty(), charcoalMono ? 0.18 : 0.34, Interpolator.EASE_BOTH),
+                                new KeyValue(iconWrap.scaleXProperty(), 0.98, Interpolator.EASE_BOTH),
+                                new KeyValue(iconWrap.scaleYProperty(), 0.98, Interpolator.EASE_BOTH)));
 
-      chatIconPulse.setCycleCount(Animation.INDEFINITE);
-      chatIconPulse.play();
+        chatIconPulse.setCycleCount(Animation.INDEFINITE);
+        chatIconPulse.play();
+      }
 
       howItWorksButton.setGraphic(iconWrap);
       howItWorksButton.setGraphicTextGap(0);
@@ -851,6 +1076,9 @@ public class XMenInterface extends Application {
     checkboxPanel.setVgap(20);
     checkboxPanel.setAlignment(Pos.TOP_LEFT);
     checkboxPanel.setMaxHeight(Double.MAX_VALUE);
+    // Let the grid shrink to 0 so the VBox.Vgrow=ALWAYS + per-row
+    // SOMETIMES vgrow can stretch the rows evenly all the way down to
+    // the bottom of the glass card (the original v1.0.0 layout).
     checkboxPanel.setMinHeight(0);
 
     buttonUpload = new Button("Upload File");
@@ -868,7 +1096,8 @@ public class XMenInterface extends Application {
           fileChooser
               .getExtensionFilters()
               .add(new FileChooser.ExtensionFilter("XML Files", "*.*"));
-          File file = fileChooser.showOpenDialog(stage);
+          seedInitialDirectory(fileChooser);
+          File file = JavaFxFilePicker.showOpenDialog(pickerOwner(stage), fileChooser);
           if (file != null) {
             selectedFile = file;
             clearGeneratedOutput();
@@ -1105,9 +1334,13 @@ public class XMenInterface extends Application {
     // belong to the choice above rather than being top-level toggles.
     Insets subOptionIndent = new Insets(0, 0, 0, 24);
 
-    // Infinite first, then Specified, then Limited (per spec).
+    // Visible derivation choices: Infinite and Specified Depth. The Limited
+    // option is intentionally kept out of the scene graph for now — backend
+    // wiring (LIMITED enum, /api/forget header handling, the rbDerivationLimited
+    // toggle itself) is preserved unchanged so it can be re-surfaced later
+    // without a coordinated server change.
     HBox derivationRadios =
-        new HBox(20, rbDerivationInfinite, rbDerivationSpecified, rbDerivationLimited);
+        new HBox(20, rbDerivationInfinite, rbDerivationSpecified);
     derivationRadios.setAlignment(Pos.CENTER_LEFT);
     checkboxPanel.add(new Label(""), 0, 6);
     checkboxPanel.add(derivationRadios, 1, 6);
@@ -1674,6 +1907,33 @@ public class XMenInterface extends Application {
     return base + "-Mutations.zip";
   }
 
+  /**
+   * Pick the owner Window to pass to the file picker. On Windows/macOS this is the X-Men stage so
+   * the native dialog is properly modal to it. On Linux the picker is rerouted through {@link
+   * JavaFxFilePicker} (a custom JavaFX dialog), which still uses the stage as the modality owner
+   * but ignores GTK sizing — we keep the same value here so callers do not need OS branching.
+   */
+  private static javafx.stage.Window pickerOwner(Stage stage) {
+    return stage;
+  }
+
+  /**
+   * Default the FileChooser to the user's home directory if it doesn't have an
+   * initial directory set yet. Without this, an installed jpackage build opens
+   * the chooser in {@code /opt/x-men/} (the install root) on Linux and the app
+   * bundle's {@code Resources} directory on macOS — neither of which is where
+   * users keep their {@code .spthy} sources.
+   */
+  private static void seedInitialDirectory(FileChooser fc) {
+    if (fc.getInitialDirectory() != null && fc.getInitialDirectory().isDirectory()) return;
+    String home = System.getProperty("user.home");
+    if (home == null || home.isBlank()) return;
+    File dir = new File(home);
+    if (dir.isDirectory()) {
+      fc.setInitialDirectory(dir);
+    }
+  }
+
   /** Save the last generated zip to disk via a FileChooser. */
   private void downloadLastZip(Stage stage) {
     if (lastGeneratedZip == null || lastGeneratedZip.length == 0) {
@@ -1684,7 +1944,8 @@ public class XMenInterface extends Application {
     fc.setTitle("Save Mutation Output");
     fc.setInitialFileName(lastGeneratedZipName);
     fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Zip Archive", "*.zip"));
-    File out = fc.showSaveDialog(stage);
+    seedInitialDirectory(fc);
+    File out = JavaFxFilePicker.showSaveDialog(pickerOwner(stage), fc);
     if (out == null) return;
     try (OutputStream os = Files.newOutputStream(out.toPath())) {
       os.write(lastGeneratedZip);
@@ -1745,9 +2006,12 @@ public class XMenInterface extends Application {
           fc.setTitle("Save Derivation Tree");
           fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text File", "*.txt"));
           fc.setInitialFileName("DerivationTree.txt");
-          File out =
-              fc.showSaveDialog(
-                  mainRoot.getScene() != null ? mainRoot.getScene().getWindow() : null);
+          seedInitialDirectory(fc);
+          javafx.stage.Window owner =
+              mainRoot.getScene() != null ? mainRoot.getScene().getWindow() : null;
+          javafx.stage.Window resolved =
+              owner instanceof Stage s ? pickerOwner(s) : owner;
+          File out = JavaFxFilePicker.showSaveDialog(resolved, fc);
           if (out != null) {
             try (OutputStream os = Files.newOutputStream(out.toPath())) {
               os.write(derivationText.getBytes(StandardCharsets.UTF_8));

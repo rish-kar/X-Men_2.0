@@ -70,13 +70,18 @@ public class VocabularyProfileStore {
   private void seedDefaultProfiles() {
     writeProfile("Oyster", oysterVocabulary(), /* force = */ true);
     writeProfile("Bank", bankVocabulary(), /* force = */ true);
-    // Library was previously seeded as an example profile but is no longer
-    // supported. Delete any leftover file so it doesn't keep showing up in
-    // the Custom Vocabulary picker for users who started on an older build.
-    try {
-      Files.deleteIfExists(PROFILES_DIR.resolve("Library.json"));
-    } catch (IOException e) {
-      log.debug("Could not remove legacy Library profile: {}", e.getMessage());
+    // Legacy / internal-test profiles that should not appear in the Custom
+    // Vocabulary picker. Library was an old example; the two *_StressTest /
+    // *_BrokenLemma* profiles were saved during pre-release QA and have no
+    // place in a shipped build. Delete any leftover .json so they vanish
+    // from the picker on next launch.
+    for (String legacy :
+        List.of("Library", "Infinite_Derivation_StressTest", "Invalid_BrokenLemmaAndTerms")) {
+      try {
+        Files.deleteIfExists(PROFILES_DIR.resolve(legacy + ".json"));
+      } catch (IOException e) {
+        log.debug("Could not remove legacy profile '{}': {}", legacy, e.getMessage());
+      }
     }
   }
 

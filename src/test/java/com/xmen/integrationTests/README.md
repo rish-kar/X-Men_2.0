@@ -47,7 +47,7 @@
 
 | File | Validates |
 | --- | --- |
-| 🧠 `ForgetMutationStrategyIntegrationTest.java` | Strategy-level Forget behaviour. |
+| 🧠 `ForgetMutationStrategyIntegrationTest.java` | Strategy-level Forget behavior. |
 | 🧠 `ForgetNeglectTriggerTest.java` | Forget triggering Neglect on internal actions. |
 | 🧠 `TrialCaseForgetMutationTest.java` | Forget on the `TrialCase` model. |
 
@@ -59,7 +59,7 @@
 <br/>
 
 - **🎯 Job:** Drive `ForgetMutationStrategy` end-to-end and assert on the generated `.m` outputs.
-- **📥 Inputs:** Forget-flavoured SPTHY fixtures under `src/test/resources`.
+- **📥 Inputs:** Forget-flavored SPTHY fixtures under `src/test/resources`.
 - **⚠️ Heads-up:** Sensitive to changes in derivation logic, replacement rules, and substitution semantics.
 
 </details>
@@ -70,7 +70,7 @@
 <br/>
 
 - **🎯 Job:** Verify that Forget correctly triggers Neglect on internal actions that reference the forgotten term — and that it *does not* fire when substitution is the right path.
-- **⚠️ Heads-up:** Pinned to Algorithm 1's branching behaviour.
+- **⚠️ Heads-up:** Pinned to Algorithm 1's branching behavior.
 
 </details>
 
@@ -118,7 +118,7 @@ Each test seeds Spring, points the pipeline at a fixture, runs the relevant muta
 
 | ✅ Safe to touch | ⚠️ Handle with care |
 | --- | --- |
-| Adding new fixtures + assertions for new mutation behaviour. | Coupling to specific filenames in `src/test/resources` — they're the contract with the test. |
+| Adding new fixtures + assertions for new mutation behavior. | Coupling to specific filenames in `src/test/resources` — they're the contract with the test. |
 
 ---
 

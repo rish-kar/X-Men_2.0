@@ -56,6 +56,17 @@ public final class MainSceneFactory {
   private static final AtomicBoolean BACKGROUND_PREWARM_STARTED = new AtomicBoolean(false);
   private static final double FULL_BLEED_OVERSCAN = 48;
 
+  /**
+   * A MediaPlayer for the first background video, created during splash on the FX thread and
+   * held at READY state. The rotator consumes it on its first play so the user never pays the
+   * native media runtime's cold-start cost for the visible first video — which on Windows was
+   * the cause of the "first background video stuck" symptom (Media Foundation's first-MediaPlayer
+   * init can take multiple seconds, during which the rotator's startup watchdog would expire
+   * and skip the clip).
+   */
+  private static volatile MediaPlayer preWarmedFirstPlayer;
+  private static volatile String preWarmedFirstResource;
+
   /** Shared HTTP client + JSON mapper: one connection pool / thread pool for the whole UI. */
   private static final OkHttpClient SHARED_HTTP = new OkHttpClient();
   private static final ObjectMapper SHARED_JSON = new ObjectMapper();
@@ -73,13 +84,40 @@ public final class MainSceneFactory {
    * MP4 extraction (~MBs of I/O) no longer happens on the FX thread during scene swap.
    */
   public static void preWarmBackgroundVideo() {
+    if (!isBackgroundVideoEnabled()) {
+      return;
+    }
     if (!BACKGROUND_PREWARM_STARTED.compareAndSet(false, true)) {
       return;
     }
     Thread t = new Thread(() -> {
       try {
-        for (String resource : availableBackgroundVideos()) {
+        List<String> resources = availableBackgroundVideos();
+        for (String resource : resources) {
           ensureCachedVideo(resource);
+        }
+        // Once the MP4s are extracted, pre-create a MediaPlayer for the
+        // first one on the FX thread and let it reach READY in parallel
+        // with the splash playback. The rotator consumes this player on
+        // its first play, skipping the cold-start codec init that on
+        // Windows made the visible first background video appear stuck.
+        //
+        // Windows-only: the JavaFX media pipeline on Linux (GStreamer) and
+        // on Apple Silicon macOS (AVFoundation) does not tolerate two
+        // simultaneous MediaPlayer instances during startup well — the
+        // pre-warm MediaPlayer racing the splash MediaPlayer for codec
+        // resources was producing the "splash and background video do not
+        // play on Linux" symptom and the "Apple Silicon build will not
+        // open" symptom. Restrict the pre-warm to Windows, which is where
+        // the cold-start delay actually exists and where the media stack
+        // handles two parallel pipelines cleanly.
+        if (isWindows() && !resources.isEmpty()) {
+          String firstResource = resources.get(0);
+          File firstFile = cachedBackgroundFiles.get(firstResource);
+          if (firstFile != null && firstFile.exists()) {
+            javafx.application.Platform.runLater(
+                () -> warmFirstPlayer(firstResource, firstFile));
+          }
         }
       } catch (IOException e) {
         BACKGROUND_PREWARM_STARTED.set(false);
@@ -88,6 +126,94 @@ public final class MainSceneFactory {
     }, "xmen-bg-prewarm");
     t.setDaemon(true);
     t.start();
+  }
+
+  private static boolean isWindows() {
+    return System.getProperty("os.name", "")
+        .toLowerCase(java.util.Locale.ROOT)
+        .contains("win");
+  }
+
+  /**
+   * Build and hold a MediaPlayer at READY state for the first background video. Must run on the
+   * FX thread because {@link MediaPlayer} construction is FX-thread-only. Idempotent: if a
+   * pre-warmed player is already cached the call is a no-op.
+   */
+  private static void warmFirstPlayer(String resource, File file) {
+    if (preWarmedFirstPlayer != null) return;
+    try {
+      MediaPlayer player = new MediaPlayer(new Media(file.toURI().toString()));
+      player.setCycleCount(1);
+      player.setMute(true);
+      player.setVolume(0);
+      player.setOnReady(
+          () -> {
+            // Hold the warm player at READY (don't play). The rotator
+            // attaches its own listeners and calls play() when it picks it up.
+            preWarmedFirstResource = resource;
+            preWarmedFirstPlayer = player;
+            log.debug("Pre-warmed first background MediaPlayer for {}", resource);
+          });
+      player.setOnError(
+          () -> {
+            String msg =
+                player.getError() == null ? "unknown" : player.getError().getMessage();
+            log.debug("Pre-warm error for {}: {}", resource, msg);
+            try {
+              player.dispose();
+            } catch (Exception ignored) {
+              // best-effort cleanup
+            }
+            preWarmedFirstPlayer = null;
+            preWarmedFirstResource = null;
+          });
+    } catch (Exception e) {
+      log.debug("Pre-warm setup failed for {}: {}", resource, e.getMessage());
+    }
+  }
+
+  /**
+   * Consume the pre-warmed MediaPlayer if it matches {@code resource}. Returns {@code null} if
+   * no pre-warmed player is available or if it was for a different resource. After consumption
+   * the caller owns the player and must dispose it when finished.
+   */
+  static MediaPlayer consumePreWarmedPlayer(String resource) {
+    if (resource == null) return null;
+    MediaPlayer p = preWarmedFirstPlayer;
+    String r = preWarmedFirstResource;
+    if (p != null && resource.equals(r)) {
+      preWarmedFirstPlayer = null;
+      preWarmedFirstResource = null;
+      return p;
+    }
+    return null;
+  }
+
+  /** Resource id of the pre-warmed first MediaPlayer, or {@code null} if none is warm yet. */
+  static String preWarmedFirstResource() {
+    return preWarmedFirstResource;
+  }
+
+  /**
+   * Decide whether the background-video rotator should run. Default: ON for
+   * every supported OS/arch — the brand-defining splash + main scene loop is
+   * part of the product, and the cross-fade rotator has been hardened with a
+   * startup watchdog, heartbeat, and a JAR-extraction worker thread so it
+   * stays smooth even on lower-end Intel laptops.
+   *
+   * <p>Power users can still opt out with {@code -Dxmen.bg.video.enabled=false}
+   * or {@code XMEN_BG_VIDEO=false}; in that case the static fallback image
+   * stays on screen and {@link #animateSmoke} pins the haze opacity.
+   */
+  static boolean isBackgroundVideoEnabled() {
+    String override =
+        System.getProperty(
+            "xmen.bg.video.enabled",
+            System.getenv("XMEN_BG_VIDEO"));
+    if (override != null && !override.isBlank()) {
+      return Boolean.parseBoolean(override.trim());
+    }
+    return true;
   }
 
   private MainSceneFactory() {}
@@ -261,6 +387,11 @@ public final class MainSceneFactory {
       container.getChildren().add(fallback);
     }
 
+    if (!isBackgroundVideoEnabled()) {
+      // Static fallback image only — keeps the splash + main scene safe on
+      // Intel macOS and any host the user has explicitly opted out on.
+      return container;
+    }
     try {
       List<String> resources = availableBackgroundVideos();
       if (!resources.isEmpty()) {
@@ -465,6 +596,17 @@ public final class MainSceneFactory {
       remaining.addAll(shuffled);
     }
 
+    /**
+     * Force the next {@link #next()} call to return {@code resource}, used by the rotator's
+     * {@code start()} to make the deck hand back the resource we've pre-warmed a MediaPlayer
+     * for. No-op if the resource isn't part of this deck.
+     */
+    private void seedFirst(String resource) {
+      if (resource == null || !resources.contains(resource)) return;
+      if (remaining.isEmpty()) refill();
+      remaining.remove(resource);
+      remaining.addFirst(resource);
+    }
   }
 
   private static final class BackgroundVideoRotator {
@@ -533,6 +675,14 @@ public final class MainSceneFactory {
     private void start() {
       if (disposed || started) return;
       started = true;
+      // If a MediaPlayer for the first background video was pre-warmed during
+      // the splash, seed the deck so deck.next() hands us that resource first
+      // — launchIncoming will then consume the warm player instead of paying
+      // the native codec cold-start cost on the visible first video.
+      String warmResource = preWarmedFirstResource();
+      if (warmResource != null) {
+        deck.seedFirst(warmResource);
+      }
       playNext(false);
     }
 
@@ -593,14 +743,29 @@ public final class MainSceneFactory {
         return;
       }
       try {
-        MediaPlayer player = new MediaPlayer(new Media(tmp.toURI().toString()));
+        // Consume the pre-warmed MediaPlayer if it matches this resource and
+        // we are about to show the very first background video. Pre-warmed
+        // players have already passed READY during the splash, so they skip
+        // the cold-start codec init that otherwise leaves the first BG video
+        // looking stuck on Windows.
+        MediaPlayer warmed =
+            (currentPlayer == null && attempt == 0)
+                ? consumePreWarmedPlayer(resource)
+                : null;
+        final boolean isPreWarmed = warmed != null;
+        MediaPlayer player;
+        if (isPreWarmed) {
+          player = warmed;
+        } else {
+          player = new MediaPlayer(new Media(tmp.toURI().toString()));
+          player.setCycleCount(1);
+          player.setMute(true);
+          player.setVolume(0);
+        }
         MediaView view = createView(player);
         view.setOpacity(0); // invisible until the crossfade fades it in
         incomingPlayer = player;
         incomingView = view;
-        player.setCycleCount(1);
-        player.setMute(true);
-        player.setVolume(0);
         javafx.animation.PauseTransition watchdog =
             new javafx.animation.PauseTransition(STARTUP_WATCHDOG);
         watchdog.setOnFinished(
@@ -619,12 +784,17 @@ public final class MainSceneFactory {
                     resource, tmp, player, view, attempt, "did not start cleanly");
               }
             });
-        player.setOnReady(
-            () -> {
-              if (disposed || incomingPlayer != player) return;
-              watchdog.playFromStart();
-              player.play();
-            });
+        // setOnReady only fires on the transition into READY, so a pre-warmed
+        // player (which already reached READY during the splash) would never
+        // call it. Skip the handler in that case and play() directly below.
+        if (!isPreWarmed) {
+          player.setOnReady(
+              () -> {
+                if (disposed || incomingPlayer != player) return;
+                watchdog.playFromStart();
+                player.play();
+              });
+        }
         player.setOnPlaying(
             () -> {
               if (disposed || incomingPlayer != player) return;
@@ -668,6 +838,12 @@ public final class MainSceneFactory {
         // (and on top of the old video, if any).
         container.getChildren().add(view);
         watchdog.playFromStart();
+        if (isPreWarmed) {
+          // The pre-warmed player is already past READY; kick off playback
+          // ourselves since the onReady handler will never fire for it.
+          log.debug("Background video {} starting from pre-warm.", resource);
+          player.play();
+        }
       } catch (Exception e) {
         log.warn("Skipping background video {}: {}", resource, e.getMessage());
         playNext(true);
@@ -1423,8 +1599,30 @@ public final class MainSceneFactory {
   /**
    * Slow opacity cycle on the smoke pane. The pane does not translate: the
    * background and theme overlay must remain pinned to the window edges.
+   *
+   * <p>The smoke layer uses two stacked CSS radial-gradients; tweening its
+   * opacity forces the renderer to recomposite both gradients on every
+   * frame. Combined with the chat-icon DropShadow pulse, this was enough
+   * to keep the iGPU busy on Intel macOS even when no video was playing
+   * (heat / display-sleep complaints in 1.0.0). The same kill switch that
+   * disables the videos also stops this drift; the smoke layer stays
+   * painted at a constant opacity so the visual still reads correctly.
    */
   private static void animateSmoke(Pane smoke) {
+    if (!isBackgroundVideoEnabled()) {
+      smoke.setOpacity(0.16);
+      return;
+    }
+    // Linux GTK/Wayland: the per-frame opacity tween forces Prism to
+    // recomposite both stacked CSS radial gradients on every render tick,
+    // and that fights GStreamer for CPU time on the same thread the
+    // MediaPlayer is decoding on. The visible symptom was background and
+    // splash video stutter; pinning the smoke opacity (still themed, just
+    // not animated) removes the contention and the video plays smoothly.
+    if (isLinux()) {
+      smoke.setOpacity(0.16);
+      return;
+    }
     javafx.animation.Timeline drift = new javafx.animation.Timeline(
         new javafx.animation.KeyFrame(Duration.ZERO,
             new javafx.animation.KeyValue(smoke.opacityProperty(), 0.12,
@@ -1438,6 +1636,11 @@ public final class MainSceneFactory {
     drift.setCycleCount(javafx.animation.Animation.INDEFINITE);
     drift.play();
     smoke.setUserData(drift);
+  }
+
+  private static boolean isLinux() {
+    String os = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT);
+    return os.contains("linux") || os.contains("nix");
   }
 
   /* ------------------------------------------------------------------ */

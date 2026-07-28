@@ -24,7 +24,7 @@
 
 <br/>
 
-- **🎯 Job:** Define the JavaFX scene's look — colours, fonts, borders, layout polish.
+- **🎯 Job:** Define the JavaFX scene's look — colors, fonts, borders, layout polish.
 - **🤝 Used by:** `XMenInterface` when constructing the main scene.
 - **⚠️ Heads-up:** Selectors here must match the IDs/style classes assigned in `XMenInterface`.
 
@@ -55,6 +55,6 @@ When the UI loads, `main.css` is applied to the scene's root pane and `alert.css
 
 | ✅ Safe to touch | ⚠️ Handle with care |
 | --- | --- |
-| Colours, fonts, spacing, gradients. | The selector names — they're contracts with `XMenInterface`. |
+| Colors, fonts, spacing, gradients. | The selector names — they're contracts with `XMenInterface`. |
 
 ---

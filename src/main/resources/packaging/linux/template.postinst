@@ -1,0 +1,157 @@
+#!/bin/sh
+# jpackage Debian postinst script for x-men.
+#
+# jpackage looks for this file under the literal name `template.postinst` in
+# the --resource-dir handed in by the build (see the pom.xml `resourceDir`
+# property under the installer-linux-extras profile). The previous filename
+# `package-postinst.in` was never matched by jpackage's OverridableResource
+# lookup, so this entire script was silently dropped from the .deb and the
+# AppStream metainfo below was never written — which is why the package
+# installed cleanly but never appeared in GNOME Software / KDE Discover /
+# Ubuntu's new App Center even after a manual cache refresh.
+#
+# What this does on top of jpackage's default postinst:
+#   1. Writes a complete AppStream metainfo XML so the package appears in
+#      the OS app catalog (Installed / Uninstall view).
+#   2. Copies the launcher icon into the freedesktop hicolor icon theme
+#      under the same stock id the metainfo advertises, so GNOME Software
+#      can render an icon next to the listing instead of the generic
+#      "?-shaped" fallback.
+#   3. Refreshes desktop, icon, AppStream, and PackageKit caches across
+#      every CLI flavor we have seen in the wild so the listing appears
+#      without requiring a session restart.
+
+set -e
+
+# IDs we publish. Keep these in sync with the launchable / icon names below.
+APP_ID="com.xmen.app"
+DESKTOP_FILE="x-men-X-Men.desktop"
+INSTALL_ICON="/opt/x-men/lib/X-Men.png"
+STOCK_ICON_NAME="x-men"
+
+case "$1" in
+    configure)
+        # ------------------------------------------------------------------
+        # 1. Stock icon — copy the bundled PNG into the hicolor theme tree.
+        #
+        # The .deb only ships the icon at /opt/x-men/lib/X-Men.png (jpackage
+        # default). GNOME Software resolves icons referenced from AppStream
+        # metainfo via the freedesktop hicolor theme; if the icon is not in
+        # /usr/share/icons/hicolor/<size>/apps/ under the stock name we
+        # advertise, the listing shows a placeholder. Copy the same PNG into
+        # the common hicolor sizes so the icon paints at whatever size the
+        # active app center asks for.
+        if [ -f "$INSTALL_ICON" ]; then
+            for size in 16 24 32 48 64 128 256 512; do
+                target_dir="/usr/share/icons/hicolor/${size}x${size}/apps"
+                mkdir -p "$target_dir"
+                cp -f "$INSTALL_ICON" "$target_dir/${STOCK_ICON_NAME}.png" 2>/dev/null || true
+            done
+            # Also drop a scalable copy so themes that prefer SVG/scalable
+            # fall back to the PNG instead of the generic icon.
+            mkdir -p /usr/share/icons/hicolor/scalable/apps
+            cp -f "$INSTALL_ICON" "/usr/share/icons/hicolor/scalable/apps/${STOCK_ICON_NAME}.png" 2>/dev/null || true
+        fi
+
+        # ------------------------------------------------------------------
+        # 2. AppStream metainfo — the file the OS app catalog actually reads.
+        mkdir -p /usr/share/metainfo
+        cat > /usr/share/metainfo/${APP_ID}.metainfo.xml <<METAINFO_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>${APP_ID}</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>X-Men</name>
+  <summary>Mutation-based formal analysis of security ceremonies</summary>
+  <description>
+    <p>X-Men turns ceremony specifications into actionable mutation traces. It models the human in the loop — forgetting, slipping, mistyping — and feeds Tamarin the variants that matter so designers can prove or break ceremony goals before they ship.</p>
+    <p>Features:</p>
+    <ul>
+      <li>Mutation generators for skip, replace, add, forget, and neglect</li>
+      <li>Hybrid derivation engine with optional Haskell back-end</li>
+      <li>Theme-aware desktop UI with a settings dialog for vocabulary and themes</li>
+      <li>One-click export of the mutation set as a downloadable archive</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">${DESKTOP_FILE}</launchable>
+  <icon type="stock">${STOCK_ICON_NAME}</icon>
+  <provides>
+    <binary>X-Men</binary>
+    <id>${DESKTOP_FILE}</id>
+  </provides>
+  <url type="homepage">https://github.com/x-men-team/X-Men_2.0</url>
+  <url type="bugtracker">https://github.com/x-men-team/X-Men_2.0/issues</url>
+  <developer_name>X-Men</developer_name>
+  <developer id="io.x-men">
+    <name>X-Men</name>
+  </developer>
+  <categories>
+    <category>Development</category>
+    <category>Security</category>
+  </categories>
+  <keywords>
+    <keyword>Tamarin</keyword>
+    <keyword>Ceremony</keyword>
+    <keyword>Mutation</keyword>
+    <keyword>Security</keyword>
+    <keyword>Formal Methods</keyword>
+    <keyword>Protocol Analysis</keyword>
+  </keywords>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.0.0" date="2026-05-29">
+      <description>
+        <p>Cross-platform installers (Windows EXE, macOS Intel + Apple Silicon DMGs, Linux DEB) with always-on splash + background videos, scrollable mutation panel, Linux file-picker fixes, and AppStream registration so the package shows up in the OS uninstaller.</p>
+      </description>
+    </release>
+  </releases>
+  <update_contact>x-men-team@x-men.io</update_contact>
+</component>
+METAINFO_EOF
+        chmod 644 /usr/share/metainfo/${APP_ID}.metainfo.xml
+
+        # ------------------------------------------------------------------
+        # 3. Cache refreshes — make every flavor of app center notice us now.
+
+        # Desktop database so the .desktop entry is picked up immediately.
+        if [ -x "$(command -v update-desktop-database 2>/dev/null)" ]; then
+            update-desktop-database -q /usr/share/applications/ || true
+        fi
+
+        # GTK icon cache for the hicolor copies we just wrote.
+        if [ -x "$(command -v gtk-update-icon-cache 2>/dev/null)" ]; then
+            gtk-update-icon-cache -q -f -t /usr/share/icons/hicolor || true
+        fi
+
+        # AppStream cache. The CLI's flags vary across distros — newer
+        # appstreamcli takes `refresh-cache --force`, older builds want
+        # plain `refresh`, and some derivatives ship `appstream-util`
+        # instead. Try each in turn so the metainfo lands in the OS app
+        # catalog regardless of which one is installed.
+        if [ -x "$(command -v appstreamcli 2>/dev/null)" ]; then
+            appstreamcli refresh-cache --force >/dev/null 2>&1 \
+                || appstreamcli refresh --force >/dev/null 2>&1 \
+                || true
+        elif [ -x "$(command -v appstream-util 2>/dev/null)" ]; then
+            appstream-util refresh >/dev/null 2>&1 || true
+        fi
+
+        # PackageKit — the backend GNOME Software / KDE Discover use to
+        # enumerate installed packages. Without this prompt the Software
+        # Center can take its own sweet time to notice the new .deb.
+        if [ -x "$(command -v pkcon 2>/dev/null)" ]; then
+            pkcon refresh force >/dev/null 2>&1 || true
+        fi
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

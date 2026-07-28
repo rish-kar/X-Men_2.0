@@ -274,6 +274,44 @@
     -fx-effect: dropshadow(gaussian, -shadow, 46, 0.46, 4, 12);
 }
 
+/* ScrollPane that wraps the mutation panel content. Visually transparent so
+ * the glass card behind it shows through; only the scroll bar itself paints. */
+.x-control-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+    -fx-border-color: transparent;
+}
+.x-control-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+.x-control-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 0 4;
+}
+.x-control-scroll .scroll-bar .track {
+    -fx-background-color: rgba(255,255,255,0.04);
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+}
+.x-control-scroll .scroll-bar .thumb {
+    -fx-background-color: rgba(255,255,255,0.22);
+    -fx-background-radius: 8;
+}
+.x-control-scroll .scroll-bar .thumb:hover {
+    -fx-background-color: rgba(255,255,255,0.34);
+}
+.x-control-scroll .scroll-bar .increment-button,
+.x-control-scroll .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.x-control-scroll .scroll-bar .increment-arrow,
+.x-control-scroll .scroll-bar .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
+}
+
 .x-root.x-theme-paper-light .x-control-panel,
 .x-root.x-theme-arctic-ice .x-control-panel,
 .x-root.x-theme-powder-blue .x-control-panel {
