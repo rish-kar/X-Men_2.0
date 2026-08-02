@@ -296,15 +296,15 @@ you'll be doing inside it.
 
 ## 📦 Downloads & Installation
 
-Installers are attached to the latest anonymized OSF artifact package. Pick the one that
-matches your machine, then follow the per-OS notes below: https://osf.io/bt3c9/overview?view_only=467e72351d684c79b08de2103af6b2dc
+Installers are attached to the latest release section. Pick the one that
+matches your machine, then follow the per-OS notes below:
 
 | Platform | Installer | Notes |
 | --- | --- | --- |
-| Windows 10/11 | X-Men.exe | Per-user install; no admin rights needed. |
-| macOS (Intel) | X-Men-x64.dmg | x86_64 build; runs natively on Intel Macs. |
-| macOS (Apple Silicon) | X-Men-arm64.dmg | arm64 build; runs natively on M1/M2/M3/M4. |
-| Linux (Debian / Ubuntu) | X-Men.deb | x86_64 .deb; tested on Ubuntu 22.04 – 26.04. |
+| Windows 10/11 | [**Download X-Men.exe**](https://github.com/rish-kar/X-Men_2.0/releases/latest/download/X-Men.exe) | Per-user install; no admin rights needed. |
+| macOS (Intel) | [**Download X-Men-x64.dmg**](https://github.com/rish-kar/X-Men_2.0/releases/latest/download/X-Men-x64.dmg) | x86_64 build; runs natively on Intel Macs. |
+| macOS (Apple Silicon) | [**Download X-Men-arm64.dmg**](https://github.com/rish-kar/X-Men_2.0/releases/latest/download/X-Men-arm64.dmg) | arm64 build; runs natively on M1/M2/M3/M4 Macs. |
+| Linux (Debian / Ubuntu) | [**Download X-Men.deb**](https://github.com/rish-kar/X-Men_2.0/releases/latest/download/X-Men.deb) | x86_64 `.deb`; tested on Ubuntu 22.04–26.04. |
 
 > 🗂️ **Where mutation output goes.** Generated `.m` files are written under
 > `~/.xmen/runs/` regardless of OS, so the app never needs to write inside its
