@@ -62,6 +62,7 @@
 - [Project Structure](#-project-structure)
 - [Troubleshooting](#-troubleshooting)
 - [Test Coverage with JaCoCo](#-test-coverage-with-jacoco)
+- [Acknowledgements](#acknowledgements)
 
 ---
 
@@ -1109,3 +1110,9 @@ mvn clean test
 
 > 💡 Model classes (`com.xmen.model.*`) are intentionally excluded from the
 > coverage figures because they are mostly generated parsers and DTOs.
+
+--- 
+
+## Acknowledgements
+
+This work was partly supported by the Horizon Europe programme under Grant Agreement No. 101070351, **“SERMAS: Socially-Acceptable Extended Reality Models and Systems,”** and by Innovate UK.
