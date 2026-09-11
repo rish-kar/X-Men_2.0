@@ -38,42 +38,51 @@ class UiAdaptationTest extends ApplicationTest {
     for (int i = 0; i < 5; i++) { root.applyCss(); root.layout(); }
   }
 
-  @Test void actionsFitAndDoNotOverlapAtSupportedLogicalSizes() {
+  @Test void originalLayoutIsPreservedAndAllOverflowCanBeScrolled() {
     interact(() -> {
-      for (double[] size : new double[][] {{1920,1040}, {1280,752}, {1067,627}, {800,560}, {640,480}}) {
+      layout(1920, 1040);
+      for (double[] size : new double[][] {{1920,1040}, {1280,752}, {1067,627}, {800,560}, {640,480}, {1920,1040}}) {
         for (boolean download : new boolean[] {false, true}) {
           Node d = root.lookup("#heroDownload");
           d.setVisible(download); d.setManaged(download);
           layout(size[0], size[1]);
-          List<Node> buttons = root.lookupAll(".x-action-bar .button").stream()
-              .filter(n -> n.isVisible() && n.isManaged()).toList();
+          ScrollPane scroll = (ScrollPane)root.lookup("#mainScroll");
+          Region foreground = (Region)scroll.getContent();
+          assertNull(root.lookup(".x-action-bar"), "Do not move actions into a new footer");
+          assertEquals(86, ((javafx.scene.text.Text)root.lookup(".x-hero-title")).getFont().getSize(), .01);
+          assertTrue(root.lookup(".x-hero-left").lookup("#heroStart") != null);
+          assertEquals(1, root.lookupAll(".scroll-pane").size(), "One scroll around the original layout");
+          List<Node> buttons = root.lookupAll(".button").stream()
+              .filter(n -> n.isVisible() && n.isManaged())
+              .filter(n -> n.getId() != null && n.getId().startsWith("hero")
+                  || n instanceof javafx.scene.control.Button b && b.getText().equals("Settings"))
+              .toList();
+          assertEquals(download ? 5 : 4, buttons.size());
+          buttons.forEach(button -> assertNotNull(
+              ((javafx.scene.control.Button)button).getOnAction(), "Actions must remain wired inside the scroll"));
           for (int i = 0; i < buttons.size(); i++) {
-            Bounds a = buttons.get(i).localToScene(buttons.get(i).getLayoutBounds());
-            assertTrue(a.getMinX() >= 0 && a.getMaxX() <= size[0] + 1, "Action outside width: " + a);
-            assertTrue(a.getMinY() >= 0 && a.getMaxY() <= size[1] + 1, "Action outside height: " + a);
+            Bounds a = foreground.sceneToLocal(buttons.get(i).localToScene(buttons.get(i).getLayoutBounds()));
+            assertTrue(a.getMinX() >= 0 && a.getMaxX() <= foreground.getWidth() + 1, "Action outside canvas: " + a);
+            assertTrue(a.getMinY() >= 0 && a.getMaxY() <= foreground.getHeight() + 1, "Action outside canvas: " + a);
             for (int j = i + 1; j < buttons.size(); j++) {
-              Bounds b = buttons.get(j).localToScene(buttons.get(j).getLayoutBounds());
-              assertFalse(a.intersects(b), "Overlapping actions: " + a + " / " + b);
+              Bounds b = foreground.sceneToLocal(buttons.get(j).localToScene(buttons.get(j).getLayoutBounds()));
+              assertFalse(a.intersects(b), "Overlapping original actions: " + a + " / " + b);
             }
           }
-          ScrollPane scroll = (ScrollPane)root.lookup("#mutationScroll");
           assertTrue(scroll.getViewportBounds().getHeight() > 0);
-          if (size[1] < 800) {
-            assertTrue(scroll.getContent().getLayoutBounds().getHeight() > scroll.getViewportBounds().getHeight());
-            scroll.setVvalue(1);
-            layout(size[0], size[1]);
-            Bounds content = scroll.getContent().localToScene(scroll.getContent().getLayoutBounds());
-            Bounds viewport = scroll.lookup(".viewport").localToScene(scroll.lookup(".viewport").getLayoutBounds());
-            assertTrue(content.getMaxY() <= viewport.getMaxY() + 2, "Bottom content must be reachable");
-            scroll.setVvalue(0);
-          }
+          scroll.setVvalue(1); scroll.setHvalue(1);
+          layout(size[0], size[1]);
+          Bounds content = foreground.localToScene(foreground.getLayoutBounds());
+          Node viewportNode = scroll.lookup(".viewport");
+          Bounds viewport = viewportNode.localToScene(viewportNode.getLayoutBounds());
+          assertTrue(content.getMaxY() <= viewport.getMaxY() + 2, "Bottom content must be reachable");
+          assertTrue(content.getMaxX() <= viewport.getMaxX() + 2, "Right edge must be reachable");
+          scroll.setVvalue(0); scroll.setHvalue(0);
         }
       }
-      layout(1280, 752);
-      root.setOpacity(1);
-      // Retain a render for visual review alongside the bounds assertions.
-      root.lookup(".x-action-bar").setOpacity(1);
-      root.lookup(".x-action-bar").getParent().setOpacity(1);
+      layout(1920, 1080);
+      root.lookup(".x-hero-left").getParent().getParent().setOpacity(1);
+      root.lookup("#heroMetrics").getParent().getParent().setOpacity(1);
       WritableImage image = root.snapshot(null, null);
       java.awt.image.BufferedImage png = new java.awt.image.BufferedImage(
           (int)image.getWidth(), (int)image.getHeight(), java.awt.image.BufferedImage.TYPE_INT_ARGB);

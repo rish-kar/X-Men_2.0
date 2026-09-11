@@ -178,8 +178,7 @@ public class XMenInterface extends Application {
     splashScene.setFill(Color.BLACK);
     stage.setScene(splashScene);
     stage.setTitle("X-Men 2.0");
-    // Work in logical screen coordinates; scrollable content and wrapping
-    // actions also support smaller windows and higher display scaling.
+    // The original foreground can scroll within smaller logical screen bounds.
     stage.setMinWidth(Math.min(640, screen.getWidth()));
     stage.setMinHeight(Math.min(480, screen.getHeight()));
     stage.setX(screen.getMinX());
@@ -188,8 +187,8 @@ public class XMenInterface extends Application {
     stage.setHeight(screen.getHeight());
     stage.show();
     stage.setMaximized(true);
-    // Keep the initial maximized view without locking the user to that size.
     stage.setResizable(true);
+    DisplayScaleSupport.install(stage);
 
     stage.setOnCloseRequest(e -> shutdownEverything());
 
@@ -785,27 +784,14 @@ public class XMenInterface extends Application {
     VBox panelContent = new VBox(0, headerOffset, panelHeader, checkboxPanel);
     panelContent.setMinHeight(0);
     VBox.setVgrow(panelContent, Priority.ALWAYS);
-    headerOffset.setPrefHeight(8);
+    headerOffset.minHeightProperty().bind(panelContent.heightProperty().multiply(0.04));
     // The grid soaks up the remaining vertical space. Combined with the row
     // constraints, this distributes the mutation rows evenly down to the chat
     // affordance instead of bunching them near the top.
     VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
 
-    // Retain the form's natural dimensions and scroll overflow. The chat
-    // footer is part of the flow, so it cannot cover mutation choices.
-    panelContent.setMinHeight(Region.USE_PREF_SIZE);
-    checkboxPanel.setMinHeight(Region.USE_PREF_SIZE);
-    panelTitle.setMinHeight(Region.USE_PREF_SIZE);
-    panelSub.setMinHeight(Region.USE_PREF_SIZE);
-    VBox scrollContent = new VBox(12, panelContent, panelFooter);
-    scrollContent.setMinHeight(Region.USE_PREF_SIZE);
-    ScrollPane panelScroll = new ScrollPane(scrollContent);
-    panelScroll.setId("mutationScroll");
-    panelScroll.getStyleClass().add("x-control-scroll");
-    panelScroll.setFitToWidth(true);
-    panelScroll.setMinSize(0, 0);
-    panelScroll.setPannable(true);
-    StackPane panelWrap = new StackPane(panelScroll);
+    // Keep the original flat card layout; the outer foreground scrolls as a whole.
+    StackPane panelWrap = new StackPane(panelContent, panelFooter);
     panelWrap.getStyleClass().add("x-control-panel");
     panelWrap.setMaxWidth(Double.MAX_VALUE);
     panelWrap.setMaxHeight(Double.MAX_VALUE);
@@ -814,9 +800,10 @@ public class XMenInterface extends Application {
     StackPane controlsHost = built.controlsHost();
     controlsHost.getChildren().add(panelWrap);
 
-    Node heroStart = built.root().lookup("#heroStart");
-    Node heroUpload = built.root().lookup("#heroUpload");
-    Node heroDownload = built.root().lookup("#heroDownload");
+    // ScrollPane content is not in its skin until CSS runs; wire the content directly.
+    Node heroStart = built.content().lookup("#heroStart");
+    Node heroUpload = built.content().lookup("#heroUpload");
+    Node heroDownload = built.content().lookup("#heroDownload");
     if (heroStart instanceof Button hs && buttonStart != null) {
       hs.setOnAction(e -> buttonStart.fire());
     }
@@ -1316,6 +1303,7 @@ public class XMenInterface extends Application {
     depthRow.setAlignment(Pos.CENTER_LEFT);
     depthRow.managedProperty().bind(tfDerivationDepth.managedProperty());
     depthRow.visibleProperty().bind(tfDerivationDepth.visibleProperty());
+    checkboxPanel.add(new Label(""), 0, 7);
     checkboxPanel.add(depthRow, 1, 7);
     GridPane.setColumnSpan(depthRow, 4);
     GridPane.setMargin(depthRow, subOptionIndent);
@@ -1334,12 +1322,42 @@ public class XMenInterface extends Application {
     checkboxPanel.add(cbShowDerivationTree, 1, 8);
     GridPane.setColumnSpan(cbShowDerivationTree, 4);
     GridPane.setMargin(cbShowDerivationTree, subOptionIndent);
+    cbShowDerivationTree
+        .translateYProperty()
+        .bind(
+            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
+                .then(0.0)
+                .otherwise(-42.0));
 
     checkboxPanel.addRow(9, lblForgetHaskell, cbForgetHaskell);
     GridPane.setColumnSpan(cbForgetHaskell, 3);
     GridPane.setHgrow(cbForgetHaskell, Priority.ALWAYS);
+    lblForgetHaskell
+        .translateYProperty()
+        .bind(
+            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
+                .then(0.0)
+                .otherwise(-42.0));
+    cbForgetHaskell
+        .translateYProperty()
+        .bind(
+            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
+                .then(0.0)
+                .otherwise(-42.0));
 
     checkboxPanel.addRow(10, lblNeglect, cbNeglect);
+    lblNeglect
+        .translateYProperty()
+        .bind(
+            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
+                .then(0.0)
+                .otherwise(-42.0));
+    cbNeglect
+        .translateYProperty()
+        .bind(
+            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
+                .then(0.0)
+                .otherwise(-42.0));
 
     // Only visible mutation rows take part in the vertical rhythm. The hidden
     // upload/start row is kept out so Neglect Mutation can land beside the

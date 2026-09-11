@@ -189,6 +189,8 @@ public class XMenInterfaceTest extends ApplicationTest {
             assertNotNull(mainScene, "createMainScene should return a non-null Scene");
 
             StackPane root = (StackPane) mainScene.getRoot();
+            // Build the ScrollPane skin before looking up its content.
+            root.applyCss();
             assertNotNull(
                 root.lookup(".x-control-panel"),
                 "Main scene should host the mutation-controls glass panel");

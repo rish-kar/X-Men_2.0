@@ -264,36 +264,22 @@ public final class MainSceneFactory {
 
     HBox body = new HBox();
     body.setFillHeight(true);
-    body.setMinSize(0, 0);
     body.setPickOnBounds(false);
 
     LogoSlot slot = buildLogoSlot();
     VBox heroLeft = buildHeroLeft(slot.container);
     StackPane controlsHost = buildControlsHost();
 
-    javafx.scene.control.ScrollPane heroScroll = new javafx.scene.control.ScrollPane(heroLeft);
-    heroScroll.getStyleClass().add("x-control-scroll");
-    heroScroll.setFitToWidth(true);
-    heroScroll.setMinSize(0, 0);
-    heroScroll.setPrefWidth(420);
-    heroScroll.setMinWidth(240);
-    if (slot.imageView != null) {
-      slot.imageView.fitWidthProperty().bind(javafx.beans.binding.Bindings.createDoubleBinding(
-          () -> Math.min(LOGO_WIDTH, Math.max(120, heroScroll.getWidth() - 64)),
-          heroScroll.widthProperty()));
-    }
-    heroScroll.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
-    HBox.setHgrow(heroScroll, Priority.SOMETIMES);
+    HBox.setHgrow(heroLeft, Priority.ALWAYS);
     HBox.setHgrow(controlsHost, Priority.ALWAYS);
     heroLeft.setMaxWidth(Double.MAX_VALUE);
-    heroLeft.setMinWidth(0);
-    heroLeft.setPrefWidth(420);
+    heroLeft.setMinWidth(420);
+    heroLeft.setPrefWidth(520);
     controlsHost.setMaxWidth(Double.MAX_VALUE);
-    controlsHost.setMinWidth(0);
-    controlsHost.setMinHeight(0);
+    controlsHost.setMinWidth(640);
     controlsHost.setPrefWidth(960);
 
-    body.getChildren().addAll(heroScroll, controlsHost);
+    body.getChildren().addAll(heroLeft, controlsHost);
 
     Button metrics = buildMetricsButton(onMetricsRequested);
     StackPane metricsShadowRoom = new StackPane(metrics);
@@ -305,28 +291,33 @@ public final class MainSceneFactory {
     settingsShadowRoom.getStyleClass().add("x-shadow-room");
     settingsShadowRoom.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-    // All actions share a wrapping footer that reserves space below the content.
-    FlowPane bottomCluster = (FlowPane) heroLeft.lookup("#heroActions");
-    heroLeft.getChildren().remove(bottomCluster);
-    bottomCluster.getChildren().addAll(metricsShadowRoom, settingsShadowRoom);
-    bottomCluster.getStyleClass().add("x-action-bar");
+    // Download lives in the hero CTA row alongside Start/Upload; only Metrics +
+    // Settings remain in the bottom-left cluster.
+    HBox bottomCluster =
+        new HBox(8, metricsShadowRoom, settingsShadowRoom);
     bottomCluster.setAlignment(Pos.BOTTOM_CENTER);
     bottomCluster.setPickOnBounds(false);
-    bottomCluster.setMaxWidth(Double.MAX_VALUE);
+    bottomCluster.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+    StackPane.setAlignment(bottomCluster, Pos.BOTTOM_LEFT);
+    StackPane.setMargin(bottomCluster, new Insets(0, 0, -12, 150));
 
     BorderPane content = new BorderPane();
     content.setPickOnBounds(false);
     content.setCenter(body);
-    content.setBottom(bottomCluster);
-    bindToRoot(content, root);
-
-    root.getChildren().addAll(background, overlay, smoke, content);
-    javafx.css.PseudoClass compact = javafx.css.PseudoClass.getPseudoClass("compact");
-    Runnable adapt = () -> root.pseudoClassStateChanged(
-        compact, root.getWidth() < 1400 || root.getHeight() < 900);
-    root.widthProperty().addListener((obs, old, value) -> adapt.run());
-    root.heightProperty().addListener((obs, old, value) -> adapt.run());
-    adapt.run();
+    // Preserve the original two-column layout and both original action rows.
+    // At smaller logical screen sizes the whole foreground scrolls instead of shrinking.
+    StackPane foreground = new StackPane(content, bottomCluster);
+    foreground.setId("originalLayout");
+    foreground.setMinWidth(1480);
+    foreground.setPrefWidth(1480);
+    foreground.setMinHeight(Region.USE_PREF_SIZE);
+    javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(foreground);
+    scroll.setId("mainScroll");
+    scroll.getStyleClass().add("x-page-scroll");
+    scroll.setFitToWidth(true);
+    scroll.setFitToHeight(true);
+    scroll.setMinSize(0, 0);
+    root.getChildren().addAll(background, overlay, smoke, scroll);
 
     // Pause the looping smoke/logo Timelines whenever the stage is iconified so we
     // don't burn CPU rendering offscreen frames. Resumes automatically when restored.
@@ -1249,7 +1240,9 @@ public final class MainSceneFactory {
     HBox wrap = new HBox();
     wrap.getStyleClass().add("x-logo-wrap");
     wrap.setAlignment(Pos.CENTER);
-    // Keep the logo in normal layout so it stays inside the scrollable hero.
+    // Push the logo block further down inside the hero without shifting the
+    // rest of the column (translateY does not affect layout of siblings).
+    wrap.setTranslateY(60);
     if (iv != null) {
       double glowRadius = LOGO_WIDTH * 0.72;
       javafx.scene.shape.Circle glow = new javafx.scene.shape.Circle(glowRadius);
@@ -1289,8 +1282,6 @@ public final class MainSceneFactory {
       glow.setUserData(pulse);
 
       StackPane stack = new StackPane(iv);
-      stack.setMinWidth(0);
-      glow.setManaged(false);
       stack.setAlignment(Pos.CENTER);
       stack.setPickOnBounds(false);
 
@@ -1341,8 +1332,8 @@ public final class MainSceneFactory {
     sub.setTextAlignment(javafx.scene.text.TextAlignment.JUSTIFY);
     sub.setMinHeight(Region.USE_PREF_SIZE);
     sub.setPrefWidth(390);
-    sub.setMaxWidth(Double.MAX_VALUE);
-    sub.setMinWidth(0);
+    sub.setMaxWidth(390);
+    sub.setMinWidth(390);
 
     Button startBtn = new Button("Start Mutation");
     startBtn.getStyleClass().add("x-cta-primary");
@@ -1371,15 +1362,16 @@ public final class MainSceneFactory {
     StackPane uploadWrap = new StackPane(uploadBtn);
     startWrap.getStyleClass().add("x-shadow-room");
     uploadWrap.getStyleClass().add("x-shadow-room");
+    startWrap.setTranslateX(34);
 
     // Download lives in the same row but only becomes visible after a successful
     // mutation. XMenInterface flips #heroDownload's managed/visible flags, and
     // the surrounding StackPane mirrors those via property bindings inside
     // buildDownloadCorner(), so the row collapses to [Start][Upload] until then.
     StackPane downloadWrap = buildDownloadCorner();
+    downloadWrap.setTranslateX(-34);
 
-    FlowPane ctas = new FlowPane(8, 8, startWrap, uploadWrap, downloadWrap);
-    ctas.setId("heroActions");
+    HBox ctas = new HBox(4, startWrap, uploadWrap, downloadWrap);
     ctas.setAlignment(Pos.CENTER_LEFT);
     ctas.setMaxWidth(Region.USE_PREF_SIZE);
     VBox.setMargin(ctas, new javafx.geometry.Insets(0, 0, 0, 0));
@@ -1394,7 +1386,7 @@ public final class MainSceneFactory {
     tagline.setAlignment(Pos.CENTER);
     VBox.setMargin(tagline, new javafx.geometry.Insets(6, 0, 0, 0));
     tagline.translateYProperty().unbind();
-    tagline.setTranslateY(0);
+    tagline.setTranslateY(-44);
     tagline.translateXProperty().unbind();
     tagline.setTranslateX(0);
 
