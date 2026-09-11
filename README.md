@@ -7,7 +7,7 @@
 ### A Mutation-based Approach for the Formal Analysis of Security Ceremonies
 
 <p>
-  <img alt="Java 25"        src="https://img.shields.io/badge/Java-25-007396?logo=openjdk&logoColor=white"/>
+  <img alt="Java 21"        src="https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white"/>
   <img alt="Spring Boot"    src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=spring&logoColor=white"/>
   <img alt="Maven"          src="https://img.shields.io/badge/Maven-3.9-C71A36?logo=apachemaven&logoColor=white"/>
   <img alt="Tamarin"        src="https://img.shields.io/badge/Tamarin-spthy-8E44AD"/>
@@ -472,7 +472,7 @@ want to build, extend, or script X-Men 2.0 from the command line.
 
 | Layer | Technology |
 | --- | --- |
-| Language | [**Java 25**](https://www.oracle.com/java/technologies/javase/jdk25-archive-downloads.html) |
+| Language | [**Java 21**](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) |
 | Build | [**Apache Maven 3.9**](https://maven.apache.org/) (via `mvnw` wrapper) |
 | Framework | [**Spring Boot 3**](https://spring.io/projects/spring-boot) |
 | API docs | [**springdoc-openapi** / Swagger UI](https://springdoc.org/) |
@@ -512,8 +512,8 @@ from source.
 
 ### Installing Java and Maven
 
-1. **Java 25** — download from
-   [Oracle](https://www.oracle.com/java/technologies/javase/jdk25-archive-downloads.html)
+1. **Java 21** — download from
+   [Oracle](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
    or [Adoptium Temurin](https://adoptium.net/) and run the platform installer.
 2. **Maven 3.9+** — download the binary archive from the
    [Apache Maven site](https://maven.apache.org/download.cgi) and unpack it to
@@ -534,7 +534,7 @@ from source.
 1. Press <kbd>Win</kbd> + <kbd>R</kbd>, type `sysdm.cpl`, press <kbd>Enter</kbd>.
 2. Switch to **Advanced ▸ Environment Variables…**
 3. Under **System variables**, click **New…** and add:
-   - `JAVA_HOME` → `C:\Program Files\Java\jdk-25`
+   - `JAVA_HOME` → `C:\Program Files\Java\jdk-21`
    - `MAVEN_HOME` → `C:\Program Files\Apache\maven`
 4. Edit **Path** and append:
    - `%JAVA_HOME%\bin`
@@ -551,8 +551,8 @@ from source.
 Append to `~/.zshrc` (or `~/.bashrc`):
 
 ```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v 25)   # macOS
-# export JAVA_HOME=/usr/lib/jvm/temurin-25-jdk    # Linux
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)   # macOS
+# export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk    # Linux
 export MAVEN_HOME=/opt/apache-maven
 export PATH="$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH"
 ```
@@ -572,7 +572,7 @@ java -version
 mvn  -version
 ```
 
-You should see Java 25.x and Maven 3.9.x respectively.
+You should see Java 21.x and Maven 3.9.x respectively.
 
 ---
 
@@ -841,8 +841,8 @@ curl -X POST "http://localhost:8081/api/generateMutations" \
 
 X-Men 2.0 ships with a production-grade **multi-stage `Dockerfile`**:
 
-- **Stage 1** uses `maven:3.9-eclipse-temurin-25` to compile and package.
-- **Stage 2** runs the resulting jar on a slim `eclipse-temurin:25-jre-noble` image
+- **Stage 1** uses `maven:3.9-eclipse-temurin-21` to compile and package.
+- **Stage 2** runs the resulting jar on a slim `eclipse-temurin:21-jre-noble` image
   as a **non-root** API/service process, with a built-in `HEALTHCHECK`.
 
 A `.dockerignore` keeps the build context tight (no `target/`, no IDE files,

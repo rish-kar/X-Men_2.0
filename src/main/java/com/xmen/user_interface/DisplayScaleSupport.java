@@ -2,66 +2,46 @@ package com.xmen.user_interface;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import java.util.Comparator;
 import java.util.function.Supplier;
 
 /**
  * Refresh bounds after live DPI/work-area changes without rebuilding the scene.
- * Requires the native DPI fix shipped in JavaFX 26 (JDK-8346281).
  */
 final class DisplayScaleSupport {
+  private static final boolean WINDOWS =
+      System.getProperty("os.name", "").toLowerCase().contains("win");
+
   private DisplayScaleSupport() {}
 
   static void install(Stage stage) {
-    Runnable dispose = observe(stage, stage.outputScaleXProperty(), stage.outputScaleYProperty(),
+    ScaleObserver observer = new ScaleObserver(stage, stage.outputScaleXProperty(), stage.outputScaleYProperty(),
         Screen.getScreens(), () -> XMenInterface.currentScreenBounds(stage),
         stage.getStyle() == StageStyle.UNDECORATED);
+    Runnable dispose = observer.install();
     stage.showingProperty().addListener((obs, wasShowing, showing) -> {
-      if (!showing) dispose.run();
+      if (!showing && !observer.refreshingPeer) dispose.run();
     });
   }
 
   // Observable inputs let tests exercise the same event path without changing OS settings.
   static Runnable observe(Stage stage, Observable scaleX, Observable scaleY,
       Observable screens, Supplier<Rectangle2D> workArea) {
-    return observe(stage, scaleX, scaleY, screens, workArea, false);
+    return new ScaleObserver(stage, scaleX, scaleY, screens, workArea, false).install();
   }
 
   static Runnable observe(Stage stage, Observable scaleX, Observable scaleY,
       Observable screens, Supplier<Rectangle2D> workArea, boolean fitBorderlessWindow) {
-    // Screen geometry and native window resize notifications can arrive on
-    // different pulses. Recheck briefly after settling; never poll indefinitely.
-    Timeline settled = new Timeline(
-        new KeyFrame(Duration.millis(150), event -> refresh(stage, workArea.get(), fitBorderlessWindow)),
-        new KeyFrame(Duration.millis(500), event -> refresh(stage, workArea.get(), fitBorderlessWindow)),
-        new KeyFrame(Duration.millis(1000), event -> refresh(stage, workArea.get(), fitBorderlessWindow)));
-    InvalidationListener changed = source -> {
-      // Reading revalidates scale properties so subsequent DPI changes also fire.
-      if (source instanceof javafx.beans.value.ObservableValue<?> value) value.getValue();
-      settled.playFromStart();
-    };
-    scaleX.addListener(changed);
-    scaleY.addListener(changed);
-    screens.addListener(changed);
-    stage.iconifiedProperty().addListener(changed);
-    stage.fullScreenProperty().addListener(changed);
-    stage.sceneProperty().addListener(changed);
-    settled.playFromStart();
-    return () -> {
-      settled.stop();
-      scaleX.removeListener(changed);
-      scaleY.removeListener(changed);
-      screens.removeListener(changed);
-      stage.iconifiedProperty().removeListener(changed);
-      stage.fullScreenProperty().removeListener(changed);
-      stage.sceneProperty().removeListener(changed);
-    };
+    return new ScaleObserver(stage, scaleX, scaleY, screens, workArea, fitBorderlessWindow).install();
   }
 
   private static void refresh(Stage stage, Rectangle2D area, boolean fitBorderlessWindow) {
@@ -96,5 +76,107 @@ final class DisplayScaleSupport {
       stage.setY(Math.max(area.getMinY(), Math.min(stage.getY(), area.getMaxY() - height)));
     }
     if (stage.getScene() != null) stage.getScene().getRoot().requestLayout();
+  }
+
+  private static final class ScaleObserver {
+    private final Stage stage;
+    private final Observable scaleX;
+    private final Observable scaleY;
+    private final Observable screens;
+    private final Supplier<Rectangle2D> workArea;
+    private final boolean fitBorderlessWindow;
+    private final Timeline settled;
+    private boolean refreshingPeer;
+
+    private ScaleObserver(Stage stage, Observable scaleX, Observable scaleY,
+        Observable screens, Supplier<Rectangle2D> workArea, boolean fitBorderlessWindow) {
+      this.stage = stage;
+      this.scaleX = scaleX;
+      this.scaleY = scaleY;
+      this.screens = screens;
+      this.workArea = workArea;
+      this.fitBorderlessWindow = fitBorderlessWindow;
+      this.settled = new Timeline(
+          new KeyFrame(Duration.millis(150), event -> refreshAfterScaleChange()),
+          new KeyFrame(Duration.millis(500), event -> refreshAfterScaleChange()),
+          new KeyFrame(Duration.millis(1000), event -> refreshAfterScaleChange()));
+    }
+
+    private Runnable install() {
+      InvalidationListener changed = source -> {
+        // Reading revalidates scale properties so subsequent DPI changes also fire.
+        if (source instanceof ObservableValue<?> value) value.getValue();
+        settled.playFromStart();
+      };
+      scaleX.addListener(changed);
+      scaleY.addListener(changed);
+      screens.addListener(changed);
+      stage.iconifiedProperty().addListener(changed);
+      stage.fullScreenProperty().addListener(changed);
+      stage.sceneProperty().addListener(changed);
+      settled.playFromStart();
+      return () -> {
+        settled.stop();
+        scaleX.removeListener(changed);
+        scaleY.removeListener(changed);
+        screens.removeListener(changed);
+        stage.iconifiedProperty().removeListener(changed);
+        stage.fullScreenProperty().removeListener(changed);
+        stage.sceneProperty().removeListener(changed);
+      };
+    }
+
+    private void refreshAfterScaleChange() {
+      Rectangle2D area = workArea.get();
+      refresh(stage, area, fitBorderlessWindow);
+      refreshPeerIfWindowsOutputScaleIsStale(area);
+    }
+
+    private void refreshPeerIfWindowsOutputScaleIsStale(Rectangle2D area) {
+      if (!WINDOWS || !fitBorderlessWindow || refreshingPeer || area == null
+          || !stage.isShowing() || stage.isFullScreen() || stage.isIconified()) {
+        return;
+      }
+      Screen screen = matchingScreen(area);
+      if (screen == null
+          || nearlyEqual(stage.getOutputScaleX(), screen.getOutputScaleX())
+          && nearlyEqual(stage.getOutputScaleY(), screen.getOutputScaleY())) {
+        return;
+      }
+      refreshingPeer = true;
+      stage.hide();
+      Platform.runLater(() -> {
+        try {
+          Rectangle2D latestArea = workArea.get();
+          if (latestArea != null) {
+            stage.setX(latestArea.getMinX());
+            stage.setY(latestArea.getMinY());
+            stage.setWidth(latestArea.getWidth());
+            stage.setHeight(latestArea.getHeight());
+          }
+          stage.show();
+          refresh(stage, workArea.get(), true);
+        } finally {
+          Platform.runLater(() -> refreshingPeer = false);
+        }
+      });
+    }
+
+    private Screen matchingScreen(Rectangle2D area) {
+      return Screen.getScreens().stream()
+          .min(Comparator.comparingDouble(screen -> distance(screen.getVisualBounds(), area)))
+          .orElse(null);
+    }
+  }
+
+  private static boolean nearlyEqual(double left, double right) {
+    return Math.abs(left - right) < 0.01;
+  }
+
+  private static double distance(Rectangle2D left, Rectangle2D right) {
+    return Math.abs(left.getMinX() - right.getMinX())
+        + Math.abs(left.getMinY() - right.getMinY())
+        + Math.abs(left.getWidth() - right.getWidth())
+        + Math.abs(left.getHeight() - right.getHeight());
   }
 }

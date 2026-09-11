@@ -2,8 +2,8 @@
 #
 # X-Men — multi-stage container image
 # ----------------------------------------------------------------------
-#  Stage 1: build with Maven + Eclipse Temurin JDK 25
-#  Stage 2: slim runtime with Eclipse Temurin JRE 25, non-root user
+#  Stage 1: build with Maven + Eclipse Temurin JDK 21
+#  Stage 2: slim runtime with Eclipse Temurin JRE 21, non-root user
 #
 # Build:    docker build -t x-men:latest .
 # Run:      docker run --rm -p 8081:8081 x-men:latest
@@ -11,7 +11,7 @@
 # ----------------------------------------------------------------------
 
 # ---------- Stage 1: build ----------
-FROM maven:3.9-eclipse-temurin-25 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 
 # Resolve dependencies first so subsequent layers can be cached.
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 
 # ---------- Stage 2: runtime ----------
-FROM eclipse-temurin:25-jre-noble AS runtime
+FROM eclipse-temurin:21-jre-noble AS runtime
 
 LABEL org.opencontainers.image.title="X-Men" \
       org.opencontainers.image.description="X-Men: Mutation-Based Analysis of Security Ceremonies" \

@@ -18,13 +18,12 @@
     <description>X-Men: A Mutation-Based Approach for the Formal Analysis of Security Ceremonies</description>
 
     <properties>
-        <!-- Build/run on JDK 25; retain Java 21 application bytecode for
-             Spring Boot 3.3's classpath scanning compatibility. -->
+        <!-- Keep the normal build on JDK 21-compatible artifacts. Live DPI
+             adaptation is handled in DisplayScaleSupport, not by requiring a
+             newer JavaFX runtime for every developer build. -->
         <java.version>21</java.version>
         <springdoc.version>2.6.0</springdoc.version>
-        <!-- Includes JDK-8346281: live Windows DPI changes must update the
-             native window's output scale, not just its screen bounds. -->
-        <javafx.version>26.0.2</javafx.version>
+        <javafx.version>23.0.2</javafx.version>
         <byte-buddy.version>1.18.11</byte-buddy.version>
     </properties>
 
@@ -358,20 +357,9 @@
                 </os>
             </activation>
             <!--
-              Ubuntu 26.04 LTS "Resolute" ships FFmpeg 8 (libavcodec.so.62) and
-              does not carry older SONAMEs. JavaFX 23.0.2's Linux media bundle
-              only ships libavplugin-ffmpeg-56..61, so on Resolute the .deb
-              either fails dep resolution (no 58-61 available) or installs
-              against libavcodec62 with no shim to load it — splash + background
-              videos die silently. 27-ea+18 is the first JavaFX build that
-              includes libavplugin-ffmpeg-62.so (verified by extracting
-              javafx-media-27-ea+18-linux.jar). Pinning the bump inside the
-              javafx-linux profile keeps its media support while Windows
-              and both Mac architectures use the shared JavaFX 26 version.
+              Keep Linux on the same JDK 21-compatible JavaFX line as Windows
+              and macOS so a normal Maven build works consistently on every OS.
             -->
-            <properties>
-                <javafx.version>27-ea+18</javafx.version>
-            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.openjfx</groupId>
@@ -776,13 +764,8 @@
                                     <linuxPackageName>x-men</linuxPackageName>
                                     <linuxAppCategory>Development</linuxAppCategory>
                                     <!--
-                                      Match the Linux profile's JavaFX runtime: 27-ea+18
-                                      ships libavplugin-ffmpeg-56..62, so include the
-                                      62 SONAMEs (Ubuntu 26.04 "Resolute", Debian
-                                      Trixie+) alongside the 58-61 set that older LTS
-                                      releases (Ubuntu 24.04, Debian 12) still ship.
-                                      apt picks the first installable alternative, and
-                                      JavaFX has a matching plugin for whichever wins.
+                                      Keep broad FFmpeg alternatives so package
+                                      resolution works across Ubuntu/Debian releases.
                                     -->
                                     <additionalOptions>
                                         <option>--linux-package-deps</option>
