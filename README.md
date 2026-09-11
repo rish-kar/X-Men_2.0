@@ -841,8 +841,8 @@ curl -X POST "http://localhost:8081/api/generateMutations" \
 
 X-Men 2.0 ships with a production-grade **multi-stage `Dockerfile`**:
 
-- **Stage 1** uses `maven:3.9.9-eclipse-temurin-21` to compile and package.
-- **Stage 2** runs the resulting jar on a slim `eclipse-temurin:21-jre` image
+- **Stage 1** uses `maven:3.9-eclipse-temurin-21` to compile and package.
+- **Stage 2** runs the resulting jar on a slim `eclipse-temurin:21-jre-noble` image
   as a **non-root** API/service process, with a built-in `HEALTHCHECK`.
 
 A `.dockerignore` keeps the build context tight (no `target/`, no IDE files,

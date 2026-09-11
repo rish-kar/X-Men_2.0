@@ -18,9 +18,13 @@
     <description>X-Men: A Mutation-Based Approach for the Formal Analysis of Security Ceremonies</description>
 
     <properties>
+        <!-- Keep the normal build on JDK 21-compatible artifacts. Live DPI
+             adaptation is handled in DisplayScaleSupport, not by requiring a
+             newer JavaFX runtime for every developer build. -->
         <java.version>21</java.version>
         <springdoc.version>2.6.0</springdoc.version>
         <javafx.version>23.0.2</javafx.version>
+        <byte-buddy.version>1.18.11</byte-buddy.version>
     </properties>
 
     <dependencies>
@@ -195,7 +199,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>${java.version}</release>
                     <showWarnings>false</showWarnings>
                     <showDeprecation>false</showDeprecation>
 
@@ -225,7 +229,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M3</version>
                 <configuration>
-                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading --enable-native-access=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
                         <jacoco-agent.destfile>$/jacoco.exec</jacoco-agent.destfile>
                     </systemPropertyVariables>
@@ -236,7 +240,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
+                <version>0.8.14</version>
                 <executions>
                     <!-- 1) Prepare JaCoCo Agent -->
                     <execution>
@@ -353,20 +357,9 @@
                 </os>
             </activation>
             <!--
-              Ubuntu 26.04 LTS "Resolute" ships FFmpeg 8 (libavcodec.so.62) and
-              does not carry older SONAMEs. JavaFX 23.0.2's Linux media bundle
-              only ships libavplugin-ffmpeg-56..61, so on Resolute the .deb
-              either fails dep resolution (no 58-61 available) or installs
-              against libavcodec62 with no shim to load it — splash + background
-              videos die silently. 27-ea+18 is the first JavaFX build that
-              includes libavplugin-ffmpeg-62.so (verified by extracting
-              javafx-media-27-ea+18-linux.jar). Pinning the bump inside the
-              javafx-linux profile leaves the Windows, Intel-Mac, and
-              Apple-Silicon builds on 23.0.2 untouched.
+              Keep Linux on the same JDK 21-compatible JavaFX line as Windows
+              and macOS so a normal Maven build works consistently on every OS.
             -->
-            <properties>
-                <javafx.version>27-ea+18</javafx.version>
-            </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.openjfx</groupId>
@@ -552,6 +545,7 @@
                                     <icon>${jpackage.icon}</icon>
                                     <javaOptions>
                                         <option>-Djava.awt.headless=false</option>
+                                        <option>--enable-native-access=ALL-UNNAMED</option>
                                         <option>-Dfile.encoding=UTF-8</option>
                                         <!--
                                           Bundled JRE heap budget. Forget +
@@ -770,13 +764,8 @@
                                     <linuxPackageName>x-men</linuxPackageName>
                                     <linuxAppCategory>Development</linuxAppCategory>
                                     <!--
-                                      Match the Linux profile's JavaFX runtime: 27-ea+18
-                                      ships libavplugin-ffmpeg-56..62, so include the
-                                      62 SONAMEs (Ubuntu 26.04 "Resolute", Debian
-                                      Trixie+) alongside the 58-61 set that older LTS
-                                      releases (Ubuntu 24.04, Debian 12) still ship.
-                                      apt picks the first installable alternative, and
-                                      JavaFX has a matching plugin for whichever wins.
+                                      Keep broad FFmpeg alternatives so package
+                                      resolution works across Ubuntu/Debian releases.
                                     -->
                                     <additionalOptions>
                                         <option>--linux-package-deps</option>

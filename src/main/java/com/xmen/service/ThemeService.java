@@ -43,12 +43,18 @@ public class ThemeService {
   }
 
   /** Switch the active theme by id. Returns the resolved (possibly defaulted) theme. */
-  public Theme setActive(String id) {
+  public synchronized Theme setActive(String id) {
     Theme resolved = catalog.resolve(id);
+    String previous = catalog.getDefaultId();
     catalog.setDefaultId(resolved.getId());
-    log.info("Active theme switched to '{}'.", resolved.getId());
     SettingsStore store = storeProvider.getIfAvailable();
-    if (store != null) store.persist();
+    try {
+      if (store != null) store.persist();
+    } catch (RuntimeException e) {
+      catalog.setDefaultId(previous);
+      throw e;
+    }
+    log.info("Active theme switched to '{}'.", resolved.getId());
     return resolved;
   }
 

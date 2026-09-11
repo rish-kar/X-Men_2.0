@@ -11,7 +11,7 @@
 # ----------------------------------------------------------------------
 
 # ---------- Stage 1: build ----------
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 
 # Resolve dependencies first so subsequent layers can be cached.
@@ -83,7 +83,7 @@ ENV SERVER_PORT=8081 \
     APP_NAME="X-Men" \
     APP_CORS_ALLOWED_ORIGINS="http://localhost:8081,http://localhost:8082,http://localhost:8083,http://localhost:5173" \
     DERIVATION_SERVICE_URL="http://localhost:9091" \
-    JAVA_OPTS="-Djava.awt.headless=false" \
+    JAVA_OPTS="-Djava.awt.headless=false --enable-native-access=ALL-UNNAMED" \
     XMEN_UI_ENABLED=false \
     SPRING_PROFILES_ACTIVE=default
 

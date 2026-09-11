@@ -178,40 +178,17 @@ public class XMenInterface extends Application {
     splashScene.setFill(Color.BLACK);
     stage.setScene(splashScene);
     stage.setTitle("X-Men 2.0");
-    // Lock the stage to the layout's true minimum so the body HBox
-    // (heroLeft minWidth 420 + controlsHost minWidth 640 = 1060) can
-    // never be squeezed into an overlapping state. Above this floor
-    // the existing HBox.setHgrow(_, ALWAYS) lets both columns grow.
-    stage.setMinWidth(1100);
-    stage.setMinHeight(720);
+    // The original foreground can scroll within smaller logical screen bounds.
+    stage.setMinWidth(Math.min(640, screen.getWidth()));
+    stage.setMinHeight(Math.min(480, screen.getHeight()));
     stage.setX(screen.getMinX());
     stage.setY(screen.getMinY());
     stage.setWidth(screen.getWidth());
     stage.setHeight(screen.getHeight());
     stage.show();
     stage.setMaximized(true);
-    // Block edge-drag resize. Programmatic setMaximized(true) above still
-    // works because the WM treats it as an explicit override, so the
-    // window opens (and stays) at the active monitor's visual bounds —
-    // setResizable(false) only suppresses *user-initiated* resize and the
-    // OS maximise affordance, which is exactly the behaviour we want:
-    // the window is fixed at fullscreen and can never be drag-resized
-    // into an awkward intermediate size.
-    //
-    // Linux: GNOME/Mutter processes setMaximized asynchronously, so
-    // calling setResizable(false) on the same frame captures the
-    // pre-maximise size (the 1100x720 minimum) as the WM_NORMAL_HINTS
-    // lock and un-maximises the window back to that size. Defer the lock
-    // by ~300 ms so the maximise has actually applied before the size is
-    // pinned — by that point the stage's reported size is the screen
-    // bounds, and locking it keeps the fullscreen state intact.
-    if (isLinux()) {
-      PauseTransition lockAfterMaximize = new PauseTransition(Duration.millis(300));
-      lockAfterMaximize.setOnFinished(e -> stage.setResizable(false));
-      lockAfterMaximize.play();
-    } else {
-      stage.setResizable(false);
-    }
+    stage.setResizable(true);
+    DisplayScaleSupport.install(stage);
 
     stage.setOnCloseRequest(e -> shutdownEverything());
 
@@ -813,11 +790,7 @@ public class XMenInterface extends Application {
     // affordance instead of bunching them near the top.
     VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
 
-    // No ScrollPane: all mutations are laid out flat inside the glass card so
-    // the rows distribute evenly all the way down to the chat affordance,
-    // matching the original v1.0.0 layout. The window is locked at
-    // fullscreen-or-larger so the panel always has enough height for the
-    // rows to fit without a scrollbar.
+    // Keep the original flat card layout; the outer foreground scrolls as a whole.
     StackPane panelWrap = new StackPane(panelContent, panelFooter);
     panelWrap.getStyleClass().add("x-control-panel");
     panelWrap.setMaxWidth(Double.MAX_VALUE);
@@ -827,9 +800,10 @@ public class XMenInterface extends Application {
     StackPane controlsHost = built.controlsHost();
     controlsHost.getChildren().add(panelWrap);
 
-    Node heroStart = built.root().lookup("#heroStart");
-    Node heroUpload = built.root().lookup("#heroUpload");
-    Node heroDownload = built.root().lookup("#heroDownload");
+    // ScrollPane content is not in its skin until CSS runs; wire the content directly.
+    Node heroStart = built.content().lookup("#heroStart");
+    Node heroUpload = built.content().lookup("#heroUpload");
+    Node heroDownload = built.content().lookup("#heroDownload");
     if (heroStart instanceof Button hs && buttonStart != null) {
       hs.setOnAction(e -> buttonStart.fire());
     }
@@ -1029,35 +1003,10 @@ public class XMenInterface extends Application {
     SettingsDialog dialog =
         new SettingsDialog(
             serverPort,
-            themeId -> {
-              try {
-                okhttp3.Response r =
-                    SHARED_HTTP.newCall(
-                            new okhttp3.Request.Builder()
-                                .url(
-                                    "http://localhost:"
-                                        + serverPort
-                                        + "/api/settings/themes/"
-                                        + themeId)
-                                .build())
-                        .execute();
-                try (r) {
-                  if (r.body() != null && mainRoot != null) {
-                    com.xmen.config.ThemeCatalog.Theme theme =
-                        SHARED_JSON.readValue(
-                            r.body().bytes(),
-                            com.xmen.config.ThemeCatalog.Theme.class);
-                    javafx.application.Platform.runLater(
-                        () -> {
-                          ThemeApplier.apply(mainRoot, theme);
-                          ThemeLogo.apply(heroLogo, theme);
-                          refreshChatIcon(theme);
-                        });
-                  }
-                }
-              } catch (Exception ex) {
-                log.warn("Failed to refresh theme: {}", ex.getMessage());
-              }
+            theme -> {
+              ThemeApplier.apply(mainRoot, theme);
+              ThemeLogo.apply(heroLogo, theme);
+              refreshChatIcon(theme);
             },
             prefs -> log.debug("UI preferences: {}", prefs),
             theme -> javafx.application.Platform.runLater(() -> ThemeLogo.apply(heroLogo, theme)));

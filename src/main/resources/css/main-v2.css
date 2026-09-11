@@ -1691,3 +1691,12 @@
         rgba(0, 0, 0, 0) 100%);
     -fx-opacity: 0.55;
 }
+
+/* Scroll the unchanged foreground when the display has fewer logical pixels. */
+.x-page-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+.x-page-scroll > .viewport { -fx-background-color: transparent; }

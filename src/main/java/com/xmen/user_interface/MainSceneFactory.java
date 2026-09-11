@@ -304,9 +304,20 @@ public final class MainSceneFactory {
     BorderPane content = new BorderPane();
     content.setPickOnBounds(false);
     content.setCenter(body);
-    bindToRoot(content, root);
-
-    root.getChildren().addAll(background, overlay, smoke, content, bottomCluster);
+    // Preserve the original two-column layout and both original action rows.
+    // At smaller logical screen sizes the whole foreground scrolls instead of shrinking.
+    StackPane foreground = new StackPane(content, bottomCluster);
+    foreground.setId("originalLayout");
+    foreground.setMinWidth(1480);
+    foreground.setPrefWidth(1480);
+    foreground.setMinHeight(Region.USE_PREF_SIZE);
+    javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(foreground);
+    scroll.setId("mainScroll");
+    scroll.getStyleClass().add("x-page-scroll");
+    scroll.setFitToWidth(true);
+    scroll.setFitToHeight(true);
+    scroll.setMinSize(0, 0);
+    root.getChildren().addAll(background, overlay, smoke, scroll);
 
     // Pause the looping smoke/logo Timelines whenever the stage is iconified so we
     // don't burn CPU rendering offscreen frames. Resumes automatically when restored.
@@ -323,6 +334,8 @@ public final class MainSceneFactory {
         theme ->
             javafx.application.Platform.runLater(
                 () -> {
+                  // A late startup response must not replace a user's preview.
+                  if (!root.getStyle().isBlank()) return;
                   ThemeApplier.apply(root, theme);
                   ThemeLogo.apply(slot.imageView, theme);
                 }));
@@ -1122,7 +1135,16 @@ public final class MainSceneFactory {
       stage.showingProperty()
           .addListener(
               (obs, was, showing) -> {
-                if (!showing) dispose();
+                if (!showing) {
+                  if (!Boolean.TRUE.equals(
+                      stage.getProperties().get(DisplayScaleSupport.PEER_REFRESHING_PROPERTY))) {
+                    dispose();
+                  }
+                } else if (!disposed && started) {
+                  if (currentPlayer != null) currentPlayer.play();
+                  if (incomingPlayer != null) incomingPlayer.play();
+                  if (currentPlayer == null && incomingPlayer == null) playNext(true);
+                }
               });
     }
 
