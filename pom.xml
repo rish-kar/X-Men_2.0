@@ -18,9 +18,14 @@
     <description>X-Men: A Mutation-Based Approach for the Formal Analysis of Security Ceremonies</description>
 
     <properties>
+        <!-- Build/run on JDK 25; retain Java 21 application bytecode for
+             Spring Boot 3.3's classpath scanning compatibility. -->
         <java.version>21</java.version>
         <springdoc.version>2.6.0</springdoc.version>
-        <javafx.version>23.0.2</javafx.version>
+        <!-- Includes JDK-8346281: live Windows DPI changes must update the
+             native window's output scale, not just its screen bounds. -->
+        <javafx.version>26.0.2</javafx.version>
+        <byte-buddy.version>1.18.11</byte-buddy.version>
     </properties>
 
     <dependencies>
@@ -195,7 +200,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>${java.version}</release>
                     <showWarnings>false</showWarnings>
                     <showDeprecation>false</showDeprecation>
 
@@ -225,7 +230,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M3</version>
                 <configuration>
-                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading --enable-native-access=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
                         <jacoco-agent.destfile>$/jacoco.exec</jacoco-agent.destfile>
                     </systemPropertyVariables>
@@ -236,7 +241,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
+                <version>0.8.14</version>
                 <executions>
                     <!-- 1) Prepare JaCoCo Agent -->
                     <execution>
@@ -361,8 +366,8 @@
               videos die silently. 27-ea+18 is the first JavaFX build that
               includes libavplugin-ffmpeg-62.so (verified by extracting
               javafx-media-27-ea+18-linux.jar). Pinning the bump inside the
-              javafx-linux profile leaves the Windows, Intel-Mac, and
-              Apple-Silicon builds on 23.0.2 untouched.
+              javafx-linux profile keeps its media support while Windows
+              and both Mac architectures use the shared JavaFX 26 version.
             -->
             <properties>
                 <javafx.version>27-ea+18</javafx.version>
@@ -552,6 +557,7 @@
                                     <icon>${jpackage.icon}</icon>
                                     <javaOptions>
                                         <option>-Djava.awt.headless=false</option>
+                                        <option>--enable-native-access=ALL-UNNAMED</option>
                                         <option>-Dfile.encoding=UTF-8</option>
                                         <!--
                                           Bundled JRE heap budget. Forget +
