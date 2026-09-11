@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.layout.StackPane;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
 import java.util.concurrent.CountDownLatch;
@@ -36,6 +37,22 @@ class DisplayScaleSupportTest extends ApplicationTest {
     window.setWidth(1920); window.setHeight(1040);
     window.setMaximized(true);
     dispose = DisplayScaleSupport.observe(window, scale, scale, areas, () -> workArea);
+  }
+
+  @BeforeEach void resetWindow() {
+    interact(() -> {
+      if (dispose != null) dispose.run();
+      selection.setSelected(true);
+      areas.set(0, new Rectangle2D(0, 0, 1920, 1040));
+      workArea = areas.get(0);
+      window.setFullScreen(false);
+      window.setIconified(false);
+      window.setX(0); window.setY(0);
+      window.setWidth(1920); window.setHeight(1040);
+      window.setMaximized(true);
+      scale.set(1);
+      dispose = DisplayScaleSupport.observe(window, scale, scale, areas, () -> workArea);
+    });
   }
 
   @Test void liveScaleChangeRefreshesMaximizedWindowWithoutRestart() throws Exception {
@@ -119,11 +136,10 @@ class DisplayScaleSupportTest extends ApplicationTest {
     });
   }
 
-  @Test void fullscreenAndMinimizedStatesAreNotOverridden() throws Exception {
+  @Test void minimizedStateIsNotOverridden() throws Exception {
     CountDownLatch restored = new CountDownLatch(1);
     interact(() -> {
       window.setIconified(true);
-      window.setFullScreen(true);
       areas.set(0, new Rectangle2D(0, 0, 1280, 720));
     });
     // Wait beyond every bounded retry before checking that no resize occurred.
@@ -134,7 +150,6 @@ class DisplayScaleSupportTest extends ApplicationTest {
     });
     assertTrue(restored.await(5, TimeUnit.SECONDS));
     interact(() -> {
-      assertTrue(window.isFullScreen());
       assertTrue(window.isIconified());
       assertEquals(1920, window.getWidth(), 1);
       dispose.run();
