@@ -65,12 +65,14 @@ public class SettingsDialog {
   private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 
   private final int serverPort;
-  private final Consumer<String> onThemeApplied;
+  private final Consumer<Theme> onThemeApplied;
   private final Consumer<Map<String, Object>> onPreferencesChanged;
   private final Consumer<Theme> onLogoSwap;
 
   private final ObservableList<VocabRow> vocabRows = FXCollections.observableArrayList();
   private final AtomicReference<String> selectedThemeId = new AtomicReference<>();
+  private final java.util.concurrent.atomic.AtomicLong previewRevision =
+      new java.util.concurrent.atomic.AtomicLong();
   private TilePane themeTiles;
   private CheckBox cbValidateOnUpload;
   private CheckBox cbShowAnimations;
@@ -85,7 +87,7 @@ public class SettingsDialog {
 
   public SettingsDialog(
       int serverPort,
-      Consumer<String> onThemeApplied,
+      Consumer<Theme> onThemeApplied,
       Consumer<Map<String, Object>> onPreferencesChanged,
       Consumer<Theme> onLogoSwap) {
     this.serverPort = serverPort;
@@ -100,6 +102,7 @@ public class SettingsDialog {
     stage.initModality(Modality.APPLICATION_MODAL);
     stage.initStyle(StageStyle.TRANSPARENT);
     stage.setTitle("X-Men Settings");
+    stage.setOnHidden(e -> previewRevision.incrementAndGet());
 
     VBox panel = new VBox(18);
     panel.getStyleClass().add("x-settings-pane");
@@ -193,6 +196,8 @@ public class SettingsDialog {
   }
 
   private void saveAll(Stage hostStage, Stage thisStage) {
+    previewRevision.incrementAndGet();
+    if (dialogRoot != null) dialogRoot.setDisable(true);
     Map<String, Object> vocabBody = unflatten(vocabRows);
     String themeId = selectedThemeId.get();
     // If a profile is currently selected, save the vocabulary back into THAT profile file
@@ -214,7 +219,16 @@ public class SettingsDialog {
             () -> {
               boolean ok = true;
               String failureReason = null;
+              Theme savedTheme = null;
               try {
+                if (themeId != null && !themeId.isBlank()) {
+                  try (Response response = http.newCall(new Request.Builder()
+                      .url(BASE + serverPort + "/api/settings/themes/" + themeId).build()).execute()) {
+                    if (!response.isSuccessful() || response.body() == null)
+                      throw new java.io.IOException("Could not load the selected theme.");
+                    savedTheme = json.readValue(response.body().bytes(), Theme.class);
+                  }
+                }
                 ok &= postJson("/api/settings/vocabulary", vocabBody);
                 if (themeId != null && !themeId.isBlank()) {
                   ok &= postJson("/api/settings/themes/active", Map.of("id", themeId));
@@ -251,11 +265,13 @@ public class SettingsDialog {
 
               final boolean success = ok;
               final String reason = failureReason;
+              final Theme appliedTheme = savedTheme;
               Platform.runLater(
                   () -> {
+                    if (dialogRoot != null) dialogRoot.setDisable(false);
                     if (success) {
-                      if (themeId != null && onThemeApplied != null)
-                        onThemeApplied.accept(themeId);
+                      if (appliedTheme != null && onThemeApplied != null)
+                        onThemeApplied.accept(appliedTheme);
                       if (onPreferencesChanged != null) onPreferencesChanged.accept(prefs);
                       // Close the dialog FIRST, then show the toast on the parent window so
                       // the confirmation isn't competing with the modal that's about to vanish.
@@ -1353,6 +1369,7 @@ public class SettingsDialog {
   }
 
   private void previewTheme(String id) {
+    long revision = previewRevision.incrementAndGet();
     runHttp(
         () -> {
           Response r =
@@ -1366,8 +1383,9 @@ public class SettingsDialog {
             Theme theme = json.readValue(r.body().bytes(), Theme.class);
             Platform.runLater(
                 () -> {
+                  if (revision != previewRevision.get()) return;
                   if (dialogRoot != null) ThemeApplier.apply(dialogRoot, theme);
-                  if (onThemeApplied != null) onThemeApplied.accept(id);
+                  if (onThemeApplied != null) onThemeApplied.accept(theme);
                   if (onLogoSwap != null) onLogoSwap.accept(theme);
                 });
           }

@@ -110,12 +110,12 @@
 /* ============================================================================ */
 
 .x-hero-left {
-    -fx-padding: 30 24 80 60;
+    -fx-padding: 24;
     -fx-spacing: 22;
     /* The hero column lives in the ~35% of the screen not taken by the
      * mutation controls glass panel — centre every child both vertically
      * and horizontally inside that space. */
-    -fx-alignment: CENTER;
+    -fx-alignment: TOP_CENTER;
 }
 
 .x-hero-center {
@@ -254,8 +254,27 @@
  * the card has enough vertical room to fit every mutation flat without a
  * scrollbar. */
 .x-controls-wrap {
-    -fx-padding: 58 60 70 12;
+    -fx-padding: 24 24 12 12;
     -fx-alignment: CENTER;
+}
+
+/* Action rows reserve their own space and wrap on smaller logical displays. */
+.x-action-bar {
+    -fx-padding: 8 16 12 16;
+}
+.x-action-bar .x-shadow-room {
+    -fx-padding: 4 8 8 8;
+}
+.x-root:compact .x-hero-title {
+    -fx-font-size: 52px;
+    -fx-line-spacing: -8px;
+}
+.x-root:compact .x-hero-left {
+    -fx-padding: 16;
+    -fx-spacing: 12;
+}
+.x-root:compact .x-controls-wrap {
+    -fx-padding: 12 12 8 8;
 }
 
 .x-control-panel {

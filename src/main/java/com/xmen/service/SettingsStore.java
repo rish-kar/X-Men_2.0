@@ -43,8 +43,7 @@ import java.util.Map;
 @Service
 public class SettingsStore {
 
-  private static final Path STORE_DIR = Paths.get(System.getProperty("user.home"), ".xmen");
-  private static final Path STORE_FILE = STORE_DIR.resolve("settings.json");
+  private final Path storeFile;
 
   private final CeremonyVocabulary vocabulary;
   private final ThemeCatalog themes;
@@ -54,25 +53,30 @@ public class SettingsStore {
 
   @Autowired
   public SettingsStore(CeremonyVocabulary vocabulary, ThemeCatalog themes) {
+    this(vocabulary, themes, Paths.get(System.getProperty("user.home"), ".xmen", "settings.json"));
+  }
+
+  SettingsStore(CeremonyVocabulary vocabulary, ThemeCatalog themes, Path storeFile) {
     this.vocabulary = vocabulary;
     this.themes = themes;
+    this.storeFile = storeFile;
     this.json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
   }
 
   /** Read the on-disk store after Spring has wired the configuration beans. */
   @PostConstruct
   public void loadFromDisk() {
-    if (!Files.exists(STORE_FILE)) {
-      log.info("No persisted settings at {} — using built-in defaults.", STORE_FILE);
+    if (!Files.exists(storeFile)) {
+      log.info("No persisted settings at {} — using built-in defaults.", storeFile);
       return;
     }
     try {
-      byte[] bytes = Files.readAllBytes(STORE_FILE);
+      byte[] bytes = Files.readAllBytes(storeFile);
       PersistedSettings snap = json.readValue(bytes, PersistedSettings.class);
 
       if (snap.vocabulary != null) {
         vocabulary.copyFrom(snap.vocabulary);
-        log.info("Applied persisted vocabulary from {}.", STORE_FILE);
+        log.info("Applied persisted vocabulary from {}.", storeFile);
       }
       if (snap.activeThemeId != null && !snap.activeThemeId.isBlank()) {
         themes.setDefaultId(snap.activeThemeId);
@@ -83,7 +87,7 @@ public class SettingsStore {
         log.info("Applied persisted UI preferences.");
       }
     } catch (Exception e) {
-      log.warn("Failed to load persisted settings from {}: {}", STORE_FILE, e.getMessage());
+      log.warn("Failed to load persisted settings from {}: {}", storeFile, e.getMessage());
     }
   }
 
@@ -110,17 +114,31 @@ public class SettingsStore {
 
   /** Persist the current state of vocabulary + active theme + preferences. */
   public synchronized void persist() {
+    Path temporary = null;
     try {
-      Files.createDirectories(STORE_DIR);
+      Files.createDirectories(storeFile.getParent());
       PersistedSettings snap = new PersistedSettings();
       snap.vocabulary = vocabulary;
       snap.activeThemeId = themes.getDefaultId();
       snap.preferences = preferences;
       byte[] bytes = json.writeValueAsBytes(snap);
-      Files.write(STORE_FILE, bytes);
-      log.debug("Persisted settings to {}.", STORE_FILE);
+      temporary = Files.createTempFile(storeFile.getParent(), "settings-", ".tmp");
+      Files.write(temporary, bytes);
+      try {
+        Files.move(temporary, storeFile, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+        Files.move(temporary, storeFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      }
+      log.debug("Persisted settings to {}.", storeFile);
     } catch (IOException e) {
-      log.warn("Failed to persist settings to {}: {}", STORE_FILE, e.getMessage());
+      log.warn("Failed to persist settings to {}: {}", storeFile, e.getMessage());
+      throw new java.io.UncheckedIOException("Could not save settings to " + storeFile, e);
+    } finally {
+      if (temporary != null) {
+        try { Files.deleteIfExists(temporary); }
+        catch (IOException e) { log.debug("Could not remove temporary settings file.", e); }
+      }
     }
   }
 

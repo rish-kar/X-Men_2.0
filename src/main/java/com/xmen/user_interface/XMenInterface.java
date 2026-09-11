@@ -178,40 +178,18 @@ public class XMenInterface extends Application {
     splashScene.setFill(Color.BLACK);
     stage.setScene(splashScene);
     stage.setTitle("X-Men 2.0");
-    // Lock the stage to the layout's true minimum so the body HBox
-    // (heroLeft minWidth 420 + controlsHost minWidth 640 = 1060) can
-    // never be squeezed into an overlapping state. Above this floor
-    // the existing HBox.setHgrow(_, ALWAYS) lets both columns grow.
-    stage.setMinWidth(1100);
-    stage.setMinHeight(720);
+    // Work in logical screen coordinates; scrollable content and wrapping
+    // actions also support smaller windows and higher display scaling.
+    stage.setMinWidth(Math.min(640, screen.getWidth()));
+    stage.setMinHeight(Math.min(480, screen.getHeight()));
     stage.setX(screen.getMinX());
     stage.setY(screen.getMinY());
     stage.setWidth(screen.getWidth());
     stage.setHeight(screen.getHeight());
     stage.show();
     stage.setMaximized(true);
-    // Block edge-drag resize. Programmatic setMaximized(true) above still
-    // works because the WM treats it as an explicit override, so the
-    // window opens (and stays) at the active monitor's visual bounds —
-    // setResizable(false) only suppresses *user-initiated* resize and the
-    // OS maximise affordance, which is exactly the behaviour we want:
-    // the window is fixed at fullscreen and can never be drag-resized
-    // into an awkward intermediate size.
-    //
-    // Linux: GNOME/Mutter processes setMaximized asynchronously, so
-    // calling setResizable(false) on the same frame captures the
-    // pre-maximise size (the 1100x720 minimum) as the WM_NORMAL_HINTS
-    // lock and un-maximises the window back to that size. Defer the lock
-    // by ~300 ms so the maximise has actually applied before the size is
-    // pinned — by that point the stage's reported size is the screen
-    // bounds, and locking it keeps the fullscreen state intact.
-    if (isLinux()) {
-      PauseTransition lockAfterMaximize = new PauseTransition(Duration.millis(300));
-      lockAfterMaximize.setOnFinished(e -> stage.setResizable(false));
-      lockAfterMaximize.play();
-    } else {
-      stage.setResizable(false);
-    }
+    // Keep the initial maximized view without locking the user to that size.
+    stage.setResizable(true);
 
     stage.setOnCloseRequest(e -> shutdownEverything());
 
@@ -807,18 +785,27 @@ public class XMenInterface extends Application {
     VBox panelContent = new VBox(0, headerOffset, panelHeader, checkboxPanel);
     panelContent.setMinHeight(0);
     VBox.setVgrow(panelContent, Priority.ALWAYS);
-    headerOffset.minHeightProperty().bind(panelContent.heightProperty().multiply(0.04));
+    headerOffset.setPrefHeight(8);
     // The grid soaks up the remaining vertical space. Combined with the row
     // constraints, this distributes the mutation rows evenly down to the chat
     // affordance instead of bunching them near the top.
     VBox.setVgrow(checkboxPanel, Priority.ALWAYS);
 
-    // No ScrollPane: all mutations are laid out flat inside the glass card so
-    // the rows distribute evenly all the way down to the chat affordance,
-    // matching the original v1.0.0 layout. The window is locked at
-    // fullscreen-or-larger so the panel always has enough height for the
-    // rows to fit without a scrollbar.
-    StackPane panelWrap = new StackPane(panelContent, panelFooter);
+    // Retain the form's natural dimensions and scroll overflow. The chat
+    // footer is part of the flow, so it cannot cover mutation choices.
+    panelContent.setMinHeight(Region.USE_PREF_SIZE);
+    checkboxPanel.setMinHeight(Region.USE_PREF_SIZE);
+    panelTitle.setMinHeight(Region.USE_PREF_SIZE);
+    panelSub.setMinHeight(Region.USE_PREF_SIZE);
+    VBox scrollContent = new VBox(12, panelContent, panelFooter);
+    scrollContent.setMinHeight(Region.USE_PREF_SIZE);
+    ScrollPane panelScroll = new ScrollPane(scrollContent);
+    panelScroll.setId("mutationScroll");
+    panelScroll.getStyleClass().add("x-control-scroll");
+    panelScroll.setFitToWidth(true);
+    panelScroll.setMinSize(0, 0);
+    panelScroll.setPannable(true);
+    StackPane panelWrap = new StackPane(panelScroll);
     panelWrap.getStyleClass().add("x-control-panel");
     panelWrap.setMaxWidth(Double.MAX_VALUE);
     panelWrap.setMaxHeight(Double.MAX_VALUE);
@@ -1029,35 +1016,10 @@ public class XMenInterface extends Application {
     SettingsDialog dialog =
         new SettingsDialog(
             serverPort,
-            themeId -> {
-              try {
-                okhttp3.Response r =
-                    SHARED_HTTP.newCall(
-                            new okhttp3.Request.Builder()
-                                .url(
-                                    "http://localhost:"
-                                        + serverPort
-                                        + "/api/settings/themes/"
-                                        + themeId)
-                                .build())
-                        .execute();
-                try (r) {
-                  if (r.body() != null && mainRoot != null) {
-                    com.xmen.config.ThemeCatalog.Theme theme =
-                        SHARED_JSON.readValue(
-                            r.body().bytes(),
-                            com.xmen.config.ThemeCatalog.Theme.class);
-                    javafx.application.Platform.runLater(
-                        () -> {
-                          ThemeApplier.apply(mainRoot, theme);
-                          ThemeLogo.apply(heroLogo, theme);
-                          refreshChatIcon(theme);
-                        });
-                  }
-                }
-              } catch (Exception ex) {
-                log.warn("Failed to refresh theme: {}", ex.getMessage());
-              }
+            theme -> {
+              ThemeApplier.apply(mainRoot, theme);
+              ThemeLogo.apply(heroLogo, theme);
+              refreshChatIcon(theme);
             },
             prefs -> log.debug("UI preferences: {}", prefs),
             theme -> javafx.application.Platform.runLater(() -> ThemeLogo.apply(heroLogo, theme)));
@@ -1354,7 +1316,6 @@ public class XMenInterface extends Application {
     depthRow.setAlignment(Pos.CENTER_LEFT);
     depthRow.managedProperty().bind(tfDerivationDepth.managedProperty());
     depthRow.visibleProperty().bind(tfDerivationDepth.visibleProperty());
-    checkboxPanel.add(new Label(""), 0, 7);
     checkboxPanel.add(depthRow, 1, 7);
     GridPane.setColumnSpan(depthRow, 4);
     GridPane.setMargin(depthRow, subOptionIndent);
@@ -1373,42 +1334,12 @@ public class XMenInterface extends Application {
     checkboxPanel.add(cbShowDerivationTree, 1, 8);
     GridPane.setColumnSpan(cbShowDerivationTree, 4);
     GridPane.setMargin(cbShowDerivationTree, subOptionIndent);
-    cbShowDerivationTree
-        .translateYProperty()
-        .bind(
-            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
-                .then(0.0)
-                .otherwise(-42.0));
 
     checkboxPanel.addRow(9, lblForgetHaskell, cbForgetHaskell);
     GridPane.setColumnSpan(cbForgetHaskell, 3);
     GridPane.setHgrow(cbForgetHaskell, Priority.ALWAYS);
-    lblForgetHaskell
-        .translateYProperty()
-        .bind(
-            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
-                .then(0.0)
-                .otherwise(-42.0));
-    cbForgetHaskell
-        .translateYProperty()
-        .bind(
-            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
-                .then(0.0)
-                .otherwise(-42.0));
 
     checkboxPanel.addRow(10, lblNeglect, cbNeglect);
-    lblNeglect
-        .translateYProperty()
-        .bind(
-            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
-                .then(0.0)
-                .otherwise(-42.0));
-    cbNeglect
-        .translateYProperty()
-        .bind(
-            javafx.beans.binding.Bindings.when(depthRow.managedProperty())
-                .then(0.0)
-                .otherwise(-42.0));
 
     // Only visible mutation rows take part in the vertical rhythm. The hidden
     // upload/start row is kept out so Neglect Mutation can land beside the
