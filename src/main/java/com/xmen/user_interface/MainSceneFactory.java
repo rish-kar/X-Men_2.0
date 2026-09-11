@@ -1135,7 +1135,16 @@ public final class MainSceneFactory {
       stage.showingProperty()
           .addListener(
               (obs, was, showing) -> {
-                if (!showing) dispose();
+                if (!showing) {
+                  if (!Boolean.TRUE.equals(
+                      stage.getProperties().get(DisplayScaleSupport.PEER_REFRESHING_PROPERTY))) {
+                    dispose();
+                  }
+                } else if (!disposed && started) {
+                  if (currentPlayer != null) currentPlayer.play();
+                  if (incomingPlayer != null) incomingPlayer.play();
+                  if (currentPlayer == null && incomingPlayer == null) playNext(true);
+                }
               });
     }
 

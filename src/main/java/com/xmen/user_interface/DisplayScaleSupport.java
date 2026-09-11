@@ -18,6 +18,7 @@ import java.util.function.Supplier;
  * Refresh bounds after live DPI/work-area changes without rebuilding the scene.
  */
 final class DisplayScaleSupport {
+  static final String PEER_REFRESHING_PROPERTY = "xmen.displayScalePeerRefreshing";
   private static final boolean WINDOWS =
       System.getProperty("os.name", "").toLowerCase().contains("win");
 
@@ -144,6 +145,7 @@ final class DisplayScaleSupport {
         return;
       }
       refreshingPeer = true;
+      stage.getProperties().put(PEER_REFRESHING_PROPERTY, Boolean.TRUE);
       stage.hide();
       Platform.runLater(() -> {
         try {
@@ -157,7 +159,10 @@ final class DisplayScaleSupport {
           stage.show();
           refresh(stage, workArea.get(), true);
         } finally {
-          Platform.runLater(() -> refreshingPeer = false);
+          Platform.runLater(() -> {
+            stage.getProperties().remove(PEER_REFRESHING_PROPERTY);
+            refreshingPeer = false;
+          });
         }
       });
     }
